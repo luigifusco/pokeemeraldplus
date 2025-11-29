@@ -2351,63 +2351,9 @@ static s32 CalcNewBarValue(s32 maxValue, s32 oldValue, s32 receivedValue, s32 *c
         newValue = maxValue;
 
     if (maxValue < scale)
-    {
-        if (newValue == Q_24_8_TO_INT(*currValue) && (*currValue & 0xFF) == 0)
-            return -1;
-    }
-    else
-    {
-        if (newValue == *currValue) // we're done, the bar's value has been updated
-            return -1;
-    }
-
-    if (maxValue < scale) // handle cases of max var having less pixels than the whole bar
-    {
-        s32 toAdd = Q_24_8(maxValue) / scale;
-
-        if (receivedValue < 0) // fill bar right
-        {
-            *currValue += toAdd;
-            ret = Q_24_8_TO_INT(*currValue);
-            if (ret >= newValue)
-            {
-                *currValue = Q_24_8(newValue);
-                ret = newValue;
-            }
-        }
-        else // move bar left
-        {
-            *currValue -= toAdd;
-            ret = Q_24_8_TO_INT(*currValue);
-            // try round up
-            if ((*currValue & 0xFF) > 0)
-                ret++;
-            if (ret <= newValue)
-            {
-                *currValue = Q_24_8(newValue);
-                ret = newValue;
-            }
-        }
-    }
-    else
-    {
-        if (receivedValue < 0) // fill bar right
-        {
-            *currValue += toAdd;
-            if (*currValue > newValue)
-                *currValue = newValue;
-            ret = *currValue;
-        }
-        else // move bar left
-        {
-            *currValue -= toAdd;
-            if (*currValue < newValue)
-                *currValue = newValue;
-            ret = *currValue;
-        }
-    }
-
-    return ret;
+        newValue = Q_24_8(newValue);
+    *currValue = newValue;
+    return -1;
 }
 
 static u8 CalcBarFilledPixels(s32 maxValue, s32 oldValue, s32 receivedValue, s32 *currValue, u8 *pixelsArray, u8 scale)

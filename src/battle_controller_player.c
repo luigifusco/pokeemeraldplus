@@ -2711,6 +2711,7 @@ static void PlayerHandleHealthBarUpdate(void)
         u32 curHP = GetMonData(&gPlayerParty[gBattlerPartyIndexes[gActiveBattler]], MON_DATA_HP);
 
         SetBattleBarStruct(gActiveBattler, gHealthboxSpriteIds[gActiveBattler], maxHP, curHP, hpVal);
+        UpdateHpTextInHealthbox(gHealthboxSpriteIds[gActiveBattler], curHP - hpVal, HP_CURRENT);
     }
     else
     {
