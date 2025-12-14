@@ -204,6 +204,8 @@ static void BattleIntroSlide1(u8 taskId)
                 if (gBattle_BG1_Y != (u16)(-56))
                     gBattle_BG1_Y -= 1;
             }
+        }
+
         REG_BLDALPHA = BLDALPHA_BLEND(gTasks[taskId].data[4] >> 4, 16 - (gTasks[taskId].data[4] >> 4));
 
         if (gBattle_WIN0V & 0xFF00)
