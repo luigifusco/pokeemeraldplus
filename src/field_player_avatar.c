@@ -970,7 +970,11 @@ void PlayerSetAnimId(u8 movementActionId, u8 copyableMovement)
 
 void PlayerWalkNormal(u8 direction)
 {
-    PlayerSetAnimId(GetWalkFasterMovementAction(direction), COPY_MOVE_WALK);
+    #ifdef WALK_FAST
+        PlayerSetAnimId(GetWalkFasterMovementAction(direction), COPY_MOVE_WALK);
+    #else
+        PlayerSetAnimId(GetWalkNormalMovementAction(direction), COPY_MOVE_WALK);
+    #endif
 }
 
 void PlayerWalkFast(u8 direction)

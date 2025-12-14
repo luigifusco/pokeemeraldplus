@@ -20,3 +20,14 @@ for pattern in unique_patterns:
 
 with open('src/data/wild_encounters.json', 'w') as f:
     f.write(encounters)
+
+# do the same for starter_choose.c
+with open('randomizer/starter_choose.c', 'r') as f:
+    starter_code = f.read()
+patterns = re.findall(r'SPECIES_[A-Z_]+', starter_code)
+unique_patterns = set(patterns)
+for pattern in unique_patterns:
+    random_species = random.choice(species)
+    starter_code = starter_code.replace(pattern, random_species)
+with open('src/starter_choose.c', 'w') as f:
+    f.write(starter_code)

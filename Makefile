@@ -114,6 +114,18 @@ INCLUDE_SCANINC_ARGS := $(INCLUDE_DIRS:%=-I %)
 
 O_LEVEL ?= 2
 CPPFLAGS := $(INCLUDE_CPP_ARGS) -Wno-trigraphs -DMODERN=$(MODERN)
+
+# Optional feature flags (enable with e.g. `make RANDOM_EVOLUTIONS=1`)
+RANDOM_EVOLUTIONS ?= 0
+ifeq ($(RANDOM_EVOLUTIONS),1)
+  CPPFLAGS += -DRANDOM_EVOLUTIONS
+endif
+WALK_FAST ?= 0
+ifeq ($(WALK_FAST),1)
+  CPPFLAGS += -DWALK_FAST
+endif
+
+
 ifeq ($(MODERN),0)
   CPPFLAGS += -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89
   CC1 := tools/agbcc/bin/agbcc$(EXE)

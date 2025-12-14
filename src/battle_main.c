@@ -3421,15 +3421,11 @@ static void BattleIntroDrawTrainersOrMonsSprites(void)
             gBattleMons[gActiveBattler].ability = GetAbilityBySpecies(gBattleMons[gActiveBattler].species, gBattleMons[gActiveBattler].abilityNum);
             hpOnSwitchout = &gBattleStruct->hpOnSwitchout[GetBattlerSide(gActiveBattler)];
             *hpOnSwitchout = gBattleMons[gActiveBattler].hp;
-            if (GetBattlerSide(gActiveBattler) == B_SIDE_OPPONENT)
-            {
-                for (i = 0; i < NUM_BATTLE_STATS; i++)
-                    gBattleMons[gActiveBattler].statStages[i] = DEFAULT_STAT_STAGE + 1;
-            }
-            else
-            {
-                for (i = 0; i < NUM_BATTLE_STATS; i++)
-                    gBattleMons[gActiveBattler].statStages[i] = DEFAULT_STAT_STAGE;
+            for (i = 0; i < NUM_BATTLE_STATS; i++) {
+                gBattleMons[gActiveBattler].statStages[i] = DEFAULT_STAT_STAGE;
+                if (GetBattlerSide(gActiveBattler) == B_SIDE_OPPONENT && i != STAT_EVASION) {
+                    gBattleMons[gActiveBattler].statStages[i]++;
+                }
             }
             gBattleMons[gActiveBattler].status2 = 0;
         }
@@ -5202,7 +5198,11 @@ static void TryEvolvePokemon(void)
                 levelUpBits &= ~(gBitTable[i]);
                 gLeveledUpInBattle = levelUpBits;
 
-                species = GetEvolutionTargetSpecies(&gPlayerParty[i], EVO_MODE_NORMAL, levelUpBits);
+                #ifdef RANDOM_EVOLUTIONS
+                    species = Random() % NUM_SPECIES; // Select a random species for evolution.
+                #else
+                    species = GetEvolutionTargetSpecies(&gPlayerParty[i], EVO_MODE_NORMAL, levelUpBits);
+                #endif
                 if (species != SPECIES_NONE)
                 {
                     FreeAllWindowBuffers();
