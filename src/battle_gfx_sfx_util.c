@@ -397,9 +397,10 @@ void SpriteCB_TrainerSlideIn(struct Sprite *sprite)
 {
     if (!(gIntroSlideFlags & 1))
     {
-        sprite->x2 += sprite->sSpeedX;
-        if (sprite->x2 == 0)
+        sprite->x2 += 4*sprite->sSpeedX;
+        if (abs(sprite->x2) < abs(4*sprite->sSpeedX))
         {
+            sprite->x2 = 0;
             if (sprite->y2 != 0)
                 sprite->callback = SpriteCB_TrainerSlideVertical;
             else

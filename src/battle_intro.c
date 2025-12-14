@@ -155,7 +155,7 @@ static void BattleIntroSlide1(u8 taskId)
 {
     int i;
 
-    gBattle_BG1_X += 6;
+    gBattle_BG1_X += 24;
     switch (gTasks[taskId].tState)
     {
     case 0:
@@ -204,13 +204,13 @@ static void BattleIntroSlide1(u8 taskId)
                 if (gBattle_BG1_Y != (u16)(-56))
                     gBattle_BG1_Y -= 1;
             }
-        }
+        REG_BLDALPHA = BLDALPHA_BLEND(gTasks[taskId].data[4] >> 4, 16 - (gTasks[taskId].data[4] >> 4));
 
         if (gBattle_WIN0V & 0xFF00)
             gBattle_WIN0V -= 0x3FC;
 
-        if (gTasks[taskId].data[2])
-            gTasks[taskId].data[2] -= 2;
+        if (gTasks[taskId].data[2] > 0)
+            gTasks[taskId].data[2] -= 8;
 
         // Scanline settings have already been set in CB2_InitBattleInternal()
         for (i = 0; i < DISPLAY_HEIGHT / 2; i++)
@@ -219,7 +219,7 @@ static void BattleIntroSlide1(u8 taskId)
         for (; i < DISPLAY_HEIGHT; i++)
             gScanlineEffectRegBuffers[gScanlineEffect.srcBuffer][i] = -gTasks[taskId].data[2];
 
-        if (gTasks[taskId].data[2] == 0)
+        if (gTasks[taskId].data[2] <= 0)
         {
             gScanlineEffect.state = 3;
             gTasks[taskId].tState++;
@@ -244,10 +244,10 @@ static void BattleIntroSlide2(u8 taskId)
     {
     case BATTLE_ENVIRONMENT_SAND:
     case BATTLE_ENVIRONMENT_WATER:
-        gBattle_BG1_X += 8;
+        gBattle_BG1_X += 32;
         break;
     case BATTLE_ENVIRONMENT_UNDERWATER:
-        gBattle_BG1_X += 6;
+        gBattle_BG1_X += 24;
         break;
     }
 
@@ -318,8 +318,8 @@ static void BattleIntroSlide2(u8 taskId)
         if (gBattle_WIN0V & 0xFF00)
             gBattle_WIN0V -= 0x3FC;
 
-        if (gTasks[taskId].data[2])
-            gTasks[taskId].data[2] -= 2;
+        if (gTasks[taskId].data[2] > 0)
+            gTasks[taskId].data[2] -= 8;
 
         // Scanline settings have already been set in CB2_InitBattleInternal()
         for (i = 0; i < DISPLAY_HEIGHT / 2; i++)
@@ -328,7 +328,7 @@ static void BattleIntroSlide2(u8 taskId)
         for (; i < DISPLAY_HEIGHT; i++)
             gScanlineEffectRegBuffers[gScanlineEffect.srcBuffer][i] = -gTasks[taskId].data[2];
 
-        if (gTasks[taskId].data[2] == 0)
+        if (gTasks[taskId].data[2] <= 0)
         {
             gScanlineEffect.state = 3;
             gTasks[taskId].tState++;
@@ -352,7 +352,7 @@ static void BattleIntroSlide3(u8 taskId)
 {
     int i;
 
-    gBattle_BG1_X += 8;
+    gBattle_BG1_X += 32;
     switch (gTasks[taskId].tState)
     {
     case 0:
@@ -406,8 +406,8 @@ static void BattleIntroSlide3(u8 taskId)
         if (gBattle_WIN0V & 0xFF00)
             gBattle_WIN0V -= 0x3FC;
 
-        if (gTasks[taskId].data[2])
-            gTasks[taskId].data[2] -= 2;
+        if (gTasks[taskId].data[2] > 0)
+            gTasks[taskId].data[2] -= 8;
 
         // Scanline settings have already been set in CB2_InitBattleInternal()
         for (i = 0; i < DISPLAY_HEIGHT / 2; i++)
@@ -416,7 +416,7 @@ static void BattleIntroSlide3(u8 taskId)
         for (; i < DISPLAY_HEIGHT; i++)
             gScanlineEffectRegBuffers[gScanlineEffect.srcBuffer][i] = -gTasks[taskId].data[2];
 
-        if (gTasks[taskId].data[2] == 0)
+        if (gTasks[taskId].data[2] <= 0)
         {
             gScanlineEffect.state = 3;
             gTasks[taskId].tState++;
@@ -488,8 +488,8 @@ static void BattleIntroSlideLink(u8 taskId)
         if (gBattle_WIN0V & 0xFF00)
             gBattle_WIN0V -= 0x3FC;
 
-        if (gTasks[taskId].data[2])
-            gTasks[taskId].data[2] -= 2;
+        if (gTasks[taskId].data[2] > 0)
+            gTasks[taskId].data[2] -= 8;
 
         // Scanline settings have already been set in CB2_InitBattleInternal()
         for (i = 0; i < DISPLAY_HEIGHT / 2; i++)
@@ -552,12 +552,12 @@ static void BattleIntroSlidePartner(u8 taskId)
         if ((gBattle_WIN0V & 0xFF00) != 0x4C00)
             gBattle_WIN0V += 0x3FC;
 
-        if (gTasks[taskId].data[2])
-            gTasks[taskId].data[2] -= 2;
+        if (gTasks[taskId].data[2] > 0)
+            gTasks[taskId].data[2] -= 8;
 
         gBattle_BG1_X = gTasks[taskId].data[2];
         gBattle_BG2_X = -gTasks[taskId].data[2];
-        if (gTasks[taskId].data[2] == 0)
+        if (gTasks[taskId].data[2] <= 0)
             gTasks[taskId].tState++;
         break;
     case 4:

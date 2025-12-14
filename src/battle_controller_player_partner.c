@@ -1770,7 +1770,6 @@ static void PlayerPartnerHandleFaintingCry(void)
 static void PlayerPartnerHandleIntroSlide(void)
 {
     HandleIntroSlide(gBattleBufferA[gActiveBattler][1]);
-    gIntroSlideFlags |= 1;
     PlayerPartnerBufferExecCompleted();
 }
 
