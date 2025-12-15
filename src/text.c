@@ -316,6 +316,7 @@ bool16 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, voi
     return TRUE;
 }
 
+
 void RunTextPrinters(void)
 {
     int i;
@@ -326,21 +327,17 @@ void RunTextPrinters(void)
         {
             if (sTextPrinters[i].active)
             {
-                u16 renderCmd;
-
-                do
-                {
+                u16 renderCmd = RenderFont(&sTextPrinters[i]);
+                #ifdef INSTANT_TEXT
+                while (renderCmd == RENDER_PRINT) {
+                    CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, COPYWIN_GFX);
                     renderCmd = RenderFont(&sTextPrinters[i]);
-                    if (renderCmd == RENDER_PRINT)
-                    {
-                        CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, COPYWIN_GFX);
-                        if (sTextPrinters[i].callback != NULL)
-                            sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, renderCmd);
-                    }
-                } while (renderCmd == RENDER_PRINT);
-
+                }
+                #endif
                 switch (renderCmd)
                 {
+                case RENDER_PRINT:
+                    CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, COPYWIN_GFX);
                 case RENDER_UPDATE:
                     if (sTextPrinters[i].callback != NULL)
                         sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, renderCmd);

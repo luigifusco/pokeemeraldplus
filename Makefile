@@ -126,6 +126,10 @@ ifeq ($(WALK_FAST),1)
 endif
 WAIT_TIME_DIVISOR ?= 1
 CPPFLAGS += -DWAIT_TIME_DIVISOR=$(WAIT_TIME_DIVISOR)
+INSTANT_TEXT ?= 0
+ifeq ($(INSTANT_TEXT),1)
+	CPPFLAGS += -DINSTANT_TEXT
+endif
 
 ifeq ($(MODERN),0)
   CPPFLAGS += -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89
