@@ -4408,6 +4408,27 @@ void CopyMon(void *dest, void *src, size_t size)
     memcpy(dest, src, size);
 }
 
+void SetMonOwnerToPlayer(struct Pokemon *mon)
+{
+    struct BoxPokemon *boxMon = &mon->box;
+    struct PokemonSubstruct3 *substruct3;
+
+    // Decrypt using the current OT ID/personality key.
+    DecryptBoxMon(boxMon);
+
+    // Update unencrypted OT fields.
+    SetBoxMonData(boxMon, MON_DATA_OT_NAME, gSaveBlock2Ptr->playerName);
+    SetBoxMonData(boxMon, MON_DATA_OT_ID, gSaveBlock2Ptr->playerTrainerId);
+
+    // Update encrypted OT gender.
+    substruct3 = &(GetSubstruct(boxMon, boxMon->personality, 3)->type3);
+    substruct3->otGender = gSaveBlock2Ptr->playerGender;
+
+    // Recompute checksum and re-encrypt using the NEW OT ID/personality key.
+    boxMon->checksum = CalculateBoxMonChecksum(boxMon);
+    EncryptBoxMon(boxMon);
+}
+
 u8 GiveMonToPlayer(struct Pokemon *mon)
 {
     s32 i;

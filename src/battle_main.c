@@ -73,6 +73,11 @@ static void CB2_HandleStartBattle(void);
 static void TryCorrectShedinjaLanguage(struct Pokemon *mon);
 static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 firstTrainer);
 
+#ifdef STEAL_TRAINER_TEAM
+static void ReplacePlayerPartyWithEnemyPartyAndRewriteOT(void);
+static void FullyHealMon(struct Pokemon *mon);
+#endif
+
 #ifdef FORCE_DOUBLE_BATTLES
 static u8 CountUsablePartyMons(struct Pokemon *party)
 {
@@ -5282,6 +5287,15 @@ static void ReturnFromBattleToOverworld(void)
     if (gBattleTypeFlags & BATTLE_TYPE_LINK && gReceivedRemoteLinkPlayers)
         return;
 
+#ifdef STEAL_TRAINER_TEAM
+    if (gBattleOutcome == B_OUTCOME_WON
+        && (gBattleTypeFlags & BATTLE_TYPE_TRAINER)
+        && !(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK | BATTLE_TYPE_RECORDED)))
+    {
+        ReplacePlayerPartyWithEnemyPartyAndRewriteOT();
+    }
+#endif
+
     gSpecialVar_Result = gBattleOutcome;
     gMain.inBattle = FALSE;
     gMain.callback1 = gPreBattleCallback1;
@@ -5301,6 +5315,61 @@ static void ReturnFromBattleToOverworld(void)
     m4aSongNumStop(SE_LOW_HEALTH);
     SetMainCallback2(gMain.savedCallback);
 }
+
+#ifdef STEAL_TRAINER_TEAM
+static void FullyHealMon(struct Pokemon *mon)
+{
+    u8 i;
+    u16 hp;
+    u8 ppBonuses;
+    u8 data[4];
+
+    for (i = 0; i < 4; i++)
+        data[i] = 0;
+
+    hp = GetMonData(mon, MON_DATA_MAX_HP);
+    data[0] = hp;
+    data[1] = hp >> 8;
+    SetMonData(mon, MON_DATA_HP, data);
+
+    ppBonuses = GetMonData(mon, MON_DATA_PP_BONUSES);
+    for (i = 0; i < MAX_MON_MOVES; i++)
+    {
+        u16 move = GetMonData(mon, MON_DATA_MOVE1 + i);
+        data[0] = CalculatePPWithBonus(move, ppBonuses, i);
+        SetMonData(mon, MON_DATA_PP1 + i, data);
+    }
+
+    data[0] = 0;
+    data[1] = 0;
+    data[2] = 0;
+    data[3] = 0;
+    SetMonData(mon, MON_DATA_STATUS, data);
+}
+
+static void ReplacePlayerPartyWithEnemyPartyAndRewriteOT(void)
+{
+    s32 enemyPartyIdx;
+    s32 playerPartyIdx = 0;
+    struct Pokemon stolen;
+
+    ZeroPlayerPartyMons();
+
+    for (enemyPartyIdx = 0; enemyPartyIdx < PARTY_SIZE && playerPartyIdx < PARTY_SIZE; enemyPartyIdx++)
+    {
+        if (GetMonData(&gEnemyParty[enemyPartyIdx], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
+            continue;
+
+        CopyMon(&stolen, &gEnemyParty[enemyPartyIdx], sizeof(stolen));
+        SetMonOwnerToPlayer(&stolen);
+        FullyHealMon(&stolen);
+        CopyMon(&gPlayerParty[playerPartyIdx], &stolen, sizeof(stolen));
+        playerPartyIdx++;
+    }
+
+    CalculatePlayerPartyCount();
+}
+#endif
 
 void RunBattleScriptCommands_PopCallbacksStack(void)
 {
