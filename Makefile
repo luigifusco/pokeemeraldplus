@@ -130,6 +130,14 @@ INSTANT_TEXT ?= 0
 ifeq ($(INSTANT_TEXT),1)
 	CPPFLAGS += -DINSTANT_TEXT
 endif
+FORCE_DOUBLE_BATTLES ?= 0
+ifeq ($(FORCE_DOUBLE_BATTLES),1)
+	CPPFLAGS += -DFORCE_DOUBLE_BATTLES
+endif
+SKIP_BATTLE_TRANSITION ?= 0
+ifeq ($(SKIP_BATTLE_TRANSITION),1)
+	CPPFLAGS += -DSKIP_BATTLE_TRANSITION
+endif
 
 ifeq ($(MODERN),0)
   CPPFLAGS += -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89
@@ -146,6 +154,23 @@ else
   LIBPATH := -L "$(dir $(shell $(PATH_MODERNCC) -mthumb -print-file-name=libgcc.a))" -L "$(dir $(shell $(PATH_MODERNCC) -mthumb -print-file-name=libnosys.a))" -L "$(dir $(shell $(PATH_MODERNCC) -mthumb -print-file-name=libc.a))"
   LIB := $(LIBPATH) -lc -lnosys -lgcc -L../../libagbsyscall -lagbsyscall
 endif
+
+# Rebuild objects when build flags change.
+# (Make does not automatically consider changes to command-line variables like SKIP_BATTLE_TRANSITION.)
+CONFIG_FLAGS_FILE := $(OBJ_DIR)/.config_flags
+
+.PHONY: FORCE
+FORCE:
+
+$(CONFIG_FLAGS_FILE): FORCE
+	@mkdir -p $(dir $@)
+	@tmp=$@.tmp; \
+	{ \
+		echo "CPPFLAGS=$(CPPFLAGS)"; \
+		echo "CFLAGS=$(CFLAGS)"; \
+		echo "ASFLAGS=$(ASFLAGS)"; \
+	} > $$tmp; \
+	if [ -f $@ ] && cmp -s $$tmp $@; then rm -f $$tmp; else mv -f $$tmp $@; fi
 # Enable debug info if set
 ifeq ($(DINFO),1)
   override CFLAGS += -g
@@ -325,7 +350,7 @@ endif
 # As a side effect, they're evaluated immediately instead of when the rule is invoked.
 # It doesn't look like $(shell) can be deferred so there might not be a better way (Icedude_907: there is soon).
 
-$(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.c
+$(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.c $(CONFIG_FLAGS_FILE)
 ifneq ($(KEEP_TEMPS),1)
 	@echo "$(CC1) <flags> -o $@ $<"
 	@$(CPP) $(CPPFLAGS) $< | $(PREPROC) -i $< charmap.txt | $(CC1) $(CFLAGS) -o - - | cat - <(echo -e ".text\n\t.align\t2, 0") | $(AS) $(ASFLAGS) -o $@ -
@@ -343,7 +368,7 @@ ifneq ($(NODEP),1)
 -include $(addprefix $(OBJ_DIR)/,$(C_SRCS:.c=.d))
 endif
 
-$(ASM_BUILDDIR)/%.o: $(ASM_SUBDIR)/%.s
+$(ASM_BUILDDIR)/%.o: $(ASM_SUBDIR)/%.s $(CONFIG_FLAGS_FILE)
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(ASM_BUILDDIR)/%.d: $(ASM_SUBDIR)/%.s
@@ -353,7 +378,7 @@ ifneq ($(NODEP),1)
 -include $(addprefix $(OBJ_DIR)/,$(ASM_SRCS:.s=.d))
 endif
 
-$(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.s
+$(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.s $(CONFIG_FLAGS_FILE)
 	$(PREPROC) $< charmap.txt | $(CPP) $(CPPFLAGS) $(INCLUDE_SCANINC_ARGS) - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@
 
 $(C_BUILDDIR)/%.d: $(C_SUBDIR)/%.s
@@ -363,7 +388,7 @@ ifneq ($(NODEP),1)
 -include $(addprefix $(OBJ_DIR)/,$(C_ASM_SRCS:.s=.d))
 endif
 
-$(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s
+$(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s $(CONFIG_FLAGS_FILE)
 	$(PREPROC) $< charmap.txt | $(CPP) $(CPPFLAGS) $(INCLUDE_SCANINC_ARGS) - | $(PREPROC) -ie $< charmap.txt | $(AS) $(ASFLAGS) -o $@
 
 $(DATA_ASM_BUILDDIR)/%.d: $(DATA_ASM_SUBDIR)/%.s

@@ -19,6 +19,7 @@
 #include "strings.h"
 #include "text.h"
 #include "trainer_hill.h"
+#include "util.h"
 #include "window.h"
 #include "constants/battle_dome.h"
 #include "constants/battle_string_ids.h"
@@ -2024,7 +2025,12 @@ void BufferStringBattle(u16 stringID)
             if (gBattleTypeFlags & BATTLE_TYPE_LEGENDARY)
                 stringPtr = sText_LegendaryPkmnAppeared;
             else if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE) // interesting, looks like they had something planned for wild double battles
-                stringPtr = sText_TwoWildPkmnAppeared;
+            {
+                if (gAbsentBattlerFlags & gBitTable[B_BATTLER_3])
+                    stringPtr = sText_WildPkmnAppeared;
+                else
+                    stringPtr = sText_TwoWildPkmnAppeared;
+            }
             else if (gBattleTypeFlags & BATTLE_TYPE_WALLY_TUTORIAL)
                 stringPtr = sText_WildPkmnAppearedPause;
             else
@@ -2036,14 +2042,21 @@ void BufferStringBattle(u16 stringID)
         {
             if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
             {
-                if (gBattleTypeFlags & BATTLE_TYPE_INGAME_PARTNER)
-                    stringPtr = sText_InGamePartnerSentOutZGoN;
-                else if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
-                    stringPtr = sText_GoTwoPkmn;
-                else if (gBattleTypeFlags & BATTLE_TYPE_MULTI)
-                    stringPtr = sText_LinkPartnerSentOutPkmnGoPkmn;
+                if (gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)])
+                {
+                    stringPtr = sText_GoPkmn;
+                }
                 else
-                    stringPtr = sText_GoTwoPkmn;
+                {
+                    if (gBattleTypeFlags & BATTLE_TYPE_INGAME_PARTNER)
+                        stringPtr = sText_InGamePartnerSentOutZGoN;
+                    else if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
+                        stringPtr = sText_GoTwoPkmn;
+                    else if (gBattleTypeFlags & BATTLE_TYPE_MULTI)
+                        stringPtr = sText_LinkPartnerSentOutPkmnGoPkmn;
+                    else
+                        stringPtr = sText_GoTwoPkmn;
+                }
             }
             else
             {
@@ -2054,16 +2067,28 @@ void BufferStringBattle(u16 stringID)
         {
             if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
             {
-                if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
-                    stringPtr = sText_TwoTrainersSentPkmn;
-                else if (gBattleTypeFlags & BATTLE_TYPE_TOWER_LINK_MULTI)
-                    stringPtr = sText_TwoTrainersSentPkmn;
-                else if (gBattleTypeFlags & BATTLE_TYPE_MULTI)
-                    stringPtr = sText_TwoLinkTrainersSentOutPkmn;
-                else if (gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK))
-                    stringPtr = sText_LinkTrainerSentOutTwoPkmn;
+                if (gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)])
+                {
+                    if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK)))
+                        stringPtr = sText_Trainer1SentOutPkmn;
+                    else if (gTrainerBattleOpponent_A == TRAINER_UNION_ROOM)
+                        stringPtr = sText_Trainer1SentOutPkmn;
+                    else
+                        stringPtr = sText_LinkTrainerSentOutPkmn;
+                }
                 else
-                    stringPtr = sText_Trainer1SentOutTwoPkmn;
+                {
+                    if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
+                        stringPtr = sText_TwoTrainersSentPkmn;
+                    else if (gBattleTypeFlags & BATTLE_TYPE_TOWER_LINK_MULTI)
+                        stringPtr = sText_TwoTrainersSentPkmn;
+                    else if (gBattleTypeFlags & BATTLE_TYPE_MULTI)
+                        stringPtr = sText_TwoLinkTrainersSentOutPkmn;
+                    else if (gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK))
+                        stringPtr = sText_LinkTrainerSentOutTwoPkmn;
+                    else
+                        stringPtr = sText_Trainer1SentOutTwoPkmn;
+                }
             }
             else
             {

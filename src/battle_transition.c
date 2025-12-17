@@ -1040,6 +1040,9 @@ void BattleTransition_Start(u8 transitionId)
 
 bool8 IsBattleTransitionDone(void)
 {
+    #ifdef SKIP_BATTLE_TRANSITION
+    return TRUE;
+    #else
     u8 taskId = FindTaskIdByFunc(Task_BattleTransition);
     if (gTasks[taskId].tTransitionDone)
     {
@@ -1051,6 +1054,7 @@ bool8 IsBattleTransitionDone(void)
     {
         return FALSE;
     }
+    #endif
 }
 
 static void LaunchBattleTransitionTask(u8 transitionId)

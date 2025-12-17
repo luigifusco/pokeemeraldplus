@@ -3359,9 +3359,26 @@ static void Cmd_getexp(void)
                 // music change in wild battle after fainting a poke
                 if (!(gBattleTypeFlags & BATTLE_TYPE_TRAINER) && gBattleMons[0].hp != 0 && !gBattleStruct->wildVictorySong)
                 {
-                    BattleStopLowHpSound();
-                    PlayBGM(MUS_VICTORY_WILD);
-                    gBattleStruct->wildVictorySong++;
+                    u16 hpCount = 0;
+
+                    // Only play the victory music once the battle is actually won.
+                    // This matters for forced wild double battles, where exp may be granted
+                    // when a single foe faints.
+                    for (i = 0; i < PARTY_SIZE; i++)
+                    {
+                        if (GetMonData(&gEnemyParty[i], MON_DATA_SPECIES) && !GetMonData(&gEnemyParty[i], MON_DATA_IS_EGG)
+                         && (!(gBattleTypeFlags & BATTLE_TYPE_ARENA) || !(gBattleStruct->arenaLostOpponentMons & gBitTable[i])))
+                        {
+                            hpCount += GetMonData(&gEnemyParty[i], MON_DATA_HP);
+                        }
+                    }
+
+                    if (hpCount == 0)
+                    {
+                        BattleStopLowHpSound();
+                        PlayBGM(MUS_VICTORY_WILD);
+                        gBattleStruct->wildVictorySong++;
+                    }
                 }
 
                 if (GetMonData(&gPlayerParty[gBattleStruct->expGetterMonId], MON_DATA_HP))

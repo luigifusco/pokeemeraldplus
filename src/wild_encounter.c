@@ -1,4 +1,5 @@
 #include "global.h"
+#include "battle.h"
 #include "battle_setup.h"
 #include "battle_pike.h"
 #include "battle_pyramid.h"
@@ -376,11 +377,10 @@ static u8 PickWildMonNature(void)
     return Random() % NUM_NATURES;
 }
 
-static void CreateWildMon(u16 species, u8 level)
+static void CreateWildMonInSlot(u8 partyIndex, u16 species, u8 level)
 {
     bool32 checkCuteCharm;
 
-    ZeroEnemyPartyMons();
     checkCuteCharm = TRUE;
 
     switch (gSpeciesInfo[species].genderRatio)
@@ -407,11 +407,17 @@ static void CreateWildMon(u16 species, u8 level)
         else
             gender = MON_FEMALE;
 
-        CreateMonWithGenderNatureLetter(&gEnemyParty[0], species, level, USE_RANDOM_IVS, gender, PickWildMonNature(), 0);
+        CreateMonWithGenderNatureLetter(&gEnemyParty[partyIndex], species, level, USE_RANDOM_IVS, gender, PickWildMonNature(), 0);
         return;
     }
 
-    CreateMonWithNature(&gEnemyParty[0], species, level, USE_RANDOM_IVS, PickWildMonNature());
+    CreateMonWithNature(&gEnemyParty[partyIndex], species, level, USE_RANDOM_IVS, PickWildMonNature());
+}
+
+static void CreateWildMon(u16 species, u8 level)
+{
+    ZeroEnemyPartyMons();
+    CreateWildMonInSlot(0, species, level);
 }
 #ifdef BUGFIX
 #define TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildPokemon, type, ability, ptr, count) TryGetAbilityInfluencedWildMonIndex(wildPokemon, type, ability, ptr, count)
@@ -451,7 +457,34 @@ static bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, u8 ar
     if (gMapHeader.mapLayoutId != LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS && flags & WILD_CHECK_KEEN_EYE && !IsAbilityAllowingEncounter(level))
         return FALSE;
 
-    CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+    ZeroEnemyPartyMons();
+    CreateWildMonInSlot(0, wildMonInfo->wildPokemon[wildMonIndex].species, level);
+
+#ifdef FORCE_DOUBLE_BATTLES
+    // Create a second wild mon for forced double battles.
+    // Skip battle types that don't become doubles under FORCE_DOUBLE_BATTLES.
+    // Also skip Pike/Pyramid wild battles, which have their own party setup.
+    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_PIKE | BATTLE_TYPE_PYRAMID)))
+    {
+        u8 wildMonIndex2;
+        u8 level2;
+
+        switch (area)
+        {
+        case WILD_AREA_LAND:
+            wildMonIndex2 = ChooseWildMonIndex_Land();
+            break;
+        case WILD_AREA_WATER:
+        case WILD_AREA_ROCKS:
+        default:
+            wildMonIndex2 = ChooseWildMonIndex_WaterRock();
+            break;
+        }
+
+        level2 = ChooseWildMonLevel(&wildMonInfo->wildPokemon[wildMonIndex2]);
+        CreateWildMonInSlot(1, wildMonInfo->wildPokemon[wildMonIndex2].species, level2);
+    }
+#endif
     return TRUE;
 }
 
@@ -460,7 +493,17 @@ static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 
     u8 wildMonIndex = ChooseWildMonIndex_Fishing(rod);
     u8 level = ChooseWildMonLevel(&wildMonInfo->wildPokemon[wildMonIndex]);
 
-    CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+    ZeroEnemyPartyMons();
+    CreateWildMonInSlot(0, wildMonInfo->wildPokemon[wildMonIndex].species, level);
+
+#ifdef FORCE_DOUBLE_BATTLES
+    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_PIKE | BATTLE_TYPE_PYRAMID)))
+    {
+        u8 wildMonIndex2 = ChooseWildMonIndex_Fishing(rod);
+        u8 level2 = ChooseWildMonLevel(&wildMonInfo->wildPokemon[wildMonIndex2]);
+        CreateWildMonInSlot(1, wildMonInfo->wildPokemon[wildMonIndex2].species, level2);
+    }
+#endif
     return wildMonInfo->wildPokemon[wildMonIndex].species;
 }
 
@@ -471,9 +514,19 @@ static bool8 SetUpMassOutbreakEncounter(u8 flags)
     if (flags & WILD_CHECK_REPEL && !IsWildLevelAllowedByRepel(gSaveBlock1Ptr->outbreakPokemonLevel))
         return FALSE;
 
-    CreateWildMon(gSaveBlock1Ptr->outbreakPokemonSpecies, gSaveBlock1Ptr->outbreakPokemonLevel);
+    ZeroEnemyPartyMons();
+    CreateWildMonInSlot(0, gSaveBlock1Ptr->outbreakPokemonSpecies, gSaveBlock1Ptr->outbreakPokemonLevel);
     for (i = 0; i < MAX_MON_MOVES; i++)
         SetMonMoveSlot(&gEnemyParty[0], gSaveBlock1Ptr->outbreakPokemonMoves[i], i);
+
+#ifdef FORCE_DOUBLE_BATTLES
+    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_PIKE | BATTLE_TYPE_PYRAMID)))
+    {
+        CreateWildMonInSlot(1, gSaveBlock1Ptr->outbreakPokemonSpecies, gSaveBlock1Ptr->outbreakPokemonLevel);
+        for (i = 0; i < MAX_MON_MOVES; i++)
+            SetMonMoveSlot(&gEnemyParty[1], gSaveBlock1Ptr->outbreakPokemonMoves[i], i);
+    }
+#endif
 
     return TRUE;
 }
@@ -786,7 +839,12 @@ void FishingWildEncounter(u8 rod)
         u8 level = ChooseWildMonLevel(&sWildFeebas);
 
         species = sWildFeebas.species;
-        CreateWildMon(species, level);
+        ZeroEnemyPartyMons();
+        CreateWildMonInSlot(0, species, level);
+#ifdef FORCE_DOUBLE_BATTLES
+        if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_PIKE | BATTLE_TYPE_PYRAMID)))
+            CreateWildMonInSlot(1, species, level);
+#endif
     }
     else
     {

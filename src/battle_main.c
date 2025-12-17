@@ -72,6 +72,30 @@ static void CB2_HandleStartMultiBattle(void);
 static void CB2_HandleStartBattle(void);
 static void TryCorrectShedinjaLanguage(struct Pokemon *mon);
 static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 firstTrainer);
+
+#ifdef FORCE_DOUBLE_BATTLES
+static u8 CountUsablePartyMons(struct Pokemon *party)
+{
+    s32 i;
+    u8 count = 0;
+
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        u16 species = GetMonData(&party[i], MON_DATA_SPECIES_OR_EGG);
+        if (species != SPECIES_NONE
+            && species != SPECIES_EGG
+            && GetMonData(&party[i], MON_DATA_HP) != 0)
+        {
+            count++;
+            if (count >= 2)
+                return count;
+        }
+    }
+
+    return count;
+}
+#endif
+
 static void BattleMainCB1(void);
 static void CB2_EndLinkBattle(void);
 static void EndLinkBattleInSteps(void);
@@ -699,6 +723,15 @@ static void CB2_InitBattleInternal(void)
             CreateNPCTrainerParty(&gEnemyParty[PARTY_SIZE / 2], gTrainerBattleOpponent_B, FALSE);
         SetWildMonHeldItem();
     }
+
+#ifdef FORCE_DOUBLE_BATTLES
+    // Force double battles for standard battles.
+    // Avoid battle types that don't support the normal 2v2 flow.
+    if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL)))
+    {
+        gBattleTypeFlags |= BATTLE_TYPE_DOUBLE;
+    }
+#endif
 
     gMain.inBattle = TRUE;
     gSaveBlock2Ptr->frontier.disableRecordBattle = FALSE;
@@ -3110,6 +3143,21 @@ static void BattleStartClearSetData(void)
     gBattleScripting.animTargetsHit = 0;
     gLeveledUpInBattle = 0;
     gAbsentBattlerFlags = 0;
+
+#ifdef FORCE_DOUBLE_BATTLES
+    // When forcing doubles, allow 2v1 / 1v2 / 1v1 by leaving the missing slot absent.
+    // Keep this to standard (non-link/non-recorded) battles; multi/partner/two-opponent
+    // battles have different party routing.
+    if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+        && !(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_MULTI | BATTLE_TYPE_INGAME_PARTNER | BATTLE_TYPE_TWO_OPPONENTS)))
+    {
+        if (CountUsablePartyMons(gPlayerParty) < 2)
+            gAbsentBattlerFlags |= gBitTable[B_BATTLER_2];
+        if (CountUsablePartyMons(gEnemyParty) < 2)
+            gAbsentBattlerFlags |= gBitTable[B_BATTLER_3];
+    }
+#endif
+
     gBattleStruct->runTries = 0;
     gBattleStruct->safariGoNearCounter = 0;
     gBattleStruct->safariPkblThrowCounter = 0;
