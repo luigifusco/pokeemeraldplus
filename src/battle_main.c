@@ -5252,9 +5252,11 @@ static void TryEvolvePokemon(void)
                 gLeveledUpInBattle = levelUpBits;
 
                 #ifdef RANDOM_EVOLUTIONS
-                    species = Random() % NUM_SPECIES; // Select a random species for evolution.
+                do {
+                    species = Random() % (NUM_SPECIES - 1) + 1; // Select a random species for evolution.
+                } while (species >= SPECIES_OLD_UNOWN_B && species <= SPECIES_OLD_UNOWN_Z); // Exclude invalid species.
                 #else
-                    species = GetEvolutionTargetSpecies(&gPlayerParty[i], EVO_MODE_NORMAL, levelUpBits);
+                species = GetEvolutionTargetSpecies(&gPlayerParty[i], EVO_MODE_NORMAL, levelUpBits);
                 #endif
                 if (species != SPECIES_NONE)
                 {
