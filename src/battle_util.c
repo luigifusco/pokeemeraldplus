@@ -319,7 +319,23 @@ void HandleAction_UseItem(void)
 
     if (gLastUsedItem <= LAST_BALL) // is ball
     {
-        gBattlescriptCurrInstr = gBattlescriptsForBallThrow[gLastUsedItem];
+        u8 opponentLeft = GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT);
+        u8 opponentRight = GetBattlerAtPosition(B_POSITION_OPPONENT_RIGHT);
+        bool8 opponentLeftAlive = !(gAbsentBattlerFlags & gBitTable[opponentLeft]) && gBattleMons[opponentLeft].hp != 0;
+        bool8 opponentRightAlive = !(gAbsentBattlerFlags & gBitTable[opponentRight]) && gBattleMons[opponentRight].hp != 0;
+
+        if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+         && !(gBattleTypeFlags & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_MULTI))
+         && opponentLeftAlive
+         && opponentRightAlive)
+        {
+            AddBagItem(gLastUsedItem, 1);
+            gBattlescriptCurrInstr = BattleScript_CantThrowBallTwoWildMons;
+        }
+        else
+        {
+            gBattlescriptCurrInstr = gBattlescriptsForBallThrow[gLastUsedItem];
+        }
     }
     else if (gLastUsedItem == ITEM_POKE_DOLL || gLastUsedItem == ITEM_FLUFFY_TAIL)
     {

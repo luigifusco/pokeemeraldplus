@@ -110,6 +110,11 @@ BattleScript_TrainerBallBlock::
 	waitmessage B_WAIT_TIME_LONG
 	finishaction
 
+BattleScript_CantThrowBallTwoWildMons::
+	printstring STRINGID_CANTTHROWBALLTWOMONS
+	waitmessage B_WAIT_TIME_LONG
+	finishaction
+
 BattleScript_PlayerUsesItem::
 	moveendcase MOVEEND_MIRROR_MOVE
 	end
