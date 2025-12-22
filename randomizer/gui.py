@@ -131,6 +131,8 @@ def main() -> None:
     flag_steal_trainer_team = tk.BooleanVar(value=False)
 
     wait_time_divisor_pow = tk.DoubleVar(value=0.0)  # 0..5 => 1..32
+    wild_level_percent = tk.DoubleVar(value=0.0)  # -100..100
+    trainer_level_percent = tk.DoubleVar(value=0.0)  # -100..100
 
     output = scrolledtext.ScrolledText(window, height=18, width=100)
 
@@ -160,6 +162,19 @@ def main() -> None:
             rand_args.append("--per-occurrence")
         if randomize_per_map.get():
             rand_args.append("--per-map-consistent")
+
+        wild_pct = int(round(wild_level_percent.get()))
+        if int(round(wild_level_percent.get())) != wild_pct:
+            wild_level_percent.set(float(wild_pct))
+        if wild_pct != 0:
+            rand_args.extend(["--wild-level-percent", str(wild_pct)])
+
+        trainer_pct = int(round(trainer_level_percent.get()))
+        if int(round(trainer_level_percent.get())) != trainer_pct:
+            trainer_level_percent.set(float(trainer_pct))
+        if trainer_pct != 0:
+            rand_args.extend(["--trainer-level-percent", str(trainer_pct)])
+
         any_selected = randomize_wild.get() or randomize_starters.get() or randomize_trainers.get()
         if not any_selected:
             rand_args.append("--restore")
@@ -271,6 +286,82 @@ def main() -> None:
     restore_btn = ttk.Button(randomizer_group, text="Restore repo files", command=do_restore)
     restore_btn.grid(row=5, column=0, sticky="w", pady=(8, 0))
     add_tooltip(restore_btn, "Overwrite the repo's src/ files with the copies in randomizer/ (undo randomization).")
+
+    wild_level_frame = ttk.Frame(randomizer_group)
+    wild_level_frame.grid(row=6, column=0, sticky="w", pady=(10, 0))
+
+    wild_level_label = ttk.Label(wild_level_frame, text="Wild Level %")
+    wild_level_label.pack(side="left")
+    add_tooltip(wild_level_label, "Scale wild encounter levels by a percentage (clamped to 1..100).")
+
+    wild_level_value_label = ttk.Label(wild_level_frame, text="0%", width=6, anchor="e")
+    wild_level_value_label.pack(side="left", padx=(8, 8))
+
+    def on_wild_level_slider(_value: str) -> None:
+        snapped = int(round(float(_value)))
+        if int(round(wild_level_percent.get())) != snapped:
+            wild_level_percent.set(float(snapped))
+        sign = "+" if snapped > 0 else ""
+        wild_level_value_label.configure(text=f"{sign}{snapped}%")
+
+    def reset_wild_level() -> None:
+        wild_level_percent.set(0.0)
+        wild_level_value_label.configure(text="0%")
+
+    wild_level_scale = ttk.Scale(
+        wild_level_frame,
+        from_=-100,
+        to=100,
+        orient="horizontal",
+        variable=wild_level_percent,
+        command=on_wild_level_slider,
+        length=160,
+    )
+    wild_level_scale.pack(side="left")
+    add_tooltip(wild_level_scale, "-100% (min 1) through +100% (double levels).")
+
+    wild_level_reset_btn = ttk.Button(wild_level_frame, text="Reset", command=reset_wild_level)
+    wild_level_reset_btn.pack(side="left", padx=(8, 0))
+    add_tooltip(wild_level_reset_btn, "Reset wild level scaling to 0%.")
+
+    trainer_level_frame = ttk.Frame(randomizer_group)
+    trainer_level_frame.grid(row=7, column=0, sticky="w", pady=(6, 0))
+
+    trainer_level_label = ttk.Label(trainer_level_frame, text="Trainer Level %")
+    trainer_level_label.pack(side="left")
+    add_tooltip(trainer_level_label, "Scale trainer party levels by a percentage (clamped to 1..100).")
+
+    trainer_level_value_label = ttk.Label(trainer_level_frame, text="0%", width=6, anchor="e")
+    trainer_level_value_label.pack(side="left", padx=(8, 8))
+
+    def on_trainer_level_slider(_value: str) -> None:
+        snapped = int(round(float(_value)))
+        if int(round(trainer_level_percent.get())) != snapped:
+            trainer_level_percent.set(float(snapped))
+        sign = "+" if snapped > 0 else ""
+        trainer_level_value_label.configure(text=f"{sign}{snapped}%")
+
+    def reset_trainer_level() -> None:
+        trainer_level_percent.set(0.0)
+        trainer_level_value_label.configure(text="0%")
+
+    trainer_level_scale = ttk.Scale(
+        trainer_level_frame,
+        from_=-100,
+        to=100,
+        orient="horizontal",
+        variable=trainer_level_percent,
+        command=on_trainer_level_slider,
+        length=160,
+    )
+    trainer_level_scale.pack(side="left")
+    add_tooltip(trainer_level_scale, "-100% (min 1) through +100% (double levels).")
+
+    trainer_level_reset_btn = ttk.Button(
+        trainer_level_frame, text="Reset", command=reset_trainer_level
+    )
+    trainer_level_reset_btn.pack(side="left", padx=(8, 0))
+    add_tooltip(trainer_level_reset_btn, "Reset trainer level scaling to 0%.")
 
     build_group = ttk.Labelframe(top, text="Build", padding=10)
     build_group.grid(row=0, column=1, sticky="nw", padx=(10, 0))

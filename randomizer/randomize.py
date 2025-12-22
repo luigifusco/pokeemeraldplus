@@ -7,6 +7,60 @@ from pathlib import Path
 
 RANDOMIZE_SPECIES_PATTERN = re.compile(r"\bSPECIES_[A-Z0-9_]+\b")
 MOVES_FIELD_PATTERN = re.compile(r"(?m)^\s*\.moves\s*=\s*\{[^}]*\}\s*,?\s*$\n?")
+TRAINER_LVL_PATTERN = re.compile(r"(?m)(^\s*\.lvl\s*=\s*)(\d+)(\s*,)")
+
+
+def _clamp_level(level: int) -> int:
+    return max(1, min(100, level))
+
+
+def _scale_level(level: int, percent: int) -> int:
+    factor = 1.0 + (percent / 100.0)
+    return _clamp_level(int(round(level * factor)))
+
+
+def scale_wild_levels_json(text: str, percent: int) -> str:
+    if percent == 0:
+        return text
+
+    data = json.loads(text)
+    for group in data.get("wild_encounter_groups", []):
+        for encounter in group.get("encounters", []):
+            for field_name, field_value in list(encounter.items()):
+                if not isinstance(field_value, dict):
+                    continue
+                mons = field_value.get("mons")
+                if not isinstance(mons, list):
+                    continue
+                for mon in mons:
+                    if not isinstance(mon, dict):
+                        continue
+                    if "min_level" in mon and isinstance(mon["min_level"], int):
+                        mon["min_level"] = _scale_level(mon["min_level"], percent)
+                    if "max_level" in mon and isinstance(mon["max_level"], int):
+                        mon["max_level"] = _scale_level(mon["max_level"], percent)
+                    if (
+                        "min_level" in mon
+                        and "max_level" in mon
+                        and isinstance(mon["min_level"], int)
+                        and isinstance(mon["max_level"], int)
+                        and mon["min_level"] > mon["max_level"]
+                    ):
+                        mon["min_level"], mon["max_level"] = mon["max_level"], mon["min_level"]
+
+    return json.dumps(data, indent=2, sort_keys=False) + "\n"
+
+
+def scale_trainer_party_levels(text: str, percent: int) -> str:
+    if percent == 0:
+        return text
+
+    def repl(match: re.Match[str]) -> str:
+        prefix, lvl_str, suffix = match.groups()
+        new_lvl = _scale_level(int(lvl_str), percent)
+        return f"{prefix}{new_lvl}{suffix}"
+
+    return TRAINER_LVL_PATTERN.sub(repl, text)
 
 
 def convert_custom_moves_trainer_parties_to_default_moves(text: str) -> str:
@@ -160,6 +214,38 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="For wild encounters, keep replacements consistent within each map.",
     )
+
+    parser.add_argument(
+        "--level-percent",
+        type=int,
+        default=0,
+        help=(
+            "Scale wild encounter and trainer party levels by a percentage. "
+            "Example: 25 increases levels by 25%%, -20 decreases by 20%%. "
+            "Levels are clamped to 1..100."
+        ),
+    )
+
+    parser.add_argument(
+        "--wild-level-percent",
+        type=int,
+        default=None,
+        help=(
+            "Scale wild encounter levels (min_level/max_level) by a percentage. "
+            "Example: 25 increases levels by 25%%, -20 decreases by 20%%. "
+            "Levels are clamped to 1..100."
+        ),
+    )
+    parser.add_argument(
+        "--trainer-level-percent",
+        type=int,
+        default=None,
+        help=(
+            "Scale trainer party levels (.lvl) by a percentage. "
+            "Example: 25 increases levels by 25%%, -20 decreases by 20%%. "
+            "Levels are clamped to 1..100."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -178,6 +264,11 @@ def main() -> None:
     do_starters = args.all or (args.starters if selected_any else True)
     do_trainers = args.all or (args.trainers if selected_any else True)
 
+    wild_level_percent = args.level_percent if args.wild_level_percent is None else args.wild_level_percent
+    trainer_level_percent = (
+        args.level_percent if args.trainer_level_percent is None else args.trainer_level_percent
+    )
+
     # open species.txt and read all pokemon
     species_path = randomizer_dir / "species.txt"
     all_species = [line.strip() for line in species_path.read_text().splitlines() if line.strip()]
@@ -188,6 +279,8 @@ def main() -> None:
             encounters = randomize_wild_encounters_per_map(encounters, all_species)
         else:
             encounters = randomize_species_in_text(encounters, all_species, per_occurrence=args.per_occurrence)
+
+        encounters = scale_wild_levels_json(encounters, wild_level_percent)
         (repo_root / "src/data/wild_encounters.json").write_text(encounters)
 
     if do_starters:
@@ -198,6 +291,7 @@ def main() -> None:
     if do_trainers:
         trainer_parties = (randomizer_dir / "trainer_parties.h").read_text()
         trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
+        trainer_parties = scale_trainer_party_levels(trainer_parties, trainer_level_percent)
         trainer_parties = convert_custom_moves_trainer_parties_to_default_moves(trainer_parties)
         (repo_root / "src/data/trainer_parties.h").write_text(trainer_parties)
 
