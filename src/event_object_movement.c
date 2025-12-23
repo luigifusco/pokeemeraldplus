@@ -5109,8 +5109,22 @@ static void InitMovementNormal(struct ObjectEvent *objectEvent, struct Sprite *s
 
 static void StartRunningAnim(struct ObjectEvent *objectEvent, struct Sprite *sprite, u8 direction)
 {
+    u8 animNum;
+
+// MOVE_SPEED_FAST_1 is vanilla running/surfing speed.
+// Under WALK_FAST, keep walking vanilla but make running use the faster speed.
+#ifdef WALK_FAST
+    InitNpcForMovement(objectEvent, sprite, direction, MOVE_SPEED_FASTER);
+#else
     InitNpcForMovement(objectEvent, sprite, direction, MOVE_SPEED_FAST_1);
-    SetStepAnimHandleAlternation(objectEvent, sprite, GetRunningDirectionAnimNum(objectEvent->facingDirection));
+#endif
+
+    animNum = GetRunningDirectionAnimNum(objectEvent->facingDirection);
+    // Prime to a valid step pose before alternating.
+    // Without this, at higher speeds the animCmdIndex can end up on a non-step frame,
+    // preventing SetStepAnimHandleAlternation from switching poses.
+    SetStepAnim(objectEvent, sprite, animNum);
+    SetStepAnimHandleAlternation(objectEvent, sprite, animNum);
 }
 
 static bool8 UpdateMovementNormal(struct ObjectEvent *objectEvent, struct Sprite *sprite)

@@ -651,7 +651,10 @@ static void PlayerNotOnBikeMoving(u8 direction, u16 heldKeys)
         return;
     }
 
-    if (!(gPlayerAvatar.flags & PLAYER_AVATAR_FLAG_UNDERWATER) && (heldKeys & B_BUTTON) && FlagGet(FLAG_SYS_B_DASH)
+    if (!(gPlayerAvatar.flags & PLAYER_AVATAR_FLAG_UNDERWATER) && (heldKeys & B_BUTTON)
+#ifndef WALK_FAST
+     && FlagGet(FLAG_SYS_B_DASH)
+#endif
      && IsRunningDisallowed(gObjectEvents[gPlayerAvatar.objectEventId].currentMetatileBehavior) == 0)
     {
         PlayerRun(direction);
@@ -970,11 +973,7 @@ void PlayerSetAnimId(u8 movementActionId, u8 copyableMovement)
 
 void PlayerWalkNormal(u8 direction)
 {
-    #ifdef WALK_FAST
-        PlayerSetAnimId(GetWalkFasterMovementAction(direction), COPY_MOVE_WALK);
-    #else
-        PlayerSetAnimId(GetWalkNormalMovementAction(direction), COPY_MOVE_WALK);
-    #endif
+    PlayerSetAnimId(GetWalkNormalMovementAction(direction), COPY_MOVE_WALK);
 }
 
 void PlayerWalkFast(u8 direction)
