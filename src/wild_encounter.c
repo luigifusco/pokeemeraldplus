@@ -464,7 +464,11 @@ static bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, u8 ar
     // Create a second wild mon for forced double battles.
     // Skip battle types that don't become doubles under FORCE_DOUBLE_BATTLES.
     // Also skip Pike/Pyramid wild battles, which have their own party setup.
-    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_PIKE | BATTLE_TYPE_PYRAMID)))
+    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI
+                              | BATTLE_TYPE_WALLY_TUTORIAL
+                              | BATTLE_TYPE_FIRST_BATTLE
+                              | BATTLE_TYPE_PIKE
+                              | BATTLE_TYPE_PYRAMID)))
     {
         u8 wildMonIndex2;
         u8 level2;
@@ -497,7 +501,11 @@ static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 
     CreateWildMonInSlot(0, wildMonInfo->wildPokemon[wildMonIndex].species, level);
 
 #ifdef FORCE_DOUBLE_BATTLES
-    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_PIKE | BATTLE_TYPE_PYRAMID)))
+    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI
+                              | BATTLE_TYPE_WALLY_TUTORIAL
+                              | BATTLE_TYPE_FIRST_BATTLE
+                              | BATTLE_TYPE_PIKE
+                              | BATTLE_TYPE_PYRAMID)))
     {
         u8 wildMonIndex2 = ChooseWildMonIndex_Fishing(rod);
         u8 level2 = ChooseWildMonLevel(&wildMonInfo->wildPokemon[wildMonIndex2]);
@@ -520,7 +528,11 @@ static bool8 SetUpMassOutbreakEncounter(u8 flags)
         SetMonMoveSlot(&gEnemyParty[0], gSaveBlock1Ptr->outbreakPokemonMoves[i], i);
 
 #ifdef FORCE_DOUBLE_BATTLES
-    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_PIKE | BATTLE_TYPE_PYRAMID)))
+    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI
+                              | BATTLE_TYPE_WALLY_TUTORIAL
+                              | BATTLE_TYPE_FIRST_BATTLE
+                              | BATTLE_TYPE_PIKE
+                              | BATTLE_TYPE_PYRAMID)))
     {
         CreateWildMonInSlot(1, gSaveBlock1Ptr->outbreakPokemonSpecies, gSaveBlock1Ptr->outbreakPokemonLevel);
         for (i = 0; i < MAX_MON_MOVES; i++)
