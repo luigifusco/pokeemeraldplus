@@ -17,6 +17,7 @@
 #include "main.h"
 #include "m4a.h"
 #include "palette.h"
+#include "remote_opponent.h"
 #include "pokeball.h"
 #include "pokemon.h"
 #include "random.h"
@@ -55,6 +56,9 @@ static void OpponentHandlePrintSelectionString(void);
 static void OpponentHandleChooseAction(void);
 static void OpponentHandleYesNoBox(void);
 static void OpponentHandleChooseMove(void);
+#ifdef REMOTE_OPPONENT_MASTER
+static void OpponentHandleChooseMove_RemoteWait(void);
+#endif
 static void OpponentHandleChooseItem(void);
 static void OpponentHandleChoosePokemon(void);
 static void OpponentHandleCmd23(void);
@@ -78,6 +82,16 @@ static void OpponentHandleToggleUnkFlag(void);
 static void OpponentHandleHitAnimation(void);
 static void OpponentHandleCantSwitch(void);
 static void OpponentHandlePlaySE(void);
+
+#ifdef REMOTE_OPPONENT_MASTER
+static u8 sRemoteOppSeq;
+static u8 sRemoteOppExpectedSeq;
+static u16 sRemoteOppTimeout;
+static u16 sRemoteOppConnectTimeout;
+static u16 sRemoteOppResponseTimeout;
+static bool8 sRemoteOppRequestSent;
+static u16 sRemoteOppMoves[4];
+#endif
 static void OpponentHandlePlayFanfareOrBGM(void);
 static void OpponentHandleFaintingCry(void);
 static void OpponentHandleIntroSlide(void);
@@ -1605,6 +1619,26 @@ static void OpponentHandleChooseMove(void)
         else
         {
             u16 move;
+
+#ifdef REMOTE_OPPONENT_MASTER
+            // Emulator-first MVP: for pure wild battles, allow a linked slave to pick the opponent's move slot.
+            // If the link isn't ready (or no reply), we wait briefly (with timeouts) then fall back.
+            sRemoteOppMoves[0] = moveInfo->moves[0];
+            sRemoteOppMoves[1] = moveInfo->moves[1];
+            sRemoteOppMoves[2] = moveInfo->moves[2];
+            sRemoteOppMoves[3] = moveInfo->moves[3];
+
+            sRemoteOppSeq++;
+            sRemoteOppExpectedSeq = sRemoteOppSeq;
+            sRemoteOppTimeout = 0;
+            sRemoteOppConnectTimeout = 0;
+            sRemoteOppResponseTimeout = 0;
+            sRemoteOppRequestSent = FALSE;
+
+            RemoteOpponent_OpenLinkIfNeeded();
+            gBattlerControllerFuncs[gActiveBattler] = OpponentHandleChooseMove_RemoteWait;
+            return;
+#endif
             do
             {
                 chosenMoveId = MOD(Random(), MAX_MON_MOVES);
@@ -1622,6 +1656,87 @@ static void OpponentHandleChooseMove(void)
         }
     }
 }
+
+#ifdef REMOTE_OPPONENT_MASTER
+static void OpponentHandleChooseMove_RemoteWait(void)
+{
+    u8 chosenMoveId;
+    u16 move;
+    u8 moveSlot;
+    struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
+
+    RemoteOpponent_OpenLinkIfNeeded();
+
+    // Phase 1: wait for link to be ready.
+    // This prevents immediate fallback when the slave isn't connected yet.
+    if (!RemoteOpponent_IsReady())
+    {
+        if (++sRemoteOppConnectTimeout > 600) // ~10 seconds @ 60fps
+            goto fallback;
+        return;
+    }
+
+    // Phase 2: send request once.
+    if (!sRemoteOppRequestSent)
+    {
+        if (RemoteOpponent_Master_SendMoveRequest(sRemoteOppExpectedSeq, gActiveBattler, sRemoteOppMoves))
+        {
+            sRemoteOppRequestSent = TRUE;
+            sRemoteOppResponseTimeout = 0;
+        }
+        return;
+    }
+
+    // Phase 3: wait for response.
+    if (RemoteOpponent_Master_TryRecvMoveChoice(sRemoteOppExpectedSeq, &moveSlot))
+    {
+        chosenMoveId = moveSlot & (MAX_MON_MOVES - 1);
+        move = moveInfo->moves[chosenMoveId];
+
+        // Safety: if slave picked an empty slot, fall back to a valid random move.
+        if (move == MOVE_NONE)
+        {
+            do
+            {
+                chosenMoveId = MOD(Random(), MAX_MON_MOVES);
+                move = moveInfo->moves[chosenMoveId];
+            } while (move == MOVE_NONE);
+        }
+
+        if (gBattleMoves[move].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (gActiveBattler << 8));
+        else if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (GetBattlerAtPosition(Random() & 2) << 8));
+        else
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (GetBattlerAtPosition(B_POSITION_PLAYER_LEFT) << 8));
+
+        OpponentBufferExecCompleted();
+        return;
+    }
+
+    // Timeout waiting for response -> fallback to vanilla random move.
+    if (++sRemoteOppResponseTimeout > 180) // ~3 seconds @ 60fps
+        goto fallback;
+    return;
+
+fallback:
+    do
+    {
+        chosenMoveId = MOD(Random(), MAX_MON_MOVES);
+        move = moveInfo->moves[chosenMoveId];
+    } while (move == MOVE_NONE);
+
+    if (gBattleMoves[move].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
+        BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (gActiveBattler << 8));
+    else if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+        BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (GetBattlerAtPosition(Random() & 2) << 8));
+    else
+        BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (GetBattlerAtPosition(B_POSITION_PLAYER_LEFT) << 8));
+
+    OpponentBufferExecCompleted();
+    return;
+}
+#endif
 
 static void OpponentHandleChooseItem(void)
 {

@@ -10,6 +10,14 @@ KEEP_TEMPS  ?= 0
 FILE_NAME := pokeemerald
 BUILD_DIR := build
 
+# Remote opponent (master/slave) build flags (enable with e.g. `make REMOTE_OPPONENT_MASTER=1`)
+REMOTE_OPPONENT_MASTER ?= 0
+REMOTE_OPPONENT_SLAVE ?= 0
+
+ifeq ($(REMOTE_OPPONENT_MASTER)$(REMOTE_OPPONENT_SLAVE),11)
+	$(error REMOTE_OPPONENT_MASTER and REMOTE_OPPONENT_SLAVE cannot both be 1)
+endif
+
 # Builds the ROM using a modern compiler
 MODERN      ?= 0
 # Compares the ROM to a checksum of the original - only makes sense using when non-modern
@@ -67,10 +75,46 @@ else
   CPP := $(PREFIX)cpp
 endif
 
-ROM_NAME := $(FILE_NAME).gba
-OBJ_DIR_NAME := $(BUILD_DIR)/emerald
-MODERN_ROM_NAME := $(FILE_NAME)_modern.gba
-MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern
+# Output ROM name:
+# - Default: uses FILE_NAME (override with e.g. `make FILE_NAME=myhack`)
+# - Or override directly: `make ROM_NAME_OVERRIDE=myrom.gba`
+# - Slave build: hardcoded to slave.gba (per request)
+ROM_NAME_OVERRIDE ?=
+MODERN_ROM_NAME_OVERRIDE ?=
+
+ifeq ($(REMOTE_OPPONENT_SLAVE),1)
+	ROM_NAME := slave.gba
+	MODERN_ROM_NAME := slave_modern.gba
+else
+	ifneq ($(ROM_NAME_OVERRIDE),)
+		ROM_NAME := $(ROM_NAME_OVERRIDE)
+	else ifeq ($(REMOTE_OPPONENT_MASTER),1)
+		ROM_NAME := master.gba
+	else
+		ROM_NAME := $(FILE_NAME).gba
+	endif
+
+	ifneq ($(MODERN_ROM_NAME_OVERRIDE),)
+		MODERN_ROM_NAME := $(MODERN_ROM_NAME_OVERRIDE)
+	else ifeq ($(REMOTE_OPPONENT_MASTER),1)
+		MODERN_ROM_NAME := master_modern.gba
+	else
+		MODERN_ROM_NAME := $(FILE_NAME)_modern.gba
+	endif
+endif
+
+# Object directories. Remote-opponent variants use separate build dirs so changing flags
+# does not accidentally reuse stale objects.
+ifeq ($(REMOTE_OPPONENT_SLAVE),1)
+	OBJ_DIR_NAME := $(BUILD_DIR)/emerald_remote_slave
+	MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern_remote_slave
+else ifeq ($(REMOTE_OPPONENT_MASTER),1)
+	OBJ_DIR_NAME := $(BUILD_DIR)/emerald_remote_master
+	MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern_remote_master
+else
+	OBJ_DIR_NAME := $(BUILD_DIR)/emerald
+	MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern
+endif
 
 ELF_NAME := $(ROM_NAME:.gba=.elf)
 MAP_NAME := $(ROM_NAME:.gba=.map)
@@ -114,6 +158,19 @@ INCLUDE_SCANINC_ARGS := $(INCLUDE_DIRS:%=-I %)
 
 O_LEVEL ?= 2
 CPPFLAGS := $(INCLUDE_CPP_ARGS) -Wno-trigraphs -DMODERN=$(MODERN)
+
+ifeq ($(REMOTE_OPPONENT_MASTER),1)
+	CPPFLAGS += -DREMOTE_OPPONENT_MASTER
+endif
+ifeq ($(REMOTE_OPPONENT_SLAVE),1)
+	CPPFLAGS += -DREMOTE_OPPONENT_SLAVE
+endif
+
+ifeq ($(REMOTE_OPPONENT_SLAVE),1)
+	ifeq ($(COMPARE),1)
+		$(error compare is not supported with REMOTE_OPPONENT_SLAVE=1)
+	endif
+endif
 
 # Optional feature flags (enable with e.g. `make RANDOM_EVOLUTIONS=1`)
 RANDOM_EVOLUTIONS ?= 0

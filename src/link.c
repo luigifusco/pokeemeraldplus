@@ -612,7 +612,12 @@ static void ProcessRecvCmds(u8 unused)
                         if (strcmp(block->magic1, sASCIIGameFreakInc) != 0
                             || strcmp(block->magic2, sASCIIGameFreakInc) != 0)
                         {
-                            SetMainCallback2(CB2_LinkError);
+                            // Some modes intentionally keep link open in the background.
+                            // Respect suppression so those modes can recover by reopening.
+                            if (!gSuppressLinkErrorMessage)
+                                SetMainCallback2(CB2_LinkError);
+                            gLinkErrorOccurred = TRUE;
+                            CloseLink();
                         }
                         else
                         {
@@ -1352,7 +1357,8 @@ void CheckLinkPlayersMatchSaved(void)
         {
             gLinkErrorOccurred = TRUE;
             CloseLink();
-            SetMainCallback2(CB2_LinkError);
+            if (!gSuppressLinkErrorMessage)
+                SetMainCallback2(CB2_LinkError);
         }
     }
 }
