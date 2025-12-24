@@ -91,6 +91,8 @@ static u16 sRemoteOppConnectTimeout;
 static u16 sRemoteOppResponseTimeout;
 static bool8 sRemoteOppRequestSent;
 static u16 sRemoteOppMoves[4];
+static bool8 sRemoteOppFallbackToAI;
+static u32 sRemoteOppLastVBlank;
 #endif
 static void OpponentHandlePlayFanfareOrBGM(void);
 static void OpponentHandleFaintingCry(void);
@@ -1585,6 +1587,35 @@ static void OpponentHandleChooseMove(void)
         u8 chosenMoveId;
         struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
 
+#ifdef REMOTE_OPPONENT_MASTER
+        // Remote opponent mode: let the linked slave pick the opponent's move slot.
+        // Applies to all non-link battles (so it works for trainers too).
+        // If the link isn't ready (or no reply), we wait briefly (with timeouts) then fall back.
+        if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_RECORDED_LINK)))
+        {
+            sRemoteOppMoves[0] = moveInfo->moves[0];
+            sRemoteOppMoves[1] = moveInfo->moves[1];
+            sRemoteOppMoves[2] = moveInfo->moves[2];
+            sRemoteOppMoves[3] = moveInfo->moves[3];
+
+            // For battle types that normally use trainer AI here, preserve that behavior
+            // as the fallback path (instead of random wild logic).
+            sRemoteOppFallbackToAI = (gBattleTypeFlags & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_FIRST_BATTLE | BATTLE_TYPE_SAFARI | BATTLE_TYPE_ROAMER | BATTLE_TYPE_EREADER_TRAINER)) != 0;
+
+            sRemoteOppSeq++;
+            sRemoteOppExpectedSeq = sRemoteOppSeq;
+            sRemoteOppTimeout = 0;
+            sRemoteOppConnectTimeout = 0;
+            sRemoteOppResponseTimeout = 0;
+            sRemoteOppRequestSent = FALSE;
+            sRemoteOppLastVBlank = gMain.vblankCounter1;
+
+            RemoteOpponent_OpenLinkIfNeeded();
+            gBattlerControllerFuncs[gActiveBattler] = OpponentHandleChooseMove_RemoteWait;
+            return;
+        }
+#endif
+
         if (gBattleTypeFlags & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_FIRST_BATTLE | BATTLE_TYPE_SAFARI | BATTLE_TYPE_ROAMER))
         {
 
@@ -1619,26 +1650,6 @@ static void OpponentHandleChooseMove(void)
         else
         {
             u16 move;
-
-#ifdef REMOTE_OPPONENT_MASTER
-            // Emulator-first MVP: for pure wild battles, allow a linked slave to pick the opponent's move slot.
-            // If the link isn't ready (or no reply), we wait briefly (with timeouts) then fall back.
-            sRemoteOppMoves[0] = moveInfo->moves[0];
-            sRemoteOppMoves[1] = moveInfo->moves[1];
-            sRemoteOppMoves[2] = moveInfo->moves[2];
-            sRemoteOppMoves[3] = moveInfo->moves[3];
-
-            sRemoteOppSeq++;
-            sRemoteOppExpectedSeq = sRemoteOppSeq;
-            sRemoteOppTimeout = 0;
-            sRemoteOppConnectTimeout = 0;
-            sRemoteOppResponseTimeout = 0;
-            sRemoteOppRequestSent = FALSE;
-
-            RemoteOpponent_OpenLinkIfNeeded();
-            gBattlerControllerFuncs[gActiveBattler] = OpponentHandleChooseMove_RemoteWait;
-            return;
-#endif
             do
             {
                 chosenMoveId = MOD(Random(), MAX_MON_MOVES);
@@ -1667,11 +1678,22 @@ static void OpponentHandleChooseMove_RemoteWait(void)
 
     RemoteOpponent_OpenLinkIfNeeded();
 
+    // The battle engine may call battler controller funcs multiple times per frame.
+    // Make timeouts advance once per frame (VBlank) to avoid burning through them instantly.
+    if (gMain.vblankCounter1 != sRemoteOppLastVBlank)
+    {
+        sRemoteOppLastVBlank = gMain.vblankCounter1;
+        if (!RemoteOpponent_IsReady())
+            sRemoteOppConnectTimeout++;
+        else if (sRemoteOppRequestSent)
+            sRemoteOppResponseTimeout++;
+    }
+
     // Phase 1: wait for link to be ready.
     // This prevents immediate fallback when the slave isn't connected yet.
     if (!RemoteOpponent_IsReady())
     {
-        if (++sRemoteOppConnectTimeout > 600) // ~10 seconds @ 60fps
+        if (sRemoteOppConnectTimeout > 3600) // ~60 seconds @ 60fps
             goto fallback;
         return;
     }
@@ -1715,11 +1737,45 @@ static void OpponentHandleChooseMove_RemoteWait(void)
     }
 
     // Timeout waiting for response -> fallback to vanilla random move.
-    if (++sRemoteOppResponseTimeout > 180) // ~3 seconds @ 60fps
+    if (sRemoteOppResponseTimeout > 3600) // ~60 seconds @ 60fps
         goto fallback;
     return;
 
 fallback:
+    if (sRemoteOppFallbackToAI)
+    {
+        // Preserve the vanilla AI path for battle types that expect it.
+        BattleAI_SetupAIData(ALL_MOVES_MASK);
+        chosenMoveId = BattleAI_ChooseMoveOrAction();
+
+        switch (chosenMoveId)
+        {
+        case AI_CHOICE_WATCH:
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, B_ACTION_SAFARI_WATCH_CAREFULLY, 0);
+            break;
+        case AI_CHOICE_FLEE:
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, B_ACTION_RUN, 0);
+            break;
+        case 6:
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 15, gBattlerTarget);
+            break;
+        default:
+            if (gBattleMoves[moveInfo->moves[chosenMoveId]].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
+                gBattlerTarget = gActiveBattler;
+            if (gBattleMoves[moveInfo->moves[chosenMoveId]].target & MOVE_TARGET_BOTH)
+            {
+                gBattlerTarget = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+                if (gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+                    gBattlerTarget = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+            }
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (gBattlerTarget << 8));
+            break;
+        }
+
+        OpponentBufferExecCompleted();
+        return;
+    }
+
     do
     {
         chosenMoveId = MOD(Random(), MAX_MON_MOVES);

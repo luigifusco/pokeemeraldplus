@@ -4,12 +4,21 @@
 #ifdef REMOTE_OPPONENT
 
 #include "gpu_regs.h"
+#include "bg.h"
+#include "data.h"
 #include "link.h"
 #include "main.h"
+#include "menu.h"
 #include "palette.h"
 #include "sprite.h"
+#include "string_util.h"
+#include "strings.h"
 #include "task.h"
+#include "text.h"
+#include "text_window.h"
+#include "window.h"
 #include "constants/rgb.h"
+#include "constants/moves.h"
 
 // Chosen to not collide with existing LINKTYPE_* constants.
 #define LINKTYPE_REMOTE_OPPONENT 0xCEFA
@@ -46,6 +55,10 @@ static EWRAM_DATA u8 sSlavePending = FALSE;
 static EWRAM_DATA u8 sSlavePendingSeq = 0;
 static EWRAM_DATA u8 sSlaveSelectedSlot = 0;
 static EWRAM_DATA u16 sSlaveFrameCounter = 0;
+static EWRAM_DATA u8 sSlaveUiLastStatus = 0xFF;
+static EWRAM_DATA u8 sSlaveUiLastPending = 0xFF;
+static EWRAM_DATA u8 sSlaveUiLastSelectedSlot = 0xFF;
+static EWRAM_DATA u16 sSlaveUiMoves[4];
 
 static const u16 sSlaveSlotColors[] =
 {
@@ -54,6 +67,70 @@ static const u16 sSlaveSlotColors[] =
     RGB(0, 0, 24),
     RGB(0, 0, 31),
 };
+
+enum
+{
+    SLAVE_UI_STATUS_NO_CONN,
+    SLAVE_UI_STATUS_NO_REMOTE_PLAYERS,
+    SLAVE_UI_STATUS_NEED_TWO_PLAYERS,
+    SLAVE_UI_STATUS_EXCHANGE_INCOMPLETE,
+    SLAVE_UI_STATUS_READY,
+    SLAVE_UI_STATUS_PENDING,
+};
+
+enum
+{
+    WIN_STATUS,
+    WIN_MOVES,
+};
+
+static const struct BgTemplate sSlaveBgTemplates[] =
+{
+    {
+        .bg = 0,
+        .charBaseIndex = 3,
+        .mapBaseIndex = 31,
+    },
+};
+
+static const struct WindowTemplate sSlaveWindowTemplates[] =
+{
+    {
+        .bg = 0,
+        .tilemapLeft = 1,
+        .tilemapTop = 1,
+        .width = 28,
+        .height = 4,
+        .paletteNum = 14,
+        .baseBlock = 0x001,
+    },
+    {
+        .bg = 0,
+        .tilemapLeft = 1,
+        .tilemapTop = 6,
+        .width = 28,
+        .height = 12,
+        .paletteNum = 14,
+        .baseBlock = 0x001 + (28 * 4),
+    },
+    DUMMY_WIN_TEMPLATE
+};
+
+static const u8 sText_RemoteOpponent[] = _("Remote Opponent");
+static const u8 sText_Status[] = _("Status:");
+static const u8 sText_NoLink[] = _("No link");
+static const u8 sText_WaitingPlayers[] = _("Waiting players");
+static const u8 sText_Exchanging[] = _("Exchanging data");
+static const u8 sText_Ready[] = _("Ready");
+static const u8 sText_ChooseMove[] = _("Choose move");
+static const u8 sText_DpadSelectASend[] = _("DPAD selects, A sends");
+static const u8 sText_BCancels[] = _("B cancels");
+static const u8 sText_Up[] = _("UP");
+static const u8 sText_Right[] = _("RIGHT");
+static const u8 sText_Down[] = _("DOWN");
+static const u8 sText_Left[] = _("LEFT");
+static const u8 sText_Dash[] = _("---");
+static const u8 sText_ColonSpace[] = _(": ");
 
 static void VBlankCB_RemoteOpponentSlave(void)
 {
@@ -66,37 +143,122 @@ static void SetSlaveBackdropColor(u16 color)
     gPlttBufferFaded[0] = color;
 }
 
+static const u8 *GetSlaveStatusText(u8 status)
+{
+    switch (status)
+    {
+    case SLAVE_UI_STATUS_NO_CONN:
+        return sText_NoLink;
+    case SLAVE_UI_STATUS_NO_REMOTE_PLAYERS:
+    case SLAVE_UI_STATUS_NEED_TWO_PLAYERS:
+        return sText_WaitingPlayers;
+    case SLAVE_UI_STATUS_EXCHANGE_INCOMPLETE:
+        return sText_Exchanging;
+    case SLAVE_UI_STATUS_READY:
+        return sText_Ready;
+    case SLAVE_UI_STATUS_PENDING:
+        return sText_ChooseMove;
+    }
+
+    return sText_NoLink;
+}
+
+static void SlaveUi_DrawStatus(u8 status)
+{
+    FillWindowPixelBuffer(WIN_STATUS, PIXEL_FILL(0));
+    AddTextPrinterParameterized(WIN_STATUS, FONT_NORMAL, sText_RemoteOpponent, 0, 1, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(WIN_STATUS, FONT_NORMAL, sText_Status, 0, 17, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(WIN_STATUS, FONT_NORMAL, GetSlaveStatusText(status), 48, 17, TEXT_SKIP_DRAW, NULL);
+    PutWindowTilemap(WIN_STATUS);
+    CopyWindowToVram(WIN_STATUS, COPYWIN_FULL);
+}
+
+static const u8 *GetMoveNameOrDash(u16 move)
+{
+    if (move == MOVE_NONE)
+        return sText_Dash;
+    return gMoveNames[move];
+}
+
+static void SlaveUi_DrawMoves(void)
+{
+    u8 i;
+    u8 y;
+    u8 text[64];
+    static const u8 *const sDirLabels[MAX_MON_MOVES] =
+    {
+        sText_Up,
+        sText_Right,
+        sText_Down,
+        sText_Left,
+    };
+
+    FillWindowPixelBuffer(WIN_MOVES, PIXEL_FILL(0));
+
+    AddTextPrinterParameterized(WIN_MOVES, FONT_NORMAL, sText_DpadSelectASend, 0, 1, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(WIN_MOVES, FONT_NORMAL, sText_BCancels, 0, 17, TEXT_SKIP_DRAW, NULL);
+
+    y = 40;
+    for (i = 0; i < MAX_MON_MOVES; i++)
+    {
+        text[0] = (i == (sSlaveSelectedSlot & 3)) ? '>' : ' ';
+        text[1] = ' ';
+        text[2] = EOS;
+        StringAppend(text, sDirLabels[i]);
+        StringAppend(text, sText_ColonSpace);
+        StringAppend(text, GetMoveNameOrDash(sSlaveUiMoves[i]));
+        AddTextPrinterParameterized(WIN_MOVES, FONT_NORMAL, text, 0, y, TEXT_SKIP_DRAW, NULL);
+        y += 16;
+    }
+
+    PutWindowTilemap(WIN_MOVES);
+    CopyWindowToVram(WIN_MOVES, COPYWIN_FULL);
+}
+
+static void SlaveUi_Init(void)
+{
+    SetGpuReg(REG_OFFSET_DISPCNT, 0);
+    ResetSpriteData();
+    FreeAllSpritePalettes();
+    ResetTasks();
+    ResetBgsAndClearDma3BusyFlags(0);
+    InitBgsFromTemplates(0, sSlaveBgTemplates, ARRAY_COUNT(sSlaveBgTemplates));
+    ResetTempTileDataBuffers();
+
+    if (!InitWindows(sSlaveWindowTemplates))
+        return;
+    DeactivateAllTextPrinters();
+
+    FillBgTilemapBufferRect(0, 0, 0, 0, DISPLAY_TILE_WIDTH, DISPLAY_TILE_HEIGHT, 0);
+    LoadUserWindowBorderGfx(0, 1, BG_PLTT_ID(13));
+    LoadUserWindowBorderGfx_(0, 1, BG_PLTT_ID(13));
+    Menu_LoadStdPal();
+
+    ClearWindowTilemap(WIN_STATUS);
+    ClearWindowTilemap(WIN_MOVES);
+    PutWindowTilemap(WIN_STATUS);
+    PutWindowTilemap(WIN_MOVES);
+
+    ShowBg(0);
+    SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_MODE_0 | DISPCNT_BG0_ON);
+
+    sSlaveUiLastStatus = 0xFF;
+    sSlaveUiLastPending = 0xFF;
+    sSlaveUiLastSelectedSlot = 0xFF;
+    sSlaveUiMoves[0] = MOVE_NONE;
+    sSlaveUiMoves[1] = MOVE_NONE;
+    sSlaveUiMoves[2] = MOVE_NONE;
+    sSlaveUiMoves[3] = MOVE_NONE;
+}
+
 void CB2_InitRemoteOpponentSlave(void)
 {
-    // Minimal init so the slave ROM is visibly alive (the original MVP loop was display-less).
     SetVBlankCallback(NULL);
-    SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_MODE_0);
-    SetGpuReg(REG_OFFSET_BG0HOFS, 0);
-    SetGpuReg(REG_OFFSET_BG0VOFS, 0);
-    SetGpuReg(REG_OFFSET_BG1HOFS, 0);
-    SetGpuReg(REG_OFFSET_BG1VOFS, 0);
-    SetGpuReg(REG_OFFSET_BG2HOFS, 0);
-    SetGpuReg(REG_OFFSET_BG2VOFS, 0);
-    SetGpuReg(REG_OFFSET_BG3HOFS, 0);
-    SetGpuReg(REG_OFFSET_BG3VOFS, 0);
-    SetGpuReg(REG_OFFSET_WIN0H, 0);
-    SetGpuReg(REG_OFFSET_WIN0V, 0);
-    SetGpuReg(REG_OFFSET_WIN1H, 0);
-    SetGpuReg(REG_OFFSET_WIN1V, 0);
-    SetGpuReg(REG_OFFSET_WININ, 0);
-    SetGpuReg(REG_OFFSET_WINOUT, 0);
-    SetGpuReg(REG_OFFSET_BLDCNT, 0);
-    SetGpuReg(REG_OFFSET_BLDALPHA, 0);
-    SetGpuReg(REG_OFFSET_BLDY, 0);
-
     DmaFill16(3, 0, (void *)VRAM, VRAM_SIZE);
     DmaFill32(3, 0, (void *)OAM, OAM_SIZE);
     DmaFill16(3, 0, (void *)PLTT, PLTT_SIZE);
-
     ResetPaletteFade();
-    ResetTasks();
-    ResetSpriteData();
-    FreeAllSpritePalettes();
+    SlaveUi_Init();
 
     sSlaveFrameCounter = 0;
     sSlavePending = FALSE;
@@ -339,6 +501,7 @@ void CB2_RemoteOpponentSlave(void)
     u8 seq;
     u8 battlerId;
     u16 moves[4];
+    u8 uiStatus;
 
     RemoteOpponent_OpenLinkIfNeeded();
 
@@ -347,7 +510,7 @@ void CB2_RemoteOpponentSlave(void)
 
     sSlaveFrameCounter++;
 
-    // Visual status cue via backdrop color:
+    // Visual status cue (color + text):
     // - red: serial link not established
     // - orange: connected but remote player blocks not received yet
     // - yellow: remote players received but player count < 2
@@ -357,26 +520,38 @@ void CB2_RemoteOpponentSlave(void)
     if (!IsLinkConnectionEstablished())
     {
         SetSlaveBackdropColor(RGB(31, 0, 0));
+        uiStatus = SLAVE_UI_STATUS_NO_CONN;
     }
     else if (!gReceivedRemoteLinkPlayers)
     {
         SetSlaveBackdropColor(RGB(31, 12, 0));
+        uiStatus = SLAVE_UI_STATUS_NO_REMOTE_PLAYERS;
     }
     else if (GetLinkPlayerCount_2() < 2)
     {
         SetSlaveBackdropColor(RGB(31, 31, 0));
+        uiStatus = SLAVE_UI_STATUS_NEED_TWO_PLAYERS;
     }
     else if (!IsLinkPlayerDataExchangeComplete())
     {
         SetSlaveBackdropColor(RGB(31, 0, 31));
+        uiStatus = SLAVE_UI_STATUS_EXCHANGE_INCOMPLETE;
     }
     else if (!sSlavePending)
     {
         SetSlaveBackdropColor(RGB(0, 31, 0));
+        uiStatus = SLAVE_UI_STATUS_READY;
     }
     else
     {
         SetSlaveBackdropColor(sSlaveSlotColors[sSlaveSelectedSlot & 3]);
+        uiStatus = SLAVE_UI_STATUS_PENDING;
+    }
+
+    if (uiStatus != sSlaveUiLastStatus)
+    {
+        sSlaveUiLastStatus = uiStatus;
+        SlaveUi_DrawStatus(uiStatus);
     }
 
     // Accept new requests at any time; the latest request wins.
@@ -385,6 +560,13 @@ void CB2_RemoteOpponentSlave(void)
         sSlavePending = TRUE;
         sSlavePendingSeq = seq;
         sSlaveSelectedSlot = 0;
+
+        sSlaveUiMoves[0] = moves[0];
+        sSlaveUiMoves[1] = moves[1];
+        sSlaveUiMoves[2] = moves[2];
+        sSlaveUiMoves[3] = moves[3];
+        SlaveUi_DrawStatus(SLAVE_UI_STATUS_PENDING);
+        SlaveUi_DrawMoves();
     }
 
     if (!sSlavePending)
@@ -403,14 +585,26 @@ void CB2_RemoteOpponentSlave(void)
     else if (gMain.newKeys & DPAD_LEFT)
         sSlaveSelectedSlot = 3;
 
+    if (sSlaveSelectedSlot != sSlaveUiLastSelectedSlot)
+    {
+        sSlaveUiLastSelectedSlot = sSlaveSelectedSlot;
+        SlaveUi_DrawMoves();
+    }
+
     if (gMain.newKeys & A_BUTTON)
     {
         if (RemoteOpponent_Slave_SendMoveChoice(sSlavePendingSeq, sSlaveSelectedSlot))
+        {
             sSlavePending = FALSE;
+            SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
+        }
     }
 
     if (gMain.newKeys & B_BUTTON)
+    {
         sSlavePending = FALSE;
+        SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
+    }
 }
 
 #endif // REMOTE_OPPONENT
