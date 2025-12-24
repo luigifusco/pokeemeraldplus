@@ -6,6 +6,7 @@
 #include "gpu_regs.h"
 #include "bg.h"
 #include "data.h"
+#include "gba/defines.h"
 #include "link.h"
 #include "main.h"
 #include "menu.h"
@@ -17,7 +18,10 @@
 #include "text.h"
 #include "text_window.h"
 #include "window.h"
+#include "battle_main.h"
+#include "pokemon.h"
 #include "constants/rgb.h"
+#include "constants/battle.h"
 #include "constants/moves.h"
 
 // Chosen to not collide with existing LINKTYPE_* constants.
@@ -35,7 +39,9 @@ struct RemoteOppRequest
     u8 seq;
     u8 battlerId;
     u8 unused;
-    u16 moves[4];
+    struct RemoteOpponentMonInfo controlledMon;
+    struct RemoteOpponentMonInfo targetMon;
+    struct RemoteOpponentMoveInfo moveInfo;
 };
 
 struct RemoteOppResponse
@@ -58,7 +64,9 @@ static EWRAM_DATA u16 sSlaveFrameCounter = 0;
 static EWRAM_DATA u8 sSlaveUiLastStatus = 0xFF;
 static EWRAM_DATA u8 sSlaveUiLastPending = 0xFF;
 static EWRAM_DATA u8 sSlaveUiLastSelectedSlot = 0xFF;
-static EWRAM_DATA u16 sSlaveUiMoves[4];
+static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiControlledMon;
+static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiTargetMon;
+static EWRAM_DATA struct RemoteOpponentMoveInfo sSlaveUiMoveInfo;
 
 static const u16 sSlaveSlotColors[] =
 {
@@ -80,15 +88,15 @@ enum
 
 enum
 {
-    WIN_STATUS,
-    WIN_MOVES,
+    WIN_MAIN,
 };
 
 static const struct BgTemplate sSlaveBgTemplates[] =
 {
     {
         .bg = 0,
-        .charBaseIndex = 3,
+        // Use charblock 2 so BG tile graphics don't overlap screenblock 31.
+        .charBaseIndex = 2,
         .mapBaseIndex = 31,
     },
 };
@@ -98,20 +106,12 @@ static const struct WindowTemplate sSlaveWindowTemplates[] =
     {
         .bg = 0,
         .tilemapLeft = 1,
-        .tilemapTop = 1,
+        .tilemapTop = 0,
         .width = 28,
-        .height = 4,
+        .height = 16,
         .paletteNum = 14,
-        .baseBlock = 0x001,
-    },
-    {
-        .bg = 0,
-        .tilemapLeft = 1,
-        .tilemapTop = 6,
-        .width = 28,
-        .height = 12,
-        .paletteNum = 14,
-        .baseBlock = 0x001 + (28 * 4),
+        // Keep tile 0 free/blank (it may be used by the cleared BG tilemap).
+        .baseBlock = 0x014,
     },
     DUMMY_WIN_TEMPLATE
 };
@@ -123,14 +123,28 @@ static const u8 sText_WaitingPlayers[] = _("Waiting players");
 static const u8 sText_Exchanging[] = _("Exchanging data");
 static const u8 sText_Ready[] = _("Ready");
 static const u8 sText_ChooseMove[] = _("Choose move");
-static const u8 sText_DpadSelectASend[] = _("DPAD selects, A sends");
-static const u8 sText_BCancels[] = _("B cancels");
+static const u8 sText_ControlsShort[] = _("A Send  B Cancel");
 static const u8 sText_Up[] = _("UP");
 static const u8 sText_Right[] = _("RIGHT");
 static const u8 sText_Down[] = _("DOWN");
 static const u8 sText_Left[] = _("LEFT");
 static const u8 sText_Dash[] = _("---");
 static const u8 sText_ColonSpace[] = _(": ");
+static const u8 sText_Enemy[] = _("ENEMY ");
+static const u8 sText_You[] = _("YOU ");
+static const u8 sText_SpaceLv[] = _(" Lv");
+static const u8 sText_SpaceHP[] = _(" HP ");
+static const u8 sText_SpacePP[] = _(" PP ");
+static const u8 sText_SpaceType[] = _("TYPE ");
+static const u8 sText_SpaceStatus[] = _(" ");
+static const u8 sText_Slash[] = _("/");
+static const u8 sText_Space[] = _(" ");
+static const u8 sText_SLP[] = _("SLP");
+static const u8 sText_PSN[] = _("PSN");
+static const u8 sText_TOX[] = _("TOX");
+static const u8 sText_BRN[] = _("BRN");
+static const u8 sText_FRZ[] = _("FRZ");
+static const u8 sText_PAR[] = _("PAR");
 
 static void VBlankCB_RemoteOpponentSlave(void)
 {
@@ -165,12 +179,14 @@ static const u8 *GetSlaveStatusText(u8 status)
 
 static void SlaveUi_DrawStatus(u8 status)
 {
-    FillWindowPixelBuffer(WIN_STATUS, PIXEL_FILL(0));
-    AddTextPrinterParameterized(WIN_STATUS, FONT_NORMAL, sText_RemoteOpponent, 0, 1, TEXT_SKIP_DRAW, NULL);
-    AddTextPrinterParameterized(WIN_STATUS, FONT_NORMAL, sText_Status, 0, 17, TEXT_SKIP_DRAW, NULL);
-    AddTextPrinterParameterized(WIN_STATUS, FONT_NORMAL, GetSlaveStatusText(status), 48, 17, TEXT_SKIP_DRAW, NULL);
-    PutWindowTilemap(WIN_STATUS);
-    CopyWindowToVram(WIN_STATUS, COPYWIN_FULL);
+    // FONT_NORMAL is 16px tall; use 16px line spacing to avoid overlap.
+    // Fill with the font BG color so text doesn't appear in "boxes".
+    FillWindowPixelBuffer(WIN_MAIN, PIXEL_FILL(1));
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_RemoteOpponent, 0, 0, 0, NULL);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_Status, 0, 16, 0, NULL);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, GetSlaveStatusText(status), 56, 16, 0, NULL);
+    PutWindowTilemap(WIN_MAIN);
+    CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
 }
 
 static const u8 *GetMoveNameOrDash(u16 move)
@@ -180,11 +196,53 @@ static const u8 *GetMoveNameOrDash(u16 move)
     return gMoveNames[move];
 }
 
+static const u8 *GetStatus1ShortString(u32 status1)
+{
+    if (status1 & STATUS1_SLEEP)
+        return sText_SLP;
+    if (status1 & STATUS1_TOXIC_POISON)
+        return sText_TOX;
+    if (status1 & STATUS1_POISON)
+        return sText_PSN;
+    if (status1 & STATUS1_BURN)
+        return sText_BRN;
+    if (status1 & STATUS1_FREEZE)
+        return sText_FRZ;
+    if (status1 & STATUS1_PARALYSIS)
+        return sText_PAR;
+    return NULL;
+}
+
+static void BuildMonLine(u8 *dst, const u8 *prefix, const struct RemoteOpponentMonInfo *mon)
+{
+    const u8 *statusStr;
+    u8 *ptr;
+
+    ptr = StringCopy(dst, prefix);
+    ptr = StringAppend(ptr, mon->nickname);
+    ptr = StringAppend(ptr, sText_SpaceLv);
+    ptr = ConvertIntToDecimalStringN(ptr, mon->level, STR_CONV_MODE_LEFT_ALIGN, 3);
+    ptr = StringAppend(ptr, sText_SpaceHP);
+    ptr = ConvertIntToDecimalStringN(ptr, mon->hp, STR_CONV_MODE_LEFT_ALIGN, 3);
+    ptr = StringAppend(ptr, sText_Slash);
+    ptr = ConvertIntToDecimalStringN(ptr, mon->maxHp, STR_CONV_MODE_LEFT_ALIGN, 3);
+
+    statusStr = GetStatus1ShortString(mon->status1);
+    if (statusStr != NULL)
+    {
+        ptr = StringAppend(ptr, sText_SpaceStatus);
+        ptr = StringAppend(ptr, statusStr);
+    }
+}
+
 static void SlaveUi_DrawMoves(void)
 {
     u8 i;
     u8 y;
     u8 text[64];
+    u8 line[128];
+    u16 selectedMove;
+    u8 moveType;
     static const u8 *const sDirLabels[MAX_MON_MOVES] =
     {
         sText_Up,
@@ -193,31 +251,65 @@ static void SlaveUi_DrawMoves(void)
         sText_Left,
     };
 
-    FillWindowPixelBuffer(WIN_MOVES, PIXEL_FILL(0));
+    // Layout uses 8 lines at 16px each (fits exactly in a 16-tile window).
+    FillWindowPixelBuffer(WIN_MAIN, PIXEL_FILL(1));
 
-    AddTextPrinterParameterized(WIN_MOVES, FONT_NORMAL, sText_DpadSelectASend, 0, 1, TEXT_SKIP_DRAW, NULL);
-    AddTextPrinterParameterized(WIN_MOVES, FONT_NORMAL, sText_BCancels, 0, 17, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_ChooseMove, 0, 0, 0, NULL);
 
-    y = 40;
+    BuildMonLine(line, sText_Enemy, &sSlaveUiControlledMon);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 16, 0, NULL);
+
+    BuildMonLine(line, sText_You, &sSlaveUiTargetMon);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 32, 0, NULL);
+
+    y = 48;
     for (i = 0; i < MAX_MON_MOVES; i++)
     {
+        u8 *ptr;
+
         text[0] = (i == (sSlaveSelectedSlot & 3)) ? '>' : ' ';
         text[1] = ' ';
         text[2] = EOS;
         StringAppend(text, sDirLabels[i]);
         StringAppend(text, sText_ColonSpace);
-        StringAppend(text, GetMoveNameOrDash(sSlaveUiMoves[i]));
-        AddTextPrinterParameterized(WIN_MOVES, FONT_NORMAL, text, 0, y, TEXT_SKIP_DRAW, NULL);
+        StringAppend(text, GetMoveNameOrDash(sSlaveUiMoveInfo.moves[i]));
+
+        if (sSlaveUiMoveInfo.moves[i] != MOVE_NONE)
+        {
+            ptr = StringAppend(text, sText_SpacePP);
+            ptr = ConvertIntToDecimalStringN(ptr, sSlaveUiMoveInfo.currentPp[i], STR_CONV_MODE_LEFT_ALIGN, 2);
+            ptr = StringAppend(ptr, sText_Slash);
+            ptr = ConvertIntToDecimalStringN(ptr, sSlaveUiMoveInfo.maxPp[i], STR_CONV_MODE_LEFT_ALIGN, 2);
+        }
+        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, text, 0, y, 0, NULL);
         y += 16;
     }
 
-    PutWindowTilemap(WIN_MOVES);
-    CopyWindowToVram(WIN_MOVES, COPYWIN_FULL);
+    // Bottom line: TYPE + controls (keeps everything on-screen without overlap).
+    selectedMove = sSlaveUiMoveInfo.moves[sSlaveSelectedSlot & 3];
+    StringCopy(line, sText_SpaceType);
+    if (selectedMove != MOVE_NONE)
+    {
+        moveType = gBattleMoves[selectedMove].type;
+        StringAppend(line, gTypeNames[moveType]);
+    }
+    else
+    {
+        StringAppend(line, sText_Dash);
+    }
+    StringAppend(line, sText_Space);
+    StringAppend(line, sText_ControlsShort);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 112, 0, NULL);
+
+    PutWindowTilemap(WIN_MAIN);
+    CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
 }
 
 static void SlaveUi_Init(void)
 {
     SetGpuReg(REG_OFFSET_DISPCNT, 0);
+    SetGpuReg(REG_OFFSET_BG0HOFS, 0);
+    SetGpuReg(REG_OFFSET_BG0VOFS, 0);
     ResetSpriteData();
     FreeAllSpritePalettes();
     ResetTasks();
@@ -229,15 +321,24 @@ static void SlaveUi_Init(void)
         return;
     DeactivateAllTextPrinters();
 
-    FillBgTilemapBufferRect(0, 0, 0, 0, DISPLAY_TILE_WIDTH, DISPLAY_TILE_HEIGHT, 0);
-    LoadUserWindowBorderGfx(0, 1, BG_PLTT_ID(13));
-    LoadUserWindowBorderGfx_(0, 1, BG_PLTT_ID(13));
+    // Clear the full BG0 tilemap (32x32) to tile 0. Even though only 30x20 tiles are visible,
+    // a non-zero scroll offset (or other engine state) can reveal off-screen rows/cols.
+    FillBgTilemapBufferRect(0, 0, 0, 0, 32, 32, 0);
     Menu_LoadStdPal();
 
-    ClearWindowTilemap(WIN_STATUS);
-    ClearWindowTilemap(WIN_MOVES);
-    PutWindowTilemap(WIN_STATUS);
-    PutWindowTilemap(WIN_MOVES);
+    // Make absolutely sure BG tile 0 is blank.
+    // If any unoccupied tilemap area points at tile 0, we want it to render empty (not font/border garbage).
+    DmaFill32(3, 0, (void *)BG_CHAR_ADDR(sSlaveBgTemplates[0].charBaseIndex), 32);
+
+    // Push the cleared tilemap buffer to VRAM so there are no leftover tiles.
+    CopyBgTilemapBufferToVram(0);
+
+    ClearWindowTilemap(WIN_MAIN);
+    PutWindowTilemap(WIN_MAIN);
+
+    // Ensure the window tile gfx is initialized in VRAM.
+    FillWindowPixelBuffer(WIN_MAIN, PIXEL_FILL(0));
+    CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
 
     ShowBg(0);
     SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_MODE_0 | DISPCNT_BG0_ON);
@@ -245,10 +346,10 @@ static void SlaveUi_Init(void)
     sSlaveUiLastStatus = 0xFF;
     sSlaveUiLastPending = 0xFF;
     sSlaveUiLastSelectedSlot = 0xFF;
-    sSlaveUiMoves[0] = MOVE_NONE;
-    sSlaveUiMoves[1] = MOVE_NONE;
-    sSlaveUiMoves[2] = MOVE_NONE;
-    sSlaveUiMoves[3] = MOVE_NONE;
+    sSlaveUiMoveInfo.moves[0] = MOVE_NONE;
+    sSlaveUiMoveInfo.moves[1] = MOVE_NONE;
+    sSlaveUiMoveInfo.moves[2] = MOVE_NONE;
+    sSlaveUiMoveInfo.moves[3] = MOVE_NONE;
 }
 
 void CB2_InitRemoteOpponentSlave(void)
@@ -405,7 +506,12 @@ bool32 RemoteOpponent_IsReady(void)
     return TRUE;
 }
 
-bool32 RemoteOpponent_Master_SendMoveRequest(u8 seq, u8 battlerId, const u16 moves[4])
+bool32 RemoteOpponent_Master_SendMoveRequest(
+    u8 seq,
+    u8 battlerId,
+    const struct RemoteOpponentMonInfo *controlledMon,
+    const struct RemoteOpponentMonInfo *targetMon,
+    const struct RemoteOpponentMoveInfo *moveInfo)
 {
     struct RemoteOppRequest req;
 
@@ -419,10 +525,9 @@ bool32 RemoteOpponent_Master_SendMoveRequest(u8 seq, u8 battlerId, const u16 mov
     req.seq = seq;
     req.battlerId = battlerId;
     req.unused = 0;
-    req.moves[0] = moves[0];
-    req.moves[1] = moves[1];
-    req.moves[2] = moves[2];
-    req.moves[3] = moves[3];
+    req.controlledMon = *controlledMon;
+    req.targetMon = *targetMon;
+    req.moveInfo = *moveInfo;
 
     return SendBlock(BitmaskAllOtherLinkPlayers(), &req, sizeof(req));
 }
@@ -451,7 +556,12 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice(u8 expectedSeq, u8 *outMoveSlot)
     return TRUE;
 }
 
-bool32 RemoteOpponent_Slave_TryRecvMoveRequest(u8 *outSeq, u8 *outBattlerId, u16 outMoves[4])
+bool32 RemoteOpponent_Slave_TryRecvMoveRequest(
+    u8 *outSeq,
+    u8 *outBattlerId,
+    struct RemoteOpponentMonInfo *outControlledMon,
+    struct RemoteOpponentMonInfo *outTargetMon,
+    struct RemoteOpponentMoveInfo *outMoveInfo)
 {
     u8 fromId;
     u16 size;
@@ -470,10 +580,9 @@ bool32 RemoteOpponent_Slave_TryRecvMoveRequest(u8 *outSeq, u8 *outBattlerId, u16
 
     *outSeq = req->seq;
     *outBattlerId = req->battlerId;
-    outMoves[0] = req->moves[0];
-    outMoves[1] = req->moves[1];
-    outMoves[2] = req->moves[2];
-    outMoves[3] = req->moves[3];
+    *outControlledMon = req->controlledMon;
+    *outTargetMon = req->targetMon;
+    *outMoveInfo = req->moveInfo;
 
     return TRUE;
 }
@@ -500,7 +609,9 @@ void CB2_RemoteOpponentSlave(void)
 {
     u8 seq;
     u8 battlerId;
-    u16 moves[4];
+    struct RemoteOpponentMonInfo controlledMon;
+    struct RemoteOpponentMonInfo targetMon;
+    struct RemoteOpponentMoveInfo moveInfo;
     u8 uiStatus;
 
     RemoteOpponent_OpenLinkIfNeeded();
@@ -551,21 +662,22 @@ void CB2_RemoteOpponentSlave(void)
     if (uiStatus != sSlaveUiLastStatus)
     {
         sSlaveUiLastStatus = uiStatus;
-        SlaveUi_DrawStatus(uiStatus);
+        if (uiStatus == SLAVE_UI_STATUS_PENDING)
+            SlaveUi_DrawMoves();
+        else
+            SlaveUi_DrawStatus(uiStatus);
     }
 
     // Accept new requests at any time; the latest request wins.
-    if (RemoteOpponent_Slave_TryRecvMoveRequest(&seq, &battlerId, moves))
+    if (RemoteOpponent_Slave_TryRecvMoveRequest(&seq, &battlerId, &controlledMon, &targetMon, &moveInfo))
     {
         sSlavePending = TRUE;
         sSlavePendingSeq = seq;
         sSlaveSelectedSlot = 0;
 
-        sSlaveUiMoves[0] = moves[0];
-        sSlaveUiMoves[1] = moves[1];
-        sSlaveUiMoves[2] = moves[2];
-        sSlaveUiMoves[3] = moves[3];
-        SlaveUi_DrawStatus(SLAVE_UI_STATUS_PENDING);
+        sSlaveUiControlledMon = controlledMon;
+        sSlaveUiTargetMon = targetMon;
+        sSlaveUiMoveInfo = moveInfo;
         SlaveUi_DrawMoves();
     }
 

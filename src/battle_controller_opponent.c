@@ -90,7 +90,9 @@ static u16 sRemoteOppTimeout;
 static u16 sRemoteOppConnectTimeout;
 static u16 sRemoteOppResponseTimeout;
 static bool8 sRemoteOppRequestSent;
-static u16 sRemoteOppMoves[4];
+static struct RemoteOpponentMonInfo sRemoteOppControlledMon;
+static struct RemoteOpponentMonInfo sRemoteOppTargetMon;
+static struct RemoteOpponentMoveInfo sRemoteOppMoveInfo;
 static bool8 sRemoteOppFallbackToAI;
 static u32 sRemoteOppLastVBlank;
 #endif
@@ -1593,10 +1595,40 @@ static void OpponentHandleChooseMove(void)
         // If the link isn't ready (or no reply), we wait briefly (with timeouts) then fall back.
         if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_RECORDED_LINK)))
         {
-            sRemoteOppMoves[0] = moveInfo->moves[0];
-            sRemoteOppMoves[1] = moveInfo->moves[1];
-            sRemoteOppMoves[2] = moveInfo->moves[2];
-            sRemoteOppMoves[3] = moveInfo->moves[3];
+            u8 i;
+            u8 playerBattler;
+
+            // Moves + PP snapshot from the controller payload.
+            for (i = 0; i < MAX_MON_MOVES; i++)
+            {
+                sRemoteOppMoveInfo.moves[i] = moveInfo->moves[i];
+                sRemoteOppMoveInfo.currentPp[i] = moveInfo->currentPp[i];
+                sRemoteOppMoveInfo.maxPp[i] = moveInfo->maxPp[i];
+            }
+            sRemoteOppMoveInfo.monTypes[0] = moveInfo->monTypes[0];
+            sRemoteOppMoveInfo.monTypes[1] = moveInfo->monTypes[1];
+
+            // Controlled battler (the one choosing a move).
+            sRemoteOppControlledMon.species = gBattleMons[gActiveBattler].species;
+            sRemoteOppControlledMon.hp = gBattleMons[gActiveBattler].hp;
+            sRemoteOppControlledMon.maxHp = gBattleMons[gActiveBattler].maxHP;
+            sRemoteOppControlledMon.status1 = gBattleMons[gActiveBattler].status1;
+            sRemoteOppControlledMon.level = gBattleMons[gActiveBattler].level;
+            StringCopyN(sRemoteOppControlledMon.nickname, gBattleMons[gActiveBattler].nickname, POKEMON_NAME_LENGTH);
+            sRemoteOppControlledMon.nickname[POKEMON_NAME_LENGTH] = EOS;
+
+            // Target display: show the first non-absent player battler.
+            playerBattler = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+            if (gAbsentBattlerFlags & gBitTable[playerBattler])
+                playerBattler = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+
+            sRemoteOppTargetMon.species = gBattleMons[playerBattler].species;
+            sRemoteOppTargetMon.hp = gBattleMons[playerBattler].hp;
+            sRemoteOppTargetMon.maxHp = gBattleMons[playerBattler].maxHP;
+            sRemoteOppTargetMon.status1 = gBattleMons[playerBattler].status1;
+            sRemoteOppTargetMon.level = gBattleMons[playerBattler].level;
+            StringCopyN(sRemoteOppTargetMon.nickname, gBattleMons[playerBattler].nickname, POKEMON_NAME_LENGTH);
+            sRemoteOppTargetMon.nickname[POKEMON_NAME_LENGTH] = EOS;
 
             // For battle types that normally use trainer AI here, preserve that behavior
             // as the fallback path (instead of random wild logic).
@@ -1701,7 +1733,12 @@ static void OpponentHandleChooseMove_RemoteWait(void)
     // Phase 2: send request once.
     if (!sRemoteOppRequestSent)
     {
-        if (RemoteOpponent_Master_SendMoveRequest(sRemoteOppExpectedSeq, gActiveBattler, sRemoteOppMoves))
+        if (RemoteOpponent_Master_SendMoveRequest(
+                sRemoteOppExpectedSeq,
+                gActiveBattler,
+                &sRemoteOppControlledMon,
+                &sRemoteOppTargetMon,
+                &sRemoteOppMoveInfo))
         {
             sRemoteOppRequestSent = TRUE;
             sRemoteOppResponseTimeout = 0;
