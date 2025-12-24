@@ -78,7 +78,8 @@ endif
 # Output ROM name:
 # - Default: uses FILE_NAME (override with e.g. `make FILE_NAME=myhack`)
 # - Or override directly: `make ROM_NAME_OVERRIDE=myrom.gba`
-# - Slave build: hardcoded to slave.gba (per request)
+# - Slave build: hardcoded to slave.gba
+# - Master remote-opponent build: uses the normal ROM name (pokeemerald.gba)
 ROM_NAME_OVERRIDE ?=
 MODERN_ROM_NAME_OVERRIDE ?=
 
@@ -88,16 +89,12 @@ ifeq ($(REMOTE_OPPONENT_SLAVE),1)
 else
 	ifneq ($(ROM_NAME_OVERRIDE),)
 		ROM_NAME := $(ROM_NAME_OVERRIDE)
-	else ifeq ($(REMOTE_OPPONENT_MASTER),1)
-		ROM_NAME := master.gba
 	else
 		ROM_NAME := $(FILE_NAME).gba
 	endif
 
 	ifneq ($(MODERN_ROM_NAME_OVERRIDE),)
 		MODERN_ROM_NAME := $(MODERN_ROM_NAME_OVERRIDE)
-	else ifeq ($(REMOTE_OPPONENT_MASTER),1)
-		MODERN_ROM_NAME := master_modern.gba
 	else
 		MODERN_ROM_NAME := $(FILE_NAME)_modern.gba
 	endif
