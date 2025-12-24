@@ -1,5 +1,6 @@
 #include "global.h"
 #include "battle.h"
+#include "battle_ai_switch_items.h"
 #include "battle_ai_script_commands.h"
 #include "battle_anim.h"
 #include "battle_arena.h"
@@ -29,11 +30,92 @@
 #include "util.h"
 #include "window.h"
 #include "constants/battle_anim.h"
+#include "constants/item_effects.h"
 #include "constants/items.h"
 #include "constants/moves.h"
 #include "constants/songs.h"
 #include "constants/trainers.h"
 #include "trainer_hill.h"
+
+static u8 GetRemoteOppAiItemType(u16 itemId, const u8 *itemEffect)
+{
+    if (itemId == ITEM_FULL_RESTORE)
+        return AI_ITEM_FULL_RESTORE;
+    else if (itemEffect != NULL && (itemEffect[4] & ITEM4_HEAL_HP))
+        return AI_ITEM_HEAL_HP;
+    else if (itemEffect != NULL && (itemEffect[3] & ITEM3_STATUS_ALL))
+        return AI_ITEM_CURE_CONDITION;
+    else if (itemEffect != NULL && ((itemEffect[0] & (ITEM0_DIRE_HIT | ITEM0_X_ATTACK)) || itemEffect[1] != 0 || itemEffect[2] != 0))
+        return AI_ITEM_X_STAT;
+    else if (itemEffect != NULL && (itemEffect[3] & ITEM3_GUARD_SPEC))
+        return AI_ITEM_GUARD_SPEC;
+    else
+        return AI_ITEM_NOT_RECOGNIZABLE;
+}
+
+static u8 GetRemoteOppAiHealFlags(u16 itemId, const u8 *itemEffect, u8 battler)
+{
+    u8 flags = 0;
+
+    if (itemEffect == NULL)
+        return 0;
+
+    // Mirror the AI's bitfield usage in battle_ai_switch_items.c.
+    if ((itemEffect[3] & ITEM3_SLEEP) && (gBattleMons[battler].status1 & STATUS1_SLEEP))
+        flags |= (1 << AI_HEAL_SLEEP);
+    if ((itemEffect[3] & ITEM3_POISON) && (gBattleMons[battler].status1 & (STATUS1_POISON | STATUS1_TOXIC_POISON)))
+        flags |= (1 << AI_HEAL_POISON);
+    if ((itemEffect[3] & ITEM3_BURN) && (gBattleMons[battler].status1 & STATUS1_BURN))
+        flags |= (1 << AI_HEAL_BURN);
+    if ((itemEffect[3] & ITEM3_FREEZE) && (gBattleMons[battler].status1 & STATUS1_FREEZE))
+        flags |= (1 << AI_HEAL_FREEZE);
+    if ((itemEffect[3] & ITEM3_PARALYSIS) && (gBattleMons[battler].status1 & STATUS1_PARALYSIS))
+        flags |= (1 << AI_HEAL_PARALYSIS);
+    if ((itemEffect[3] & ITEM3_CONFUSION) && (gBattleMons[battler].status2 & STATUS2_CONFUSION))
+        flags |= (1 << AI_HEAL_CONFUSION);
+
+    // FULL RESTORE also cures status.
+    if (itemId == ITEM_FULL_RESTORE && (gBattleMons[battler].status1 || (gBattleMons[battler].status2 & STATUS2_CONFUSION)))
+    {
+        if (gBattleMons[battler].status1 & STATUS1_SLEEP)
+            flags |= (1 << AI_HEAL_SLEEP);
+        else if (gBattleMons[battler].status1 & (STATUS1_POISON | STATUS1_TOXIC_POISON))
+            flags |= (1 << AI_HEAL_POISON);
+        else if (gBattleMons[battler].status1 & STATUS1_BURN)
+            flags |= (1 << AI_HEAL_BURN);
+        else if (gBattleMons[battler].status1 & STATUS1_FREEZE)
+            flags |= (1 << AI_HEAL_FREEZE);
+        else if (gBattleMons[battler].status1 & STATUS1_PARALYSIS)
+            flags |= (1 << AI_HEAL_PARALYSIS);
+        else if (gBattleMons[battler].status2 & STATUS2_CONFUSION)
+            flags |= (1 << AI_HEAL_CONFUSION);
+    }
+
+    return flags;
+}
+
+static u8 GetRemoteOppAiXStatFlags(const u8 *itemEffect)
+{
+    u8 flags = 0;
+
+    if (itemEffect == NULL)
+        return 0;
+
+    if (itemEffect[0] & ITEM0_X_ATTACK)
+        flags |= (1 << AI_X_ATTACK);
+    if (itemEffect[1] & ITEM1_X_DEFEND)
+        flags |= (1 << AI_X_DEFEND);
+    if (itemEffect[1] & ITEM1_X_SPEED)
+        flags |= (1 << AI_X_SPEED);
+    if (itemEffect[2] & ITEM2_X_SPATK)
+        flags |= (1 << AI_X_SPATK);
+    if (itemEffect[2] & ITEM2_X_ACCURACY)
+        flags |= (1 << AI_X_ACCURACY);
+    if (itemEffect[0] & ITEM0_DIRE_HIT)
+        flags |= (1 << AI_DIRE_HIT);
+
+    return flags;
+}
 
 static void OpponentHandleGetMonData(void);
 static void OpponentHandleGetRawMonData(void);
@@ -1743,6 +1825,55 @@ static void OpponentHandleChooseAction_RemoteWait(void)
                 OpponentBufferExecCompleted();
                 return;
             }
+        }
+
+        if (action == REMOTE_OPP_ACTION_ITEM)
+        {
+            u16 item;
+            const u8 *itemEffect;
+
+            if (gBattleResources != NULL && gBattleResources->battleHistory != NULL
+             && data < MAX_TRAINER_ITEMS)
+            {
+                item = gBattleResources->battleHistory->trainerItems[data];
+                if (item != ITEM_NONE && item >= ITEM_POTION)
+                {
+                    if (gItemEffectTable[item - ITEM_POTION] == NULL)
+                        itemEffect = NULL;
+                    else
+                        itemEffect = gItemEffectTable[item - ITEM_POTION];
+
+                    *(gBattleStruct->AI_itemType + (gActiveBattler / 2)) = GetRemoteOppAiItemType(item, itemEffect);
+
+                    // Populate flags used for battle text/animations.
+                    if (*(gBattleStruct->AI_itemType + (gActiveBattler / 2)) == AI_ITEM_CURE_CONDITION
+                     || item == ITEM_FULL_RESTORE)
+                    {
+                        *(gBattleStruct->AI_itemFlags + (gActiveBattler / 2)) = GetRemoteOppAiHealFlags(item, itemEffect, gActiveBattler);
+                    }
+                    else if (*(gBattleStruct->AI_itemType + (gActiveBattler / 2)) == AI_ITEM_X_STAT)
+                    {
+                        *(gBattleStruct->AI_itemFlags + (gActiveBattler / 2)) = GetRemoteOppAiXStatFlags(itemEffect);
+                    }
+                    else
+                    {
+                        *(gBattleStruct->AI_itemFlags + (gActiveBattler / 2)) = 0;
+                    }
+
+                    // Execute the item use.
+                    *(gBattleStruct->chosenItem + (gActiveBattler / 2) * 2) = item;
+                    gBattleResources->battleHistory->trainerItems[data] = ITEM_NONE;
+
+                    BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, B_ACTION_USE_ITEM, 0);
+                    OpponentBufferExecCompleted();
+                    return;
+                }
+            }
+
+            // Invalid selection: default to fight so we don't deadlock.
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, B_ACTION_USE_MOVE, 0);
+            OpponentBufferExecCompleted();
+            return;
         }
 
         // Default: fight.

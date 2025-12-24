@@ -46,6 +46,7 @@ enum
 {
 	REMOTE_OPP_ACTION_FIGHT = 0,
 	REMOTE_OPP_ACTION_SWITCH = 1,
+	REMOTE_OPP_ACTION_ITEM = 2,
 };
 
 // Special move slot used by the slave to indicate "cancel/back" from the move menu.

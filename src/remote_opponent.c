@@ -18,10 +18,13 @@
 #include "text.h"
 #include "text_window.h"
 #include "window.h"
+#include "battle.h"
 #include "battle_main.h"
+#include "item.h"
 #include "pokemon.h"
 #include "constants/rgb.h"
 #include "constants/battle.h"
+#include "constants/items.h"
 #include "constants/moves.h"
 #include "constants/characters.h"
 
@@ -64,6 +67,7 @@ struct RemoteOppActionRequest
     struct RemoteOpponentMonInfo controlledMon;
     struct RemoteOpponentMonInfo targetMon;
     struct RemoteOpponentPartyInfo party;
+    u16 trainerItems[MAX_TRAINER_ITEMS];
 };
 
 struct RemoteOppActionResponse
@@ -96,6 +100,7 @@ static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiControlledMon;
 static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiTargetMon;
 static EWRAM_DATA struct RemoteOpponentMoveInfo sSlaveUiMoveInfo;
 static EWRAM_DATA struct RemoteOpponentPartyInfo sSlaveUiPartyInfo;
+static EWRAM_DATA u16 sSlaveUiTrainerItems[MAX_TRAINER_ITEMS];
 
 #ifdef REMOTE_OPPONENT_MASTER
 static EWRAM_DATA bool8 sMasterHasCachedPacket = FALSE;
@@ -167,11 +172,13 @@ static const u8 sText_Exchanging[] = _("Exchanging data");
 static const u8 sText_Ready[] = _("Ready");
 static const u8 sText_ChooseMove[] = _("Choose move");
 static const u8 sText_ControlsShort[] = _("A Select  B Back");
-static const u8 sText_ChooseAction[] = _("Party / Switch");
+static const u8 sText_ChooseAction[] = _("Choose action");
 static const u8 sText_Fight[] = _("FIGHT");
+static const u8 sText_Bag[] = _("BAG");
 static const u8 sText_Switch[] = _("SWITCH");
 static const u8 sText_ControlsAction[] = _("A Select  B Cancel");
 static const u8 sText_ControlsParty[] = _("A Switch  B Back");
+static const u8 sText_ControlsBag[] = _("A Use  B Back");
 static const u8 sText_Up[] = _("UP");
 static const u8 sText_Right[] = _("RIGHT");
 static const u8 sText_Down[] = _("DOWN");
@@ -349,11 +356,15 @@ enum
 {
     SLAVE_ACTION_SUBSCREEN_MENU,
     SLAVE_ACTION_SUBSCREEN_PARTY,
+    SLAVE_ACTION_SUBSCREEN_BAG,
 };
 
 static void SlaveUi_DrawActionMenu(void)
 {
     u8 line[128];
+    u8 yFight = 56;
+    u8 yBag = 72;
+    u8 ySwitch = 88;
 
     FillWindowPixelBuffer(WIN_MAIN, PIXEL_FILL(1));
 
@@ -366,12 +377,15 @@ static void SlaveUi_DrawActionMenu(void)
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 32, 0, NULL);
 
     if (sSlaveActionCursor == 0)
-        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, 56, 0, NULL);
+        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, yFight, 0, NULL);
+    else if (sSlaveActionCursor == 1)
+        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, yBag, 0, NULL);
     else
-        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, 72, 0, NULL);
+        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, ySwitch, 0, NULL);
 
-    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_Fight, 8, 56, 0, NULL);
-    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_Switch, 8, 72, 0, NULL);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_Fight, 8, yFight, 0, NULL);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_Bag, 8, yBag, 0, NULL);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_Switch, 8, ySwitch, 0, NULL);
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_ControlsAction, 0, 112, 0, NULL);
 
     PutWindowTilemap(WIN_MAIN);
@@ -442,6 +456,68 @@ static void SlaveUi_DrawParty(void)
     }
 
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_ControlsParty, 0, 112, 0, NULL);
+
+    PutWindowTilemap(WIN_MAIN);
+    CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
+}
+
+static bool8 SlaveUi_IsValidItemSlot(u8 slot)
+{
+    if (slot >= MAX_TRAINER_ITEMS)
+        return FALSE;
+    if (sSlaveUiTrainerItems[slot] == ITEM_NONE)
+        return FALSE;
+    return TRUE;
+}
+
+static void BuildItemLine(u8 *dst, u8 slot)
+{
+    u8 *ptr;
+    u16 itemId;
+
+    dst[0] = CHAR_0 + (slot + 1);
+    dst[1] = CHAR_COLON;
+    dst[2] = CHAR_SPACE;
+    dst[3] = EOS;
+    ptr = dst + 3;
+
+    itemId = sSlaveUiTrainerItems[slot];
+    if (itemId == ITEM_NONE)
+    {
+        StringAppend(ptr, sText_Dash);
+        return;
+    }
+
+    CopyItemName(itemId, ptr);
+}
+
+static void SlaveUi_DrawBag(void)
+{
+    u8 i;
+    u8 y;
+    u8 line[128];
+
+    FillWindowPixelBuffer(WIN_MAIN, PIXEL_FILL(1));
+
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_ChooseAction, 0, 0, 0, NULL);
+
+    BuildMonLine(line, sText_Enemy, &sSlaveUiControlledMon);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 16, 0, NULL);
+
+    BuildMonLine(line, sText_You, &sSlaveUiTargetMon);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 32, 0, NULL);
+
+    y = 48;
+    for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+    {
+        if (i == (sSlaveSelectedSlot % MAX_TRAINER_ITEMS))
+            AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, y, 0, NULL);
+        BuildItemLine(line, i);
+        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 8, y, 0, NULL);
+        y += 16;
+    }
+
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_ControlsBag, 0, 112, 0, NULL);
 
     PutWindowTilemap(WIN_MAIN);
     CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
@@ -775,6 +851,7 @@ bool32 RemoteOpponent_Master_SendActionRequest2(
     const struct RemoteOpponentPartyInfo *partyInfo)
 {
     struct RemoteOppActionRequest req;
+    u8 i;
 
     if (!RemoteOpponent_IsReady())
         return FALSE;
@@ -789,6 +866,17 @@ bool32 RemoteOpponent_Master_SendActionRequest2(
     req.controlledMon = *controlledMon;
     req.targetMon = *targetMon;
     req.party = *partyInfo;
+
+    for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+        req.trainerItems[i] = ITEM_NONE;
+
+#ifdef REMOTE_OPPONENT_MASTER
+    if (gBattleResources != NULL && gBattleResources->battleHistory != NULL)
+    {
+        for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+            req.trainerItems[i] = gBattleResources->battleHistory->trainerItems[i];
+    }
+#endif
 
     return SendBlock(BitmaskAllOtherLinkPlayers(), &req, sizeof(req));
 }
@@ -1052,6 +1140,10 @@ bool32 RemoteOpponent_Slave_TryRecvActionRequest2(
     *outPartyInfo = req->party;
 
 #ifdef REMOTE_OPPONENT_SLAVE
+    CpuCopy16(req->trainerItems, sSlaveUiTrainerItems, sizeof(sSlaveUiTrainerItems));
+#endif
+
+#ifdef REMOTE_OPPONENT_SLAVE
     Slave_ConsumePeekedPacket();
 #endif
     return TRUE;
@@ -1169,6 +1261,8 @@ void CB2_RemoteOpponentSlave(void)
             {
                 if (sSlaveActionSubscreen == SLAVE_ACTION_SUBSCREEN_PARTY)
                     SlaveUi_DrawParty();
+                else if (sSlaveActionSubscreen == SLAVE_ACTION_SUBSCREEN_BAG)
+                    SlaveUi_DrawBag();
                 else
                     SlaveUi_DrawActionMenu();
             }
@@ -1225,7 +1319,20 @@ void CB2_RemoteOpponentSlave(void)
         {
             if (gMain.newKeys & (DPAD_UP | DPAD_DOWN))
             {
-                sSlaveActionCursor ^= 1;
+                if (gMain.newKeys & DPAD_UP)
+                {
+                    if (sSlaveActionCursor > 0)
+                        sSlaveActionCursor--;
+                    else
+                        sSlaveActionCursor = 2;
+                }
+                else
+                {
+                    if (sSlaveActionCursor < 2)
+                        sSlaveActionCursor++;
+                    else
+                        sSlaveActionCursor = 0;
+                }
                 SlaveUi_DrawActionMenu();
             }
 
@@ -1238,6 +1345,13 @@ void CB2_RemoteOpponentSlave(void)
                         sSlavePending = FALSE;
                         SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
                     }
+                }
+                else if (sSlaveActionCursor == 1)
+                {
+                    sSlaveActionSubscreen = SLAVE_ACTION_SUBSCREEN_BAG;
+                    sSlaveUiLastSelectedSlot = 0xFF;
+                    sSlaveSelectedSlot = 0;
+                    SlaveUi_DrawBag();
                 }
                 else
                 {
@@ -1252,7 +1366,7 @@ void CB2_RemoteOpponentSlave(void)
 
             return;
         }
-        else
+        else if (sSlaveActionSubscreen == SLAVE_ACTION_SUBSCREEN_PARTY)
         {
             if (gMain.newKeys & DPAD_UP)
             {
@@ -1277,6 +1391,46 @@ void CB2_RemoteOpponentSlave(void)
                     return;
 
                 if (RemoteOpponent_Slave_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_SWITCH, sSlaveSelectedSlot))
+                {
+                    sSlavePending = FALSE;
+                    SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
+                }
+            }
+
+            if (gMain.newKeys & B_BUTTON)
+            {
+                sSlaveActionSubscreen = SLAVE_ACTION_SUBSCREEN_MENU;
+                SlaveUi_DrawActionMenu();
+            }
+
+            return;
+        }
+        else
+        {
+            // Bag subscreen
+            if (gMain.newKeys & DPAD_UP)
+            {
+                if (sSlaveSelectedSlot > 0)
+                    sSlaveSelectedSlot--;
+            }
+            else if (gMain.newKeys & DPAD_DOWN)
+            {
+                if (sSlaveSelectedSlot + 1 < MAX_TRAINER_ITEMS)
+                    sSlaveSelectedSlot++;
+            }
+
+            if (sSlaveSelectedSlot != sSlaveUiLastSelectedSlot)
+            {
+                sSlaveUiLastSelectedSlot = sSlaveSelectedSlot;
+                SlaveUi_DrawBag();
+            }
+
+            if (gMain.newKeys & A_BUTTON)
+            {
+                if (!SlaveUi_IsValidItemSlot(sSlaveSelectedSlot))
+                    return;
+
+                if (RemoteOpponent_Slave_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_ITEM, sSlaveSelectedSlot))
                 {
                     sSlavePending = FALSE;
                     SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
