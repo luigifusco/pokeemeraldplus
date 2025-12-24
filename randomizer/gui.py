@@ -177,6 +177,7 @@ def main() -> None:
             rand_args.extend(["--trainer-level-percent", str(trainer_pct)])
 
         any_selected = randomize_wild.get() or randomize_starters.get() or randomize_trainers.get()
+        did_scale_levels = (wild_pct != 0) or (trainer_pct != 0)
         if not any_selected:
             rand_args.append("--restore")
         else:
@@ -213,7 +214,10 @@ def main() -> None:
                 return
 
             if not any_selected:
-                log("[success] repo files restored from templates\n")
+                if did_scale_levels:
+                    log("[success] level scaling applied\n")
+                else:
+                    log("[success] repo files restored from templates\n")
             else:
                 log("[success] randomizer completed\n")
 

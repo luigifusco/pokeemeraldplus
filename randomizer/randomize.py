@@ -254,20 +254,36 @@ def main() -> None:
     randomizer_dir = Path(__file__).resolve().parent
     repo_root = randomizer_dir.parent
 
-    restore_originals(randomizer_dir, repo_root)
-
-    if args.restore:
-        return
-
     selected_any = args.all or args.wild or args.starters or args.trainers
-    do_wild = args.all or (args.wild if selected_any else True)
-    do_starters = args.all or (args.starters if selected_any else True)
-    do_trainers = args.all or (args.trainers if selected_any else True)
 
     wild_level_percent = args.level_percent if args.wild_level_percent is None else args.wild_level_percent
     trainer_level_percent = (
         args.level_percent if args.trainer_level_percent is None else args.trainer_level_percent
     )
+
+    restore_originals(randomizer_dir, repo_root)
+
+    if args.restore:
+        # Allow "restore + level scaling" as a convenience mode (used by the GUI):
+        # when no randomization targets are selected, apply only the requested
+        # level scaling on top of the restored (template) files.
+        if not selected_any and (wild_level_percent != 0 or trainer_level_percent != 0):
+            if wild_level_percent != 0:
+                encounters_path = repo_root / "src/data/wild_encounters.json"
+                encounters = encounters_path.read_text()
+                encounters = scale_wild_levels_json(encounters, wild_level_percent)
+                encounters_path.write_text(encounters)
+
+            if trainer_level_percent != 0:
+                parties_path = repo_root / "src/data/trainer_parties.h"
+                parties = parties_path.read_text()
+                parties = scale_trainer_party_levels(parties, trainer_level_percent)
+                parties_path.write_text(parties)
+        return
+
+    do_wild = args.all or (args.wild if selected_any else True)
+    do_starters = args.all or (args.starters if selected_any else True)
+    do_trainers = args.all or (args.trainers if selected_any else True)
 
     # open species.txt and read all pokemon
     species_path = randomizer_dir / "species.txt"
