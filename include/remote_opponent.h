@@ -64,7 +64,10 @@ bool32 RemoteOpponent_Master_SendMoveRequest(
 	u8 seq,
 	u8 battlerId,
 	const struct RemoteOpponentMonInfo *controlledMon,
-	const struct RemoteOpponentMonInfo *targetMon,
+	u8 targetBattlerLeft,
+	const struct RemoteOpponentMonInfo *targetMonLeft,
+	u8 targetBattlerRight,
+	const struct RemoteOpponentMonInfo *targetMonRight,
 	const struct RemoteOpponentMoveInfo *moveInfo);
 
 // MASTER: check for a move response. Returns TRUE when a valid response is received.
@@ -81,7 +84,8 @@ bool32 RemoteOpponent_Master_SendActionRequest2(
 	u8 seq,
 	u8 battlerId,
 	const struct RemoteOpponentMonInfo *controlledMon,
-	const struct RemoteOpponentMonInfo *targetMon,
+	const struct RemoteOpponentMonInfo *targetMonLeft,
+	const struct RemoteOpponentMonInfo *targetMonRight,
 	const struct RemoteOpponentPartyInfo *partyInfo);
 
 // MASTER: check for an action response. Returns TRUE when a valid response is received.
@@ -91,12 +95,15 @@ bool32 RemoteOpponent_Master_TryRecvActionChoice(u8 expectedSeq, u8 *outAction, 
 bool32 RemoteOpponent_Slave_TryRecvMoveRequest(
 	u8 *outSeq,
 	u8 *outBattlerId,
+	u8 *outTargetBattlerLeft,
+	u8 *outTargetBattlerRight,
 	struct RemoteOpponentMonInfo *outControlledMon,
-	struct RemoteOpponentMonInfo *outTargetMon,
+	struct RemoteOpponentMonInfo *outTargetMonLeft,
+	struct RemoteOpponentMonInfo *outTargetMonRight,
 	struct RemoteOpponentMoveInfo *outMoveInfo);
 
 // SLAVE: send selected move slot back to the master.
-bool32 RemoteOpponent_Slave_SendMoveChoice(u8 seq, u8 moveSlot);
+bool32 RemoteOpponent_Slave_SendMoveChoice(u8 seq, u8 moveSlot, u8 targetBattlerId);
 
 // SLAVE: check for an action request. Returns TRUE when a request is received.
 bool32 RemoteOpponent_Slave_TryRecvActionRequest(
@@ -109,16 +116,17 @@ bool32 RemoteOpponent_Slave_TryRecvActionRequest2(
 	u8 *outSeq,
 	u8 *outBattlerId,
 	struct RemoteOpponentMonInfo *outControlledMon,
-	struct RemoteOpponentMonInfo *outTargetMon,
+	struct RemoteOpponentMonInfo *outTargetMonLeft,
+	struct RemoteOpponentMonInfo *outTargetMonRight,
 	struct RemoteOpponentPartyInfo *outPartyInfo);
 
 // SLAVE: send selected action back to the master.
 bool32 RemoteOpponent_Slave_SendActionChoice(u8 seq, u8 action, u8 data);
 
 // Variants that also include battlerId for routing (recommended).
-bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outMoveSlot);
+bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outMoveSlot, u8 *outTargetBattlerId);
 bool32 RemoteOpponent_Master_TryRecvActionChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outAction, u8 *outData);
-bool32 RemoteOpponent_Slave_SendMoveChoice2(u8 seq, u8 battlerId, u8 moveSlot);
+bool32 RemoteOpponent_Slave_SendMoveChoice2(u8 seq, u8 battlerId, u8 moveSlot, u8 targetBattlerId);
 bool32 RemoteOpponent_Slave_SendActionChoice2(u8 seq, u8 battlerId, u8 action, u8 data);
 
 // SLAVE: main callback (boots into this if REMOTE_OPPONENT_SLAVE is set).

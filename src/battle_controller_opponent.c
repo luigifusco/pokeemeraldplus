@@ -183,6 +183,10 @@ static EWRAM_DATA struct RemoteOppWaitState sRemoteOppMoveState[MAX_BATTLERS_COU
 static EWRAM_DATA struct RemoteOppWaitState sRemoteOppActionState[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA struct RemoteOpponentMonInfo sRemoteOppControlledMon[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA struct RemoteOpponentMonInfo sRemoteOppTargetMon[MAX_BATTLERS_COUNT] = {0};
+static EWRAM_DATA struct RemoteOpponentMonInfo sRemoteOppTargetMonLeft[MAX_BATTLERS_COUNT] = {0};
+static EWRAM_DATA struct RemoteOpponentMonInfo sRemoteOppTargetMonRight[MAX_BATTLERS_COUNT] = {0};
+static EWRAM_DATA u8 sRemoteOppTargetBattlerLeft[MAX_BATTLERS_COUNT] = {0};
+static EWRAM_DATA u8 sRemoteOppTargetBattlerRight[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA struct RemoteOpponentMoveInfo sRemoteOppMoveInfo[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA struct RemoteOpponentPartyInfo sRemoteOppParty[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA bool8 sRemoteOppFallbackToAI[MAX_BATTLERS_COUNT] = {0};
@@ -1768,8 +1772,10 @@ static void OpponentHandleChooseAction_RemoteWait(void)
     {
         BuildRemoteOppPartyInfo(&sRemoteOppParty[gActiveBattler]);
 
-        // Include minimal battle HUD info (enemy + player mon) for the slave action menu.
+        // Include minimal battle HUD info (enemy + player mons) for the slave action menu.
         {
+            u8 playerLeft;
+            u8 playerRight;
             u8 playerBattler;
 
             sRemoteOppControlledMon[gActiveBattler].species = gBattleMons[gActiveBattler].species;
@@ -1780,9 +1786,49 @@ static void OpponentHandleChooseAction_RemoteWait(void)
             StringCopyN(sRemoteOppControlledMon[gActiveBattler].nickname, gBattleMons[gActiveBattler].nickname, POKEMON_NAME_LENGTH);
             sRemoteOppControlledMon[gActiveBattler].nickname[POKEMON_NAME_LENGTH] = EOS;
 
-            playerBattler = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+            playerLeft = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+            playerRight = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+
+            if (!(gAbsentBattlerFlags & gBitTable[playerLeft]))
+            {
+                sRemoteOppTargetBattlerLeft[gActiveBattler] = playerLeft;
+                sRemoteOppTargetMonLeft[gActiveBattler].species = gBattleMons[playerLeft].species;
+                sRemoteOppTargetMonLeft[gActiveBattler].hp = gBattleMons[playerLeft].hp;
+                sRemoteOppTargetMonLeft[gActiveBattler].maxHp = gBattleMons[playerLeft].maxHP;
+                sRemoteOppTargetMonLeft[gActiveBattler].status1 = gBattleMons[playerLeft].status1;
+                sRemoteOppTargetMonLeft[gActiveBattler].level = gBattleMons[playerLeft].level;
+                StringCopyN(sRemoteOppTargetMonLeft[gActiveBattler].nickname, gBattleMons[playerLeft].nickname, POKEMON_NAME_LENGTH);
+                sRemoteOppTargetMonLeft[gActiveBattler].nickname[POKEMON_NAME_LENGTH] = EOS;
+            }
+            else
+            {
+                sRemoteOppTargetBattlerLeft[gActiveBattler] = 0xFF;
+                sRemoteOppTargetMonLeft[gActiveBattler].species = SPECIES_NONE;
+                sRemoteOppTargetMonLeft[gActiveBattler].nickname[0] = EOS;
+            }
+
+            if (!(gAbsentBattlerFlags & gBitTable[playerRight]))
+            {
+                sRemoteOppTargetBattlerRight[gActiveBattler] = playerRight;
+                sRemoteOppTargetMonRight[gActiveBattler].species = gBattleMons[playerRight].species;
+                sRemoteOppTargetMonRight[gActiveBattler].hp = gBattleMons[playerRight].hp;
+                sRemoteOppTargetMonRight[gActiveBattler].maxHp = gBattleMons[playerRight].maxHP;
+                sRemoteOppTargetMonRight[gActiveBattler].status1 = gBattleMons[playerRight].status1;
+                sRemoteOppTargetMonRight[gActiveBattler].level = gBattleMons[playerRight].level;
+                StringCopyN(sRemoteOppTargetMonRight[gActiveBattler].nickname, gBattleMons[playerRight].nickname, POKEMON_NAME_LENGTH);
+                sRemoteOppTargetMonRight[gActiveBattler].nickname[POKEMON_NAME_LENGTH] = EOS;
+            }
+            else
+            {
+                sRemoteOppTargetBattlerRight[gActiveBattler] = 0xFF;
+                sRemoteOppTargetMonRight[gActiveBattler].species = SPECIES_NONE;
+                sRemoteOppTargetMonRight[gActiveBattler].nickname[0] = EOS;
+            }
+
+            // Single-target HUD fallback: first non-absent player battler.
+            playerBattler = playerLeft;
             if (gAbsentBattlerFlags & gBitTable[playerBattler])
-                playerBattler = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+                playerBattler = playerRight;
 
             sRemoteOppTargetMon[gActiveBattler].species = gBattleMons[playerBattler].species;
             sRemoteOppTargetMon[gActiveBattler].hp = gBattleMons[playerBattler].hp;
@@ -1797,7 +1843,8 @@ static void OpponentHandleChooseAction_RemoteWait(void)
                 state->expectedSeq,
                 gActiveBattler,
                 &sRemoteOppControlledMon[gActiveBattler],
-                &sRemoteOppTargetMon[gActiveBattler],
+                &sRemoteOppTargetMonLeft[gActiveBattler],
+                &sRemoteOppTargetMonRight[gActiveBattler],
                 &sRemoteOppParty[gActiveBattler]))
         {
             state->requestSent = TRUE;
@@ -1919,6 +1966,8 @@ static void OpponentHandleChooseMove(void)
         if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_RECORDED_LINK)))
         {
             u8 i;
+            u8 playerLeft;
+            u8 playerRight;
             u8 playerBattler;
             struct RemoteOppWaitState *state = &sRemoteOppMoveState[gActiveBattler];
 
@@ -1941,10 +1990,50 @@ static void OpponentHandleChooseMove(void)
             StringCopyN(sRemoteOppControlledMon[gActiveBattler].nickname, gBattleMons[gActiveBattler].nickname, POKEMON_NAME_LENGTH);
             sRemoteOppControlledMon[gActiveBattler].nickname[POKEMON_NAME_LENGTH] = EOS;
 
-            // Target display: show the first non-absent player battler.
-            playerBattler = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+            // Target candidates (for doubles target selection): player left + player right.
+            playerLeft = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+            playerRight = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+
+            if (!(gAbsentBattlerFlags & gBitTable[playerLeft]))
+            {
+                sRemoteOppTargetBattlerLeft[gActiveBattler] = playerLeft;
+                sRemoteOppTargetMonLeft[gActiveBattler].species = gBattleMons[playerLeft].species;
+                sRemoteOppTargetMonLeft[gActiveBattler].hp = gBattleMons[playerLeft].hp;
+                sRemoteOppTargetMonLeft[gActiveBattler].maxHp = gBattleMons[playerLeft].maxHP;
+                sRemoteOppTargetMonLeft[gActiveBattler].status1 = gBattleMons[playerLeft].status1;
+                sRemoteOppTargetMonLeft[gActiveBattler].level = gBattleMons[playerLeft].level;
+                StringCopyN(sRemoteOppTargetMonLeft[gActiveBattler].nickname, gBattleMons[playerLeft].nickname, POKEMON_NAME_LENGTH);
+                sRemoteOppTargetMonLeft[gActiveBattler].nickname[POKEMON_NAME_LENGTH] = EOS;
+            }
+            else
+            {
+                sRemoteOppTargetBattlerLeft[gActiveBattler] = 0xFF;
+                sRemoteOppTargetMonLeft[gActiveBattler].species = SPECIES_NONE;
+                sRemoteOppTargetMonLeft[gActiveBattler].nickname[0] = EOS;
+            }
+
+            if (!(gAbsentBattlerFlags & gBitTable[playerRight]))
+            {
+                sRemoteOppTargetBattlerRight[gActiveBattler] = playerRight;
+                sRemoteOppTargetMonRight[gActiveBattler].species = gBattleMons[playerRight].species;
+                sRemoteOppTargetMonRight[gActiveBattler].hp = gBattleMons[playerRight].hp;
+                sRemoteOppTargetMonRight[gActiveBattler].maxHp = gBattleMons[playerRight].maxHP;
+                sRemoteOppTargetMonRight[gActiveBattler].status1 = gBattleMons[playerRight].status1;
+                sRemoteOppTargetMonRight[gActiveBattler].level = gBattleMons[playerRight].level;
+                StringCopyN(sRemoteOppTargetMonRight[gActiveBattler].nickname, gBattleMons[playerRight].nickname, POKEMON_NAME_LENGTH);
+                sRemoteOppTargetMonRight[gActiveBattler].nickname[POKEMON_NAME_LENGTH] = EOS;
+            }
+            else
+            {
+                sRemoteOppTargetBattlerRight[gActiveBattler] = 0xFF;
+                sRemoteOppTargetMonRight[gActiveBattler].species = SPECIES_NONE;
+                sRemoteOppTargetMonRight[gActiveBattler].nickname[0] = EOS;
+            }
+
+            // Target display (for HUD): show the first non-absent player battler.
+            playerBattler = playerLeft;
             if (gAbsentBattlerFlags & gBitTable[playerBattler])
-                playerBattler = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+                playerBattler = playerRight;
 
             sRemoteOppTargetMon[gActiveBattler].species = gBattleMons[playerBattler].species;
             sRemoteOppTargetMon[gActiveBattler].hp = gBattleMons[playerBattler].hp;
@@ -2029,6 +2118,7 @@ static void OpponentHandleChooseMove_RemoteWait(void)
     u8 chosenMoveId;
     u16 move;
     u8 moveSlot;
+    u8 targetBattlerId;
     struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
     struct RemoteOppWaitState *state = &sRemoteOppMoveState[gActiveBattler];
 
@@ -2061,7 +2151,10 @@ static void OpponentHandleChooseMove_RemoteWait(void)
                 state->expectedSeq,
                 gActiveBattler,
                 &sRemoteOppControlledMon[gActiveBattler],
-                &sRemoteOppTargetMon[gActiveBattler],
+                sRemoteOppTargetBattlerLeft[gActiveBattler],
+                &sRemoteOppTargetMonLeft[gActiveBattler],
+                sRemoteOppTargetBattlerRight[gActiveBattler],
+                &sRemoteOppTargetMonRight[gActiveBattler],
                 &sRemoteOppMoveInfo[gActiveBattler]))
         {
             state->requestSent = TRUE;
@@ -2071,7 +2164,7 @@ static void OpponentHandleChooseMove_RemoteWait(void)
     }
 
     // Phase 3: wait for response.
-    if (RemoteOpponent_Master_TryRecvMoveChoice2(state->expectedSeq, gActiveBattler, &moveSlot))
+    if (RemoteOpponent_Master_TryRecvMoveChoice2(state->expectedSeq, gActiveBattler, &moveSlot, &targetBattlerId))
     {
         // Slave requested cancel/back from the move menu.
         // Use the vanilla cancel sentinel (0xFFFF) so the engine re-prompts for action.
@@ -2095,12 +2188,28 @@ static void OpponentHandleChooseMove_RemoteWait(void)
             } while (move == MOVE_NONE);
         }
 
-        if (gBattleMoves[move].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
-            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (gActiveBattler << 8));
-        else if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
-            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (GetBattlerAtPosition(Random() & 2) << 8));
-        else
-            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (GetBattlerAtPosition(B_POSITION_PLAYER_LEFT) << 8));
+        {
+            u8 chosenTarget;
+            u8 left = sRemoteOppTargetBattlerLeft[gActiveBattler];
+            u8 right = sRemoteOppTargetBattlerRight[gActiveBattler];
+            bool8 leftValid = (left != 0xFF) && (sRemoteOppTargetMonLeft[gActiveBattler].species != SPECIES_NONE) && !(gAbsentBattlerFlags & gBitTable[left]);
+            bool8 rightValid = (right != 0xFF) && (sRemoteOppTargetMonRight[gActiveBattler].species != SPECIES_NONE) && !(gAbsentBattlerFlags & gBitTable[right]);
+
+            if (gBattleMoves[move].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
+                chosenTarget = gActiveBattler;
+            else if (gBattleMoves[move].target & MOVE_TARGET_BOTH)
+                chosenTarget = leftValid ? left : right;
+            else if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+            {
+                chosenTarget = targetBattlerId;
+                if (!((chosenTarget == left && leftValid) || (chosenTarget == right && rightValid)))
+                    chosenTarget = leftValid ? left : rightValid ? right : GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+            }
+            else
+                chosenTarget = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, (chosenMoveId) | (chosenTarget << 8));
+        }
 
         OpponentBufferExecCompleted();
         return;

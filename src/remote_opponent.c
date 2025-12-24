@@ -45,8 +45,12 @@ struct RemoteOppRequest
     u8 seq;
     u8 battlerId;
     u8 unused;
+    u8 targetBattlerLeft;
+    u8 targetBattlerRight;
+    u8 unused2[2];
     struct RemoteOpponentMonInfo controlledMon;
-    struct RemoteOpponentMonInfo targetMon;
+    struct RemoteOpponentMonInfo targetMonLeft;
+    struct RemoteOpponentMonInfo targetMonRight;
     struct RemoteOpponentMoveInfo moveInfo;
 };
 
@@ -56,6 +60,8 @@ struct RemoteOppResponse
     u8 seq;
     u8 battlerId;
     u8 moveSlot;
+    u8 targetBattlerId;
+    u8 unused;
 };
 
 struct RemoteOppActionRequest
@@ -65,7 +71,8 @@ struct RemoteOppActionRequest
     u8 battlerId;
     u8 unused;
     struct RemoteOpponentMonInfo controlledMon;
-    struct RemoteOpponentMonInfo targetMon;
+    struct RemoteOpponentMonInfo targetMonLeft;
+    struct RemoteOpponentMonInfo targetMonRight;
     struct RemoteOpponentPartyInfo party;
     u16 trainerItems[MAX_TRAINER_ITEMS];
 };
@@ -101,6 +108,11 @@ static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiTargetMon;
 static EWRAM_DATA struct RemoteOpponentMoveInfo sSlaveUiMoveInfo;
 static EWRAM_DATA struct RemoteOpponentPartyInfo sSlaveUiPartyInfo;
 static EWRAM_DATA u16 sSlaveUiTrainerItems[MAX_TRAINER_ITEMS];
+static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiTargetMonLeft;
+static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiTargetMonRight;
+static EWRAM_DATA u8 sSlaveUiTargetBattlerLeft = 0;
+static EWRAM_DATA u8 sSlaveUiTargetBattlerRight = 0;
+static EWRAM_DATA u8 sSlaveSelectedTargetBattler = 0;
 
 #ifdef REMOTE_OPPONENT_MASTER
 static EWRAM_DATA bool8 sMasterHasCachedPacket = FALSE;
@@ -171,7 +183,7 @@ static const u8 sText_WaitingPlayers[] = _("Waiting players");
 static const u8 sText_Exchanging[] = _("Exchanging data");
 static const u8 sText_Ready[] = _("Ready");
 static const u8 sText_ChooseMove[] = _("Choose move");
-static const u8 sText_ControlsShort[] = _("A Select  B Back");
+static const u8 sText_ControlsShort[] = _("A Select  B Back  L/R Target");
 static const u8 sText_ChooseAction[] = _("Choose action");
 static const u8 sText_Fight[] = _("FIGHT");
 static const u8 sText_Bag[] = _("BAG");
@@ -186,7 +198,6 @@ static const u8 sText_Left[] = _("LEFT");
 static const u8 sText_Dash[] = _("---");
 static const u8 sText_ColonSpace[] = _(": ");
 static const u8 sText_Enemy[] = _("ENEMY ");
-static const u8 sText_You[] = _("YOU ");
 static const u8 sText_SpaceLv[] = _(" Lv");
 static const u8 sText_SpaceHP[] = _(" HP ");
 static const u8 sText_SpacePP[] = _(" PP ");
@@ -194,12 +205,20 @@ static const u8 sText_SpaceType[] = _("TYPE ");
 static const u8 sText_SpaceStatus[] = _(" ");
 static const u8 sText_Slash[] = _("/");
 static const u8 sText_Space[] = _(" ");
+static const u8 sText_SpaceSlashSpace[] = _(" / ");
 static const u8 sText_SLP[] = _("SLP");
 static const u8 sText_PSN[] = _("PSN");
 static const u8 sText_TOX[] = _("TOX");
 static const u8 sText_BRN[] = _("BRN");
 static const u8 sText_FRZ[] = _("FRZ");
 static const u8 sText_PAR[] = _("PAR");
+
+static const u8 *GetMonSpeciesNameOrDash(const struct RemoteOpponentMonInfo *mon)
+{
+    if (mon->species == SPECIES_NONE)
+        return sText_Dash;
+    return gSpeciesNames[mon->species];
+}
 
 static void VBlankCB_RemoteOpponentSlave(void)
 {
@@ -273,8 +292,15 @@ static void BuildMonLine(u8 *dst, const u8 *prefix, const struct RemoteOpponentM
     const u8 *statusStr;
     u8 *ptr;
 
+    if (mon->species == SPECIES_NONE)
+    {
+        ptr = StringCopy(dst, prefix);
+        StringAppend(ptr, sText_Dash);
+        return;
+    }
+
     ptr = StringCopy(dst, prefix);
-    ptr = StringAppend(ptr, mon->nickname);
+    ptr = StringAppend(ptr, GetMonSpeciesNameOrDash(mon));
     ptr = StringAppend(ptr, sText_SpaceLv);
     ptr = ConvertIntToDecimalStringN(ptr, mon->level, STR_CONV_MODE_LEFT_ALIGN, 3);
     ptr = StringAppend(ptr, sText_SpaceHP);
@@ -287,6 +313,75 @@ static void BuildMonLine(u8 *dst, const u8 *prefix, const struct RemoteOpponentM
     {
         ptr = StringAppend(ptr, sText_SpaceStatus);
         ptr = StringAppend(ptr, statusStr);
+    }
+}
+
+static void BuildMonHpSnippet(u8 *dst, const struct RemoteOpponentMonInfo *mon)
+{
+    u8 *ptr;
+
+    if (mon->species == SPECIES_NONE)
+    {
+        StringCopy(dst, sText_Dash);
+        return;
+    }
+
+    ptr = StringCopy(dst, GetMonSpeciesNameOrDash(mon));
+    ptr = StringAppend(ptr, sText_SpaceHP);
+    ptr = ConvertIntToDecimalStringN(ptr, mon->hp, STR_CONV_MODE_LEFT_ALIGN, 3);
+    ptr = StringAppend(ptr, sText_Slash);
+    ptr = ConvertIntToDecimalStringN(ptr, mon->maxHp, STR_CONV_MODE_LEFT_ALIGN, 3);
+}
+
+static void BuildYouMonsLine(u8 *dst)
+{
+    u8 left[64];
+    u8 right[64];
+
+    BuildMonHpSnippet(left, &sSlaveUiTargetMonLeft);
+    BuildMonHpSnippet(right, &sSlaveUiTargetMonRight);
+
+    dst[0] = EOS;
+    StringAppend(dst, left);
+    if (sSlaveUiTargetMonRight.species != SPECIES_NONE)
+    {
+        StringAppend(dst, sText_SpaceSlashSpace);
+        StringAppend(dst, right);
+    }
+}
+
+static void BuildYouMonsLineForMoveMenu(u8 *dst)
+{
+    u8 left[64];
+    u8 right[64];
+    bool8 hasRight;
+    bool8 targetIsRight;
+
+    BuildMonHpSnippet(left, &sSlaveUiTargetMonLeft);
+    BuildMonHpSnippet(right, &sSlaveUiTargetMonRight);
+
+    hasRight = (sSlaveUiTargetMonRight.species != SPECIES_NONE);
+    targetIsRight = (hasRight && sSlaveSelectedTargetBattler == sSlaveUiTargetBattlerRight);
+
+    dst[0] = EOS;
+
+    // Always reserve space for a marker before each mon to keep the layout stable.
+    if (!targetIsRight)
+        StringAppend(dst, gText_SelectorArrow2);
+    else
+        StringAppend(dst, sText_Space);
+    StringAppend(dst, sText_Space);
+    StringAppend(dst, left);
+
+    if (hasRight)
+    {
+        StringAppend(dst, sText_SpaceSlashSpace);
+        if (targetIsRight)
+            StringAppend(dst, gText_SelectorArrow2);
+        else
+            StringAppend(dst, sText_Space);
+        StringAppend(dst, sText_Space);
+        StringAppend(dst, right);
     }
 }
 
@@ -307,7 +402,7 @@ static void SlaveUi_DrawMoves(void)
     BuildMonLine(line, sText_Enemy, &sSlaveUiControlledMon);
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 16, 0, NULL);
 
-    BuildMonLine(line, sText_You, &sSlaveUiTargetMon);
+    BuildYouMonsLineForMoveMenu(line);
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 32, 0, NULL);
 
     y = 48;
@@ -332,7 +427,7 @@ static void SlaveUi_DrawMoves(void)
         y += 16;
     }
 
-    // Bottom line: TYPE + controls (keeps everything on-screen without overlap).
+    // Bottom line: TYPE + controls (target is indicated inline on the player line).
     selectedMove = sSlaveUiMoveInfo.moves[sSlaveSelectedSlot & 3];
     StringCopy(line, sText_SpaceType);
     if (selectedMove != MOVE_NONE)
@@ -344,6 +439,7 @@ static void SlaveUi_DrawMoves(void)
     {
         StringAppend(line, sText_Dash);
     }
+
     StringAppend(line, sText_Space);
     StringAppend(line, sText_ControlsShort);
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 112, 0, NULL);
@@ -373,7 +469,7 @@ static void SlaveUi_DrawActionMenu(void)
     BuildMonLine(line, sText_Enemy, &sSlaveUiControlledMon);
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 16, 0, NULL);
 
-    BuildMonLine(line, sText_You, &sSlaveUiTargetMon);
+    BuildYouMonsLine(line);
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 32, 0, NULL);
 
     if (sSlaveActionCursor == 0)
@@ -419,7 +515,7 @@ static void BuildPartyLine(u8 *dst, u8 slot, const struct RemoteOpponentPartyInf
         return;
     }
 
-    ptr = StringAppend(ptr, mon->nickname);
+    ptr = StringAppend(ptr, gSpeciesNames[mon->species]);
     ptr = StringAppend(ptr, sText_SpaceLv);
     ptr = ConvertIntToDecimalStringN(ptr, mon->level, STR_CONV_MODE_LEFT_ALIGN, 3);
     ptr = StringAppend(ptr, sText_SpaceHP);
@@ -504,7 +600,7 @@ static void SlaveUi_DrawBag(void)
     BuildMonLine(line, sText_Enemy, &sSlaveUiControlledMon);
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 16, 0, NULL);
 
-    BuildMonLine(line, sText_You, &sSlaveUiTargetMon);
+    BuildYouMonsLine(line);
     AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 32, 0, NULL);
 
     y = 48;
@@ -840,14 +936,15 @@ bool32 RemoteOpponent_Master_SendActionRequest(
     // Backwards-compatible wrapper: no HUD info.
     struct RemoteOpponentMonInfo dummyMon;
     CpuFill16(0, &dummyMon, sizeof(dummyMon));
-    return RemoteOpponent_Master_SendActionRequest2(seq, battlerId, &dummyMon, &dummyMon, partyInfo);
+    return RemoteOpponent_Master_SendActionRequest2(seq, battlerId, &dummyMon, &dummyMon, &dummyMon, partyInfo);
 }
 
 bool32 RemoteOpponent_Master_SendActionRequest2(
     u8 seq,
     u8 battlerId,
     const struct RemoteOpponentMonInfo *controlledMon,
-    const struct RemoteOpponentMonInfo *targetMon,
+    const struct RemoteOpponentMonInfo *targetMonLeft,
+    const struct RemoteOpponentMonInfo *targetMonRight,
     const struct RemoteOpponentPartyInfo *partyInfo)
 {
     struct RemoteOppActionRequest req;
@@ -864,7 +961,8 @@ bool32 RemoteOpponent_Master_SendActionRequest2(
     req.battlerId = battlerId;
     req.unused = 0;
     req.controlledMon = *controlledMon;
-    req.targetMon = *targetMon;
+    req.targetMonLeft = *targetMonLeft;
+    req.targetMonRight = *targetMonRight;
     req.party = *partyInfo;
 
     for (i = 0; i < MAX_TRAINER_ITEMS; i++)
@@ -961,7 +1059,10 @@ bool32 RemoteOpponent_Master_SendMoveRequest(
     u8 seq,
     u8 battlerId,
     const struct RemoteOpponentMonInfo *controlledMon,
-    const struct RemoteOpponentMonInfo *targetMon,
+    u8 targetBattlerLeft,
+    const struct RemoteOpponentMonInfo *targetMonLeft,
+    u8 targetBattlerRight,
+    const struct RemoteOpponentMonInfo *targetMonRight,
     const struct RemoteOpponentMoveInfo *moveInfo)
 {
     struct RemoteOppRequest req;
@@ -976,8 +1077,13 @@ bool32 RemoteOpponent_Master_SendMoveRequest(
     req.seq = seq;
     req.battlerId = battlerId;
     req.unused = 0;
+    req.targetBattlerLeft = targetBattlerLeft;
+    req.targetBattlerRight = targetBattlerRight;
+    req.unused2[0] = 0;
+    req.unused2[1] = 0;
     req.controlledMon = *controlledMon;
-    req.targetMon = *targetMon;
+    req.targetMonLeft = *targetMonLeft;
+    req.targetMonRight = *targetMonRight;
     req.moveInfo = *moveInfo;
 
     return SendBlock(BitmaskAllOtherLinkPlayers(), &req, sizeof(req));
@@ -1016,7 +1122,7 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice(u8 expectedSeq, u8 *outMoveSlot)
     return TRUE;
 }
 
-bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outMoveSlot)
+bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outMoveSlot, u8 *outTargetBattlerId)
 {
     u8 fromId;
     u16 size;
@@ -1041,7 +1147,6 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattl
         return FALSE;
     if (resp->seq != expectedSeq)
     {
-        // Stale response for this battler: consume+discard so it can't block the cache forever.
 #ifdef REMOTE_OPPONENT_MASTER
         Master_ConsumePeekedPacket();
 #endif
@@ -1049,6 +1154,7 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattl
     }
 
     *outMoveSlot = resp->moveSlot;
+    *outTargetBattlerId = resp->targetBattlerId;
 
 #ifdef REMOTE_OPPONENT_MASTER
     Master_ConsumePeekedPacket();
@@ -1059,8 +1165,11 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattl
 bool32 RemoteOpponent_Slave_TryRecvMoveRequest(
     u8 *outSeq,
     u8 *outBattlerId,
+    u8 *outTargetBattlerLeft,
+    u8 *outTargetBattlerRight,
     struct RemoteOpponentMonInfo *outControlledMon,
-    struct RemoteOpponentMonInfo *outTargetMon,
+    struct RemoteOpponentMonInfo *outTargetMonLeft,
+    struct RemoteOpponentMonInfo *outTargetMonRight,
     struct RemoteOpponentMoveInfo *outMoveInfo)
 {
     u8 fromId;
@@ -1085,8 +1194,11 @@ bool32 RemoteOpponent_Slave_TryRecvMoveRequest(
 
     *outSeq = req->seq;
     *outBattlerId = req->battlerId;
+    *outTargetBattlerLeft = req->targetBattlerLeft;
+    *outTargetBattlerRight = req->targetBattlerRight;
     *outControlledMon = req->controlledMon;
-    *outTargetMon = req->targetMon;
+    *outTargetMonLeft = req->targetMonLeft;
+    *outTargetMonRight = req->targetMonRight;
     *outMoveInfo = req->moveInfo;
 
 #ifdef REMOTE_OPPONENT_SLAVE
@@ -1102,15 +1214,17 @@ bool32 RemoteOpponent_Slave_TryRecvActionRequest(
 {
     // Backwards-compatible wrapper: ignore HUD info.
     struct RemoteOpponentMonInfo controlledMon;
-    struct RemoteOpponentMonInfo targetMon;
-    return RemoteOpponent_Slave_TryRecvActionRequest2(outSeq, outBattlerId, &controlledMon, &targetMon, outPartyInfo);
+    struct RemoteOpponentMonInfo targetMonLeft;
+    struct RemoteOpponentMonInfo targetMonRight;
+    return RemoteOpponent_Slave_TryRecvActionRequest2(outSeq, outBattlerId, &controlledMon, &targetMonLeft, &targetMonRight, outPartyInfo);
 }
 
 bool32 RemoteOpponent_Slave_TryRecvActionRequest2(
     u8 *outSeq,
     u8 *outBattlerId,
     struct RemoteOpponentMonInfo *outControlledMon,
-    struct RemoteOpponentMonInfo *outTargetMon,
+    struct RemoteOpponentMonInfo *outTargetMonLeft,
+    struct RemoteOpponentMonInfo *outTargetMonRight,
     struct RemoteOpponentPartyInfo *outPartyInfo)
 {
     u8 fromId;
@@ -1136,7 +1250,8 @@ bool32 RemoteOpponent_Slave_TryRecvActionRequest2(
     *outSeq = req->seq;
     *outBattlerId = req->battlerId;
     *outControlledMon = req->controlledMon;
-    *outTargetMon = req->targetMon;
+    *outTargetMonLeft = req->targetMonLeft;
+    *outTargetMonRight = req->targetMonRight;
     *outPartyInfo = req->party;
 
 #ifdef REMOTE_OPPONENT_SLAVE
@@ -1149,12 +1264,12 @@ bool32 RemoteOpponent_Slave_TryRecvActionRequest2(
     return TRUE;
 }
 
-bool32 RemoteOpponent_Slave_SendMoveChoice(u8 seq, u8 moveSlot)
+bool32 RemoteOpponent_Slave_SendMoveChoice(u8 seq, u8 moveSlot, u8 targetBattlerId)
 {
-    return RemoteOpponent_Slave_SendMoveChoice2(seq, sSlavePendingBattlerId, moveSlot);
+    return RemoteOpponent_Slave_SendMoveChoice2(seq, sSlavePendingBattlerId, moveSlot, targetBattlerId);
 }
 
-bool32 RemoteOpponent_Slave_SendMoveChoice2(u8 seq, u8 battlerId, u8 moveSlot)
+bool32 RemoteOpponent_Slave_SendMoveChoice2(u8 seq, u8 battlerId, u8 moveSlot, u8 targetBattlerId)
 {
     struct RemoteOppResponse resp;
 
@@ -1168,6 +1283,8 @@ bool32 RemoteOpponent_Slave_SendMoveChoice2(u8 seq, u8 battlerId, u8 moveSlot)
     resp.seq = seq;
     resp.battlerId = battlerId;
     resp.moveSlot = moveSlot;
+    resp.targetBattlerId = targetBattlerId;
+    resp.unused = 0;
 
     return SendBlock(BitmaskAllOtherLinkPlayers(), &resp, sizeof(resp));
 }
@@ -1201,8 +1318,11 @@ void CB2_RemoteOpponentSlave(void)
 {
     u8 seq;
     u8 battlerId;
+    u8 targetBattlerLeft;
+    u8 targetBattlerRight;
     struct RemoteOpponentMonInfo controlledMon;
-    struct RemoteOpponentMonInfo targetMon;
+    struct RemoteOpponentMonInfo targetMonLeft;
+    struct RemoteOpponentMonInfo targetMonRight;
     struct RemoteOpponentMoveInfo moveInfo;
     struct RemoteOpponentPartyInfo partyInfo;
     u8 uiStatus;
@@ -1278,7 +1398,7 @@ void CB2_RemoteOpponentSlave(void)
     }
 
     // Accept new requests at any time; the latest request wins.
-    if (RemoteOpponent_Slave_TryRecvActionRequest2(&seq, &battlerId, &controlledMon, &targetMon, &partyInfo))
+    if (RemoteOpponent_Slave_TryRecvActionRequest2(&seq, &battlerId, &controlledMon, &targetMonLeft, &targetMonRight, &partyInfo))
     {
         sSlavePending = TRUE;
         sSlavePendingIsAction = TRUE;
@@ -1288,12 +1408,15 @@ void CB2_RemoteOpponentSlave(void)
         sSlaveActionSubscreen = SLAVE_ACTION_SUBSCREEN_MENU;
         sSlaveSelectedSlot = partyInfo.currentMonId;
         sSlaveUiControlledMon = controlledMon;
-        sSlaveUiTargetMon = targetMon;
+        sSlaveUiTargetMonLeft = targetMonLeft;
+        sSlaveUiTargetMonRight = targetMonRight;
+        // Keep existing single-target HUD field populated (used by some UI and as a fallback).
+        sSlaveUiTargetMon = (targetMonLeft.species != SPECIES_NONE) ? targetMonLeft : targetMonRight;
         sSlaveUiPartyInfo = partyInfo;
         SlaveUi_DrawActionMenu();
     }
 
-    if (RemoteOpponent_Slave_TryRecvMoveRequest(&seq, &battlerId, &controlledMon, &targetMon, &moveInfo))
+    if (RemoteOpponent_Slave_TryRecvMoveRequest(&seq, &battlerId, &targetBattlerLeft, &targetBattlerRight, &controlledMon, &targetMonLeft, &targetMonRight, &moveInfo))
     {
         sSlavePending = TRUE;
         sSlavePendingIsAction = FALSE;
@@ -1302,7 +1425,18 @@ void CB2_RemoteOpponentSlave(void)
         sSlaveSelectedSlot = 0;
 
         sSlaveUiControlledMon = controlledMon;
-        sSlaveUiTargetMon = targetMon;
+        sSlaveUiTargetMonLeft = targetMonLeft;
+        sSlaveUiTargetMonRight = targetMonRight;
+        sSlaveUiTargetBattlerLeft = targetBattlerLeft;
+        sSlaveUiTargetBattlerRight = targetBattlerRight;
+        // Default target: prefer left if valid, otherwise right.
+        if (sSlaveUiTargetMonLeft.species != SPECIES_NONE)
+            sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerLeft;
+        else
+            sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerRight;
+
+        // Keep existing single-target HUD field populated (used by action menus).
+        sSlaveUiTargetMon = (targetMonLeft.species != SPECIES_NONE) ? targetMonLeft : targetMonRight;
         sSlaveUiMoveInfo = moveInfo;
         SlaveUi_DrawMoves();
     }
@@ -1450,8 +1584,23 @@ void CB2_RemoteOpponentSlave(void)
     // Minimal, display-less UI:
     // Move UI:
     // - DPAD moves the cursor linearly (up/down)
+    // - DPAD left/right changes target in doubles
     // - A selects
     // - B backs out to action menu (handled via REMOTE_OPP_MOVE_SLOT_CANCEL)
+    if (gMain.newKeys & (DPAD_LEFT | DPAD_RIGHT))
+    {
+        // Toggle between left/right target if both are present.
+        if (sSlaveUiTargetMonLeft.species != SPECIES_NONE && sSlaveUiTargetMonRight.species != SPECIES_NONE)
+        {
+            if (sSlaveSelectedTargetBattler == sSlaveUiTargetBattlerLeft)
+                sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerRight;
+            else
+                sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerLeft;
+
+            SlaveUi_DrawMoves();
+        }
+    }
+
     if (gMain.newKeys & DPAD_UP)
     {
         u8 start = sSlaveSelectedSlot & 3;
@@ -1493,7 +1642,7 @@ void CB2_RemoteOpponentSlave(void)
 
     if (gMain.newKeys & A_BUTTON)
     {
-        if (RemoteOpponent_Slave_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, sSlaveSelectedSlot))
+        if (RemoteOpponent_Slave_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, sSlaveSelectedSlot, sSlaveSelectedTargetBattler))
         {
             sSlavePending = FALSE;
             SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
@@ -1504,7 +1653,7 @@ void CB2_RemoteOpponentSlave(void)
     {
         // Mirror vanilla behavior: B cancels move selection and returns to the action menu.
         // We must inform the master so the battle engine can transition back.
-        if (RemoteOpponent_Slave_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_MOVE_SLOT_CANCEL))
+        if (RemoteOpponent_Slave_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_MOVE_SLOT_CANCEL, sSlaveSelectedTargetBattler))
         {
             sSlavePending = FALSE;
             SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
