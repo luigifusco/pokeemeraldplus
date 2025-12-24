@@ -171,8 +171,8 @@ void AgbMain(void)
 
 static void UpdateLinkAndCallCallbacks(void)
 {
-#ifdef REMOTE_OPPONENT_MASTER
-    // Bring up the link as early as possible so the slave can complete the
+#ifdef REMOTE_OPPONENT_LEADER
+    // Bring up the link as early as possible so the follower can complete the
     // player-data exchange at boot, instead of waiting until the first battle.
     RemoteOpponent_OpenLinkIfNeeded();
 #endif
@@ -187,8 +187,8 @@ static void InitMainCallbacks(void)
     gMain.vblankCounter2 = 0;
     gMain.callback1 = NULL;
 
-#ifdef REMOTE_OPPONENT_SLAVE
-    SetMainCallback2(CB2_InitRemoteOpponentSlave);
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    SetMainCallback2(CB2_InitRemoteOpponentFollower);
 #else
     SetMainCallback2(CB2_InitCopyrightScreenAfterBootup);
 #endif

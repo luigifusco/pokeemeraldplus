@@ -114,18 +114,18 @@ static EWRAM_DATA u8 sSlaveUiTargetBattlerLeft = 0;
 static EWRAM_DATA u8 sSlaveUiTargetBattlerRight = 0;
 static EWRAM_DATA u8 sSlaveSelectedTargetBattler = 0;
 
-#ifdef REMOTE_OPPONENT_MASTER
-static EWRAM_DATA bool8 sMasterHasCachedPacket = FALSE;
-static EWRAM_DATA u8 sMasterCachedPacket[BLOCK_BUFFER_SIZE];
-static EWRAM_DATA u8 sMasterCachedFromId = 0;
-static EWRAM_DATA u16 sMasterCachedSize = 0;
+#ifdef REMOTE_OPPONENT_LEADER
+static EWRAM_DATA bool8 sLeaderHasCachedPacket = FALSE;
+static EWRAM_DATA u8 sLeaderCachedPacket[BLOCK_BUFFER_SIZE];
+static EWRAM_DATA u8 sLeaderCachedFromId = 0;
+static EWRAM_DATA u16 sLeaderCachedSize = 0;
 #endif
 
-#ifdef REMOTE_OPPONENT_SLAVE
-static EWRAM_DATA bool8 sSlaveHasCachedPacket = FALSE;
-static EWRAM_DATA u8 sSlaveCachedPacket[BLOCK_BUFFER_SIZE];
-static EWRAM_DATA u8 sSlaveCachedFromId = 0;
-static EWRAM_DATA u16 sSlaveCachedSize = 0;
+#ifdef REMOTE_OPPONENT_FOLLOWER
+static EWRAM_DATA bool8 sFollowerHasCachedPacket = FALSE;
+static EWRAM_DATA u8 sFollowerCachedPacket[BLOCK_BUFFER_SIZE];
+static EWRAM_DATA u8 sFollowerCachedFromId = 0;
+static EWRAM_DATA u16 sFollowerCachedSize = 0;
 #endif
 
 static const u16 sSlaveSlotColors[] =
@@ -220,7 +220,7 @@ static const u8 *GetMonSpeciesNameOrDash(const struct RemoteOpponentMonInfo *mon
     return gSpeciesNames[mon->species];
 }
 
-static void VBlankCB_RemoteOpponentSlave(void)
+static void VBlankCB_RemoteOpponentFollower(void)
 {
     TransferPlttBuffer();
 }
@@ -686,7 +686,7 @@ static void SlaveUi_Init(void)
     sSlaveUiMoveInfo.moves[3] = MOVE_NONE;
 }
 
-void CB2_InitRemoteOpponentSlave(void)
+void CB2_InitRemoteOpponentFollower(void)
 {
     SetVBlankCallback(NULL);
     DmaFill16(3, 0, (void *)VRAM, VRAM_SIZE);
@@ -704,8 +704,8 @@ void CB2_InitRemoteOpponentSlave(void)
     SetSlaveBackdropColor(RGB(31, 0, 0));
 
     EnableInterrupts(INTR_FLAG_VBLANK);
-    SetVBlankCallback(VBlankCB_RemoteOpponentSlave);
-    SetMainCallback2(CB2_RemoteOpponentSlave);
+    SetVBlankCallback(VBlankCB_RemoteOpponentFollower);
+    SetMainCallback2(CB2_RemoteOpponentFollower);
 }
 
 static bool32 TryRecvPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
@@ -734,17 +734,17 @@ static bool32 TryRecvPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
     return FALSE;
 }
 
-#ifdef REMOTE_OPPONENT_SLAVE
-static bool32 Slave_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
+#ifdef REMOTE_OPPONENT_FOLLOWER
+static bool32 Follower_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
 {
     u8 i;
     u8 status;
 
-    if (sSlaveHasCachedPacket)
+    if (sFollowerHasCachedPacket)
     {
-        *outFromId = sSlaveCachedFromId;
-        *outData = (const u8 *)sSlaveCachedPacket;
-        *outSize = sSlaveCachedSize;
+        *outFromId = sFollowerCachedFromId;
+        *outData = (const u8 *)sFollowerCachedPacket;
+        *outSize = sFollowerCachedSize;
         return TRUE;
     }
 
@@ -756,15 +756,15 @@ static bool32 Slave_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
     {
         if ((status & (1 << i)) && i != GetMultiplayerId())
         {
-            sSlaveCachedFromId = i;
-            sSlaveCachedSize = BLOCK_BUFFER_SIZE;
-            CpuCopy16(gBlockRecvBuffer[i], sSlaveCachedPacket, BLOCK_BUFFER_SIZE);
+            sFollowerCachedFromId = i;
+            sFollowerCachedSize = BLOCK_BUFFER_SIZE;
+            CpuCopy16(gBlockRecvBuffer[i], sFollowerCachedPacket, BLOCK_BUFFER_SIZE);
             ResetBlockReceivedFlag(i);
-            sSlaveHasCachedPacket = TRUE;
+            sFollowerHasCachedPacket = TRUE;
 
-            *outFromId = sSlaveCachedFromId;
-            *outData = (const u8 *)sSlaveCachedPacket;
-            *outSize = sSlaveCachedSize;
+            *outFromId = sFollowerCachedFromId;
+            *outData = (const u8 *)sFollowerCachedPacket;
+            *outSize = sFollowerCachedSize;
             return TRUE;
         }
     }
@@ -772,23 +772,23 @@ static bool32 Slave_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
     return FALSE;
 }
 
-static void Slave_ConsumePeekedPacket(void)
+static void Follower_ConsumePeekedPacket(void)
 {
-    sSlaveHasCachedPacket = FALSE;
+    sFollowerHasCachedPacket = FALSE;
 }
 #endif
 
-#ifdef REMOTE_OPPONENT_MASTER
-static bool32 Master_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
+#ifdef REMOTE_OPPONENT_LEADER
+static bool32 Leader_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
 {
     u8 i;
     u8 status;
 
-    if (sMasterHasCachedPacket)
+    if (sLeaderHasCachedPacket)
     {
-        *outFromId = sMasterCachedFromId;
-        *outData = (const u8 *)sMasterCachedPacket;
-        *outSize = sMasterCachedSize;
+        *outFromId = sLeaderCachedFromId;
+        *outData = (const u8 *)sLeaderCachedPacket;
+        *outSize = sLeaderCachedSize;
         return TRUE;
     }
 
@@ -800,15 +800,15 @@ static bool32 Master_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
     {
         if ((status & (1 << i)) && i != GetMultiplayerId())
         {
-            sMasterCachedFromId = i;
-            sMasterCachedSize = BLOCK_BUFFER_SIZE;
-            CpuCopy16(gBlockRecvBuffer[i], sMasterCachedPacket, BLOCK_BUFFER_SIZE);
+            sLeaderCachedFromId = i;
+            sLeaderCachedSize = BLOCK_BUFFER_SIZE;
+            CpuCopy16(gBlockRecvBuffer[i], sLeaderCachedPacket, BLOCK_BUFFER_SIZE);
             ResetBlockReceivedFlag(i);
-            sMasterHasCachedPacket = TRUE;
+            sLeaderHasCachedPacket = TRUE;
 
-            *outFromId = sMasterCachedFromId;
-            *outData = (const u8 *)sMasterCachedPacket;
-            *outSize = sMasterCachedSize;
+            *outFromId = sLeaderCachedFromId;
+            *outData = (const u8 *)sLeaderCachedPacket;
+            *outSize = sLeaderCachedSize;
             return TRUE;
         }
     }
@@ -816,9 +816,9 @@ static bool32 Master_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSize)
     return FALSE;
 }
 
-static void Master_ConsumePeekedPacket(void)
+static void Leader_ConsumePeekedPacket(void)
 {
-    sMasterHasCachedPacket = FALSE;
+    sLeaderHasCachedPacket = FALSE;
 }
 #endif
 
@@ -849,7 +849,7 @@ void RemoteOpponent_OpenLinkIfNeeded(void)
         sRemoteOppNoConnFrames = 0;
     }
 
-    // If we were previously fully connected but the peer vanished (e.g. slave reset),
+    // If we were previously fully connected but the peer vanished (e.g. follower reset),
     // force a clean reopen so player-data exchange can restart.
     // Avoid doing this during battles; battle code already has timeouts/fallback.
     if (sRemoteOppLinkOpened
@@ -873,13 +873,13 @@ void RemoteOpponent_OpenLinkIfNeeded(void)
         gLinkType = LINKTYPE_REMOTE_OPPONENT;
 
         // The serial IRQ handler calls gMain.serialCallback; in normal flow the intro sets this.
-        // Our master/slave builds can open link outside of that flow, so ensure it's set.
+        // Our leader/follower builds can open link outside of that flow, so ensure it's set.
         SetSerialCallback(SerialCB);
 
         OpenLink();
         sRemoteOppLinkOpened = TRUE;
         // OpenLink() normally uses a task to trigger the handshake a few frames later.
-        // The slave build runs a minimal loop without the usual task scheduler, so we
+        // The follower build runs a minimal loop without the usual task scheduler, so we
         // also advance the link state here to ensure the handshake progresses.
         sRemoteOppHandshakeDelay = 5;
         sRemoteOppNoConnFrames = 0;
@@ -928,7 +928,7 @@ bool32 RemoteOpponent_IsReady(void)
     return TRUE;
 }
 
-bool32 RemoteOpponent_Master_SendActionRequest(
+bool32 RemoteOpponent_Leader_SendActionRequest(
     u8 seq,
     u8 battlerId,
     const struct RemoteOpponentPartyInfo *partyInfo)
@@ -936,10 +936,10 @@ bool32 RemoteOpponent_Master_SendActionRequest(
     // Backwards-compatible wrapper: no HUD info.
     struct RemoteOpponentMonInfo dummyMon;
     CpuFill16(0, &dummyMon, sizeof(dummyMon));
-    return RemoteOpponent_Master_SendActionRequest2(seq, battlerId, &dummyMon, &dummyMon, &dummyMon, partyInfo);
+    return RemoteOpponent_Leader_SendActionRequest2(seq, battlerId, &dummyMon, &dummyMon, &dummyMon, partyInfo);
 }
 
-bool32 RemoteOpponent_Master_SendActionRequest2(
+bool32 RemoteOpponent_Leader_SendActionRequest2(
     u8 seq,
     u8 battlerId,
     const struct RemoteOpponentMonInfo *controlledMon,
@@ -968,7 +968,7 @@ bool32 RemoteOpponent_Master_SendActionRequest2(
     for (i = 0; i < MAX_TRAINER_ITEMS; i++)
         req.trainerItems[i] = ITEM_NONE;
 
-#ifdef REMOTE_OPPONENT_MASTER
+#ifdef REMOTE_OPPONENT_LEADER
     if (gBattleResources != NULL && gBattleResources->battleHistory != NULL)
     {
         for (i = 0; i < MAX_TRAINER_ITEMS; i++)
@@ -979,7 +979,7 @@ bool32 RemoteOpponent_Master_SendActionRequest2(
     return SendBlock(BitmaskAllOtherLinkPlayers(), &req, sizeof(req));
 }
 
-bool32 RemoteOpponent_Master_TryRecvActionChoice(u8 expectedSeq, u8 *outAction, u8 *outData)
+bool32 RemoteOpponent_Leader_TryRecvActionChoice(u8 expectedSeq, u8 *outAction, u8 *outData)
 {
     u8 fromId;
     u16 size;
@@ -989,8 +989,8 @@ bool32 RemoteOpponent_Master_TryRecvActionChoice(u8 expectedSeq, u8 *outAction, 
     if (!RemoteOpponent_IsReady())
         return FALSE;
 
-    #ifdef REMOTE_OPPONENT_MASTER
-    if (!Master_PeekPacket(&fromId, &data, &size))
+    #ifdef REMOTE_OPPONENT_LEADER
+    if (!Leader_PeekPacket(&fromId, &data, &size))
         return FALSE;
     #else
     if (!TryRecvPacket(&fromId, &data, &size))
@@ -1007,13 +1007,13 @@ bool32 RemoteOpponent_Master_TryRecvActionChoice(u8 expectedSeq, u8 *outAction, 
     *outAction = resp->action;
     *outData = resp->data;
 
-    #ifdef REMOTE_OPPONENT_MASTER
-    Master_ConsumePeekedPacket();
+    #ifdef REMOTE_OPPONENT_LEADER
+    Leader_ConsumePeekedPacket();
     #endif
     return TRUE;
 }
 
-bool32 RemoteOpponent_Master_TryRecvActionChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outAction, u8 *outData)
+bool32 RemoteOpponent_Leader_TryRecvActionChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outAction, u8 *outData)
 {
     u8 fromId;
     u16 size;
@@ -1023,8 +1023,8 @@ bool32 RemoteOpponent_Master_TryRecvActionChoice2(u8 expectedSeq, u8 expectedBat
     if (!RemoteOpponent_IsReady())
         return FALSE;
 
-#ifdef REMOTE_OPPONENT_MASTER
-    if (!Master_PeekPacket(&fromId, &data, &size))
+#ifdef REMOTE_OPPONENT_LEADER
+    if (!Leader_PeekPacket(&fromId, &data, &size))
         return FALSE;
 #else
     if (!TryRecvPacket(&fromId, &data, &size))
@@ -1040,8 +1040,8 @@ bool32 RemoteOpponent_Master_TryRecvActionChoice2(u8 expectedSeq, u8 expectedBat
     {
         // Stale response for this battler: consume+discard so it can't block the cache forever.
         // (Responses for other battlers are not consumed here; they may be needed elsewhere.)
-#ifdef REMOTE_OPPONENT_MASTER
-        Master_ConsumePeekedPacket();
+#ifdef REMOTE_OPPONENT_LEADER
+        Leader_ConsumePeekedPacket();
 #endif
         return FALSE;
     }
@@ -1049,13 +1049,13 @@ bool32 RemoteOpponent_Master_TryRecvActionChoice2(u8 expectedSeq, u8 expectedBat
     *outAction = resp->action;
     *outData = resp->data;
 
-#ifdef REMOTE_OPPONENT_MASTER
-    Master_ConsumePeekedPacket();
+#ifdef REMOTE_OPPONENT_LEADER
+    Leader_ConsumePeekedPacket();
 #endif
     return TRUE;
 }
 
-bool32 RemoteOpponent_Master_SendMoveRequest(
+bool32 RemoteOpponent_Leader_SendMoveRequest(
     u8 seq,
     u8 battlerId,
     const struct RemoteOpponentMonInfo *controlledMon,
@@ -1089,7 +1089,7 @@ bool32 RemoteOpponent_Master_SendMoveRequest(
     return SendBlock(BitmaskAllOtherLinkPlayers(), &req, sizeof(req));
 }
 
-bool32 RemoteOpponent_Master_TryRecvMoveChoice(u8 expectedSeq, u8 *outMoveSlot)
+bool32 RemoteOpponent_Leader_TryRecvMoveChoice(u8 expectedSeq, u8 *outMoveSlot)
 {
     u8 fromId;
     u16 size;
@@ -1099,8 +1099,8 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice(u8 expectedSeq, u8 *outMoveSlot)
     if (!RemoteOpponent_IsReady())
         return FALSE;
 
-    #ifdef REMOTE_OPPONENT_MASTER
-    if (!Master_PeekPacket(&fromId, &data, &size))
+    #ifdef REMOTE_OPPONENT_LEADER
+    if (!Leader_PeekPacket(&fromId, &data, &size))
         return FALSE;
     #else
     if (!TryRecvPacket(&fromId, &data, &size))
@@ -1116,13 +1116,13 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice(u8 expectedSeq, u8 *outMoveSlot)
 
     *outMoveSlot = resp->moveSlot;
 
-    #ifdef REMOTE_OPPONENT_MASTER
-    Master_ConsumePeekedPacket();
+    #ifdef REMOTE_OPPONENT_LEADER
+    Leader_ConsumePeekedPacket();
     #endif
     return TRUE;
 }
 
-bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outMoveSlot, u8 *outTargetBattlerId)
+bool32 RemoteOpponent_Leader_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outMoveSlot, u8 *outTargetBattlerId)
 {
     u8 fromId;
     u16 size;
@@ -1132,8 +1132,8 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattl
     if (!RemoteOpponent_IsReady())
         return FALSE;
 
-#ifdef REMOTE_OPPONENT_MASTER
-    if (!Master_PeekPacket(&fromId, &data, &size))
+#ifdef REMOTE_OPPONENT_LEADER
+    if (!Leader_PeekPacket(&fromId, &data, &size))
         return FALSE;
 #else
     if (!TryRecvPacket(&fromId, &data, &size))
@@ -1147,8 +1147,8 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattl
         return FALSE;
     if (resp->seq != expectedSeq)
     {
-#ifdef REMOTE_OPPONENT_MASTER
-        Master_ConsumePeekedPacket();
+#ifdef REMOTE_OPPONENT_LEADER
+    Leader_ConsumePeekedPacket();
 #endif
         return FALSE;
     }
@@ -1156,13 +1156,13 @@ bool32 RemoteOpponent_Master_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattl
     *outMoveSlot = resp->moveSlot;
     *outTargetBattlerId = resp->targetBattlerId;
 
-#ifdef REMOTE_OPPONENT_MASTER
-    Master_ConsumePeekedPacket();
+#ifdef REMOTE_OPPONENT_LEADER
+    Leader_ConsumePeekedPacket();
 #endif
     return TRUE;
 }
 
-bool32 RemoteOpponent_Slave_TryRecvMoveRequest(
+bool32 RemoteOpponent_Follower_TryRecvMoveRequest(
     u8 *outSeq,
     u8 *outBattlerId,
     u8 *outTargetBattlerLeft,
@@ -1180,8 +1180,8 @@ bool32 RemoteOpponent_Slave_TryRecvMoveRequest(
     if (!RemoteOpponent_IsReady())
         return FALSE;
 
-#ifdef REMOTE_OPPONENT_SLAVE
-    if (!Slave_PeekPacket(&fromId, &data, &size))
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    if (!Follower_PeekPacket(&fromId, &data, &size))
         return FALSE;
 #else
     if (!TryRecvPacket(&fromId, &data, &size))
@@ -1201,13 +1201,13 @@ bool32 RemoteOpponent_Slave_TryRecvMoveRequest(
     *outTargetMonRight = req->targetMonRight;
     *outMoveInfo = req->moveInfo;
 
-#ifdef REMOTE_OPPONENT_SLAVE
-    Slave_ConsumePeekedPacket();
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    Follower_ConsumePeekedPacket();
 #endif
     return TRUE;
 }
 
-bool32 RemoteOpponent_Slave_TryRecvActionRequest(
+bool32 RemoteOpponent_Follower_TryRecvActionRequest(
     u8 *outSeq,
     u8 *outBattlerId,
     struct RemoteOpponentPartyInfo *outPartyInfo)
@@ -1216,10 +1216,10 @@ bool32 RemoteOpponent_Slave_TryRecvActionRequest(
     struct RemoteOpponentMonInfo controlledMon;
     struct RemoteOpponentMonInfo targetMonLeft;
     struct RemoteOpponentMonInfo targetMonRight;
-    return RemoteOpponent_Slave_TryRecvActionRequest2(outSeq, outBattlerId, &controlledMon, &targetMonLeft, &targetMonRight, outPartyInfo);
+    return RemoteOpponent_Follower_TryRecvActionRequest2(outSeq, outBattlerId, &controlledMon, &targetMonLeft, &targetMonRight, outPartyInfo);
 }
 
-bool32 RemoteOpponent_Slave_TryRecvActionRequest2(
+bool32 RemoteOpponent_Follower_TryRecvActionRequest2(
     u8 *outSeq,
     u8 *outBattlerId,
     struct RemoteOpponentMonInfo *outControlledMon,
@@ -1235,8 +1235,8 @@ bool32 RemoteOpponent_Slave_TryRecvActionRequest2(
     if (!RemoteOpponent_IsReady())
         return FALSE;
 
-#ifdef REMOTE_OPPONENT_SLAVE
-    if (!Slave_PeekPacket(&fromId, &data, &size))
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    if (!Follower_PeekPacket(&fromId, &data, &size))
         return FALSE;
 #else
     if (!TryRecvPacket(&fromId, &data, &size))
@@ -1254,22 +1254,22 @@ bool32 RemoteOpponent_Slave_TryRecvActionRequest2(
     *outTargetMonRight = req->targetMonRight;
     *outPartyInfo = req->party;
 
-#ifdef REMOTE_OPPONENT_SLAVE
+#ifdef REMOTE_OPPONENT_FOLLOWER
     CpuCopy16(req->trainerItems, sSlaveUiTrainerItems, sizeof(sSlaveUiTrainerItems));
 #endif
 
-#ifdef REMOTE_OPPONENT_SLAVE
-    Slave_ConsumePeekedPacket();
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    Follower_ConsumePeekedPacket();
 #endif
     return TRUE;
 }
 
-bool32 RemoteOpponent_Slave_SendMoveChoice(u8 seq, u8 moveSlot, u8 targetBattlerId)
+bool32 RemoteOpponent_Follower_SendMoveChoice(u8 seq, u8 moveSlot, u8 targetBattlerId)
 {
-    return RemoteOpponent_Slave_SendMoveChoice2(seq, sSlavePendingBattlerId, moveSlot, targetBattlerId);
+    return RemoteOpponent_Follower_SendMoveChoice2(seq, sSlavePendingBattlerId, moveSlot, targetBattlerId);
 }
 
-bool32 RemoteOpponent_Slave_SendMoveChoice2(u8 seq, u8 battlerId, u8 moveSlot, u8 targetBattlerId)
+bool32 RemoteOpponent_Follower_SendMoveChoice2(u8 seq, u8 battlerId, u8 moveSlot, u8 targetBattlerId)
 {
     struct RemoteOppResponse resp;
 
@@ -1289,12 +1289,12 @@ bool32 RemoteOpponent_Slave_SendMoveChoice2(u8 seq, u8 battlerId, u8 moveSlot, u
     return SendBlock(BitmaskAllOtherLinkPlayers(), &resp, sizeof(resp));
 }
 
-bool32 RemoteOpponent_Slave_SendActionChoice(u8 seq, u8 action, u8 data)
+bool32 RemoteOpponent_Follower_SendActionChoice(u8 seq, u8 action, u8 data)
 {
-    return RemoteOpponent_Slave_SendActionChoice2(seq, sSlavePendingBattlerId, action, data);
+    return RemoteOpponent_Follower_SendActionChoice2(seq, sSlavePendingBattlerId, action, data);
 }
 
-bool32 RemoteOpponent_Slave_SendActionChoice2(u8 seq, u8 battlerId, u8 action, u8 data)
+bool32 RemoteOpponent_Follower_SendActionChoice2(u8 seq, u8 battlerId, u8 action, u8 data)
 {
     struct RemoteOppActionResponse resp;
 
@@ -1314,7 +1314,7 @@ bool32 RemoteOpponent_Slave_SendActionChoice2(u8 seq, u8 battlerId, u8 action, u
     return SendBlock(BitmaskAllOtherLinkPlayers(), &resp, sizeof(resp));
 }
 
-void CB2_RemoteOpponentSlave(void)
+void CB2_RemoteOpponentFollower(void)
 {
     u8 seq;
     u8 battlerId;
@@ -1398,7 +1398,7 @@ void CB2_RemoteOpponentSlave(void)
     }
 
     // Accept new requests at any time; the latest request wins.
-    if (RemoteOpponent_Slave_TryRecvActionRequest2(&seq, &battlerId, &controlledMon, &targetMonLeft, &targetMonRight, &partyInfo))
+    if (RemoteOpponent_Follower_TryRecvActionRequest2(&seq, &battlerId, &controlledMon, &targetMonLeft, &targetMonRight, &partyInfo))
     {
         sSlavePending = TRUE;
         sSlavePendingIsAction = TRUE;
@@ -1416,7 +1416,7 @@ void CB2_RemoteOpponentSlave(void)
         SlaveUi_DrawActionMenu();
     }
 
-    if (RemoteOpponent_Slave_TryRecvMoveRequest(&seq, &battlerId, &targetBattlerLeft, &targetBattlerRight, &controlledMon, &targetMonLeft, &targetMonRight, &moveInfo))
+    if (RemoteOpponent_Follower_TryRecvMoveRequest(&seq, &battlerId, &targetBattlerLeft, &targetBattlerRight, &controlledMon, &targetMonLeft, &targetMonRight, &moveInfo))
     {
         sSlavePending = TRUE;
         sSlavePendingIsAction = FALSE;
@@ -1474,7 +1474,7 @@ void CB2_RemoteOpponentSlave(void)
             {
                 if (sSlaveActionCursor == 0)
                 {
-                    if (RemoteOpponent_Slave_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_FIGHT, 0))
+                    if (RemoteOpponent_Follower_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_FIGHT, 0))
                     {
                         sSlavePending = FALSE;
                         SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
@@ -1496,7 +1496,7 @@ void CB2_RemoteOpponentSlave(void)
             }
 
             // Intentionally do not handle B on this menu.
-            // The prompt is coming from the master; cancelling locally desyncs UX.
+            // The prompt is coming from the leader; cancelling locally desyncs UX.
 
             return;
         }
@@ -1524,7 +1524,7 @@ void CB2_RemoteOpponentSlave(void)
                 if (!SlaveUi_IsValidSwitchSlot(sSlaveSelectedSlot))
                     return;
 
-                if (RemoteOpponent_Slave_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_SWITCH, sSlaveSelectedSlot))
+                if (RemoteOpponent_Follower_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_SWITCH, sSlaveSelectedSlot))
                 {
                     sSlavePending = FALSE;
                     SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
@@ -1564,7 +1564,7 @@ void CB2_RemoteOpponentSlave(void)
                 if (!SlaveUi_IsValidItemSlot(sSlaveSelectedSlot))
                     return;
 
-                if (RemoteOpponent_Slave_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_ITEM, sSlaveSelectedSlot))
+                if (RemoteOpponent_Follower_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_ITEM, sSlaveSelectedSlot))
                 {
                     sSlavePending = FALSE;
                     SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
@@ -1642,7 +1642,7 @@ void CB2_RemoteOpponentSlave(void)
 
     if (gMain.newKeys & A_BUTTON)
     {
-        if (RemoteOpponent_Slave_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, sSlaveSelectedSlot, sSlaveSelectedTargetBattler))
+        if (RemoteOpponent_Follower_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, sSlaveSelectedSlot, sSlaveSelectedTargetBattler))
         {
             sSlavePending = FALSE;
             SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
@@ -1652,8 +1652,8 @@ void CB2_RemoteOpponentSlave(void)
     if (gMain.newKeys & B_BUTTON)
     {
         // Mirror vanilla behavior: B cancels move selection and returns to the action menu.
-        // We must inform the master so the battle engine can transition back.
-        if (RemoteOpponent_Slave_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_MOVE_SLOT_CANCEL, sSlaveSelectedTargetBattler))
+        // We must inform the leader so the battle engine can transition back.
+        if (RemoteOpponent_Follower_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_MOVE_SLOT_CANCEL, sSlaveSelectedTargetBattler))
         {
             sSlavePending = FALSE;
             SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);

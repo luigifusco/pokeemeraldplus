@@ -199,10 +199,10 @@ def main() -> None:
         add_bool_flag("FORCE_DOUBLE_BATTLES", flag_force_doubles.get())
         add_bool_flag("STEAL_TRAINER_TEAM", flag_steal_trainer_team.get())
 
-        # Remote opponent control (master) build: keep all selected build flags.
+        # Remote opponent control (leader) build: keep all selected build flags.
         # The Makefile outputs the normal ROM name (pokeemerald.gba).
         if flag_remote_opponent.get():
-            make_args.append("REMOTE_OPPONENT_MASTER=1")
+            make_args.append("REMOTE_OPPONENT_LEADER=1")
 
         wtd = 1 << int(round(wait_time_divisor_pow.get()))
         make_args.append(f"WAIT_TIME_DIVISOR={wtd}")
@@ -228,32 +228,32 @@ def main() -> None:
                 else:
                     log("[success] build completed\n")
 
-                # If remote opponent is enabled, also build the slave ROM with only the slave flag.
+                # If remote opponent is enabled, also build the follower ROM with only the follower flag.
                 if not flag_remote_opponent.get():
                     build_btn.configure(state="normal")
                     return
 
-                slave_make_args = [
+                follower_make_args = [
                     "make",
                     f"-j{os.cpu_count() or 1}",
-                    "REMOTE_OPPONENT_SLAVE=1",
+                    "REMOTE_OPPONENT_FOLLOWER=1",
                 ]
 
-                def after_slave_make(slave_code: int) -> None:
+                def after_follower_make(follower_code: int) -> None:
                     build_btn.configure(state="normal")
-                    if slave_code == 0:
-                        slave_path = repo_root / "slave.gba"
-                        if slave_path.exists():
-                            log(f"[success] slave rom generated: {slave_path.name}\n")
+                    if follower_code == 0:
+                        follower_path = repo_root / "follower.gba"
+                        if follower_path.exists():
+                            log(f"[success] follower rom generated: {follower_path.name}\n")
                         else:
-                            log("[success] slave build completed\n")
+                            log("[success] follower build completed\n")
 
                 run_command_stream(
                     window,
                     repo_root,
-                    slave_make_args,
+                    follower_make_args,
                     log,
-                    on_done=after_slave_make,
+                    on_done=after_follower_make,
                 )
 
             run_command_stream(
@@ -434,7 +434,7 @@ def main() -> None:
     remote_opp_cb.grid(row=6, column=0, sticky="w", pady=(8, 0))
     add_tooltip(
         remote_opp_cb,
-        "Build pokeemerald.gba with remote opponent control enabled, then also build slave.gba (transport-only ROM).",
+        "Build pokeemerald.gba with remote opponent control enabled, then also build follower.gba (transport-only ROM).",
     )
 
     wait_frame = ttk.Frame(build_group)

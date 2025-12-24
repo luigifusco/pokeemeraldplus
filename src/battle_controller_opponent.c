@@ -138,7 +138,7 @@ static void OpponentHandlePrintSelectionString(void);
 static void OpponentHandleChooseAction(void);
 static void OpponentHandleYesNoBox(void);
 static void OpponentHandleChooseMove(void);
-#ifdef REMOTE_OPPONENT_MASTER
+#ifdef REMOTE_OPPONENT_LEADER
 static void OpponentHandleChooseAction_RemoteWait(void);
 static void OpponentHandleChooseMove_RemoteWait(void);
 #endif
@@ -166,7 +166,7 @@ static void OpponentHandleHitAnimation(void);
 static void OpponentHandleCantSwitch(void);
 static void OpponentHandlePlaySE(void);
 
-#ifdef REMOTE_OPPONENT_MASTER
+#ifdef REMOTE_OPPONENT_LEADER
 struct RemoteOppWaitState
 {
     u8 expectedSeq;
@@ -1663,8 +1663,8 @@ static void OpponentHandlePrintSelectionString(void)
 
 static void OpponentHandleChooseAction(void)
 {
-#ifdef REMOTE_OPPONENT_MASTER
-    // Remote opponent mode: allow the linked slave to pick between FIGHT and SWITCH.
+#ifdef REMOTE_OPPONENT_LEADER
+    // Remote opponent mode: allow the linked follower to pick between FIGHT and SWITCH.
     // If remote isn't ready (or no reply), fall back to vanilla AI.
     if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_RECORDED_LINK)))
     {
@@ -1691,7 +1691,7 @@ static void OpponentHandleChooseAction(void)
     OpponentBufferExecCompleted();
 }
 
-#ifdef REMOTE_OPPONENT_MASTER
+#ifdef REMOTE_OPPONENT_LEADER
 static void BuildRemoteOppPartyInfo(struct RemoteOpponentPartyInfo *outParty)
 {
     s32 i;
@@ -1772,7 +1772,7 @@ static void OpponentHandleChooseAction_RemoteWait(void)
     {
         BuildRemoteOppPartyInfo(&sRemoteOppParty[gActiveBattler]);
 
-        // Include minimal battle HUD info (enemy + player mons) for the slave action menu.
+        // Include minimal battle HUD info (enemy + player mons) for the follower action menu.
         {
             u8 playerLeft;
             u8 playerRight;
@@ -1839,7 +1839,7 @@ static void OpponentHandleChooseAction_RemoteWait(void)
             sRemoteOppTargetMon[gActiveBattler].nickname[POKEMON_NAME_LENGTH] = EOS;
         }
 
-        if (RemoteOpponent_Master_SendActionRequest2(
+        if (RemoteOpponent_Leader_SendActionRequest2(
                 state->expectedSeq,
                 gActiveBattler,
                 &sRemoteOppControlledMon[gActiveBattler],
@@ -1853,7 +1853,7 @@ static void OpponentHandleChooseAction_RemoteWait(void)
         return;
     }
 
-    if (RemoteOpponent_Master_TryRecvActionChoice2(state->expectedSeq, gActiveBattler, &action, &data))
+    if (RemoteOpponent_Leader_TryRecvActionChoice2(state->expectedSeq, gActiveBattler, &action, &data))
     {
         if (action == REMOTE_OPP_ACTION_SWITCH)
         {
@@ -1959,8 +1959,8 @@ static void OpponentHandleChooseMove(void)
         u8 chosenMoveId;
         struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
 
-#ifdef REMOTE_OPPONENT_MASTER
-        // Remote opponent mode: let the linked slave pick the opponent's move slot.
+#ifdef REMOTE_OPPONENT_LEADER
+    // Remote opponent mode: let the linked follower pick the opponent's move slot.
         // Applies to all non-link battles (so it works for trainers too).
         // If the link isn't ready (or no reply), we wait briefly (with timeouts) then fall back.
         if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_RECORDED_LINK)))
@@ -2112,7 +2112,7 @@ static void OpponentHandleChooseMove(void)
     }
 }
 
-#ifdef REMOTE_OPPONENT_MASTER
+#ifdef REMOTE_OPPONENT_LEADER
 static void OpponentHandleChooseMove_RemoteWait(void)
 {
     u8 chosenMoveId;
@@ -2136,7 +2136,7 @@ static void OpponentHandleChooseMove_RemoteWait(void)
     }
 
     // Phase 1: wait for link to be ready.
-    // This prevents immediate fallback when the slave isn't connected yet.
+    // This prevents immediate fallback when the follower isn't connected yet.
     if (!RemoteOpponent_IsReady())
     {
         if (state->connectTimeout > 3600) // ~60 seconds @ 60fps
@@ -2147,7 +2147,7 @@ static void OpponentHandleChooseMove_RemoteWait(void)
     // Phase 2: send request once.
     if (!state->requestSent)
     {
-        if (RemoteOpponent_Master_SendMoveRequest(
+        if (RemoteOpponent_Leader_SendMoveRequest(
                 state->expectedSeq,
                 gActiveBattler,
                 &sRemoteOppControlledMon[gActiveBattler],
@@ -2164,9 +2164,9 @@ static void OpponentHandleChooseMove_RemoteWait(void)
     }
 
     // Phase 3: wait for response.
-    if (RemoteOpponent_Master_TryRecvMoveChoice2(state->expectedSeq, gActiveBattler, &moveSlot, &targetBattlerId))
+    if (RemoteOpponent_Leader_TryRecvMoveChoice2(state->expectedSeq, gActiveBattler, &moveSlot, &targetBattlerId))
     {
-        // Slave requested cancel/back from the move menu.
+        // Follower requested cancel/back from the move menu.
         // Use the vanilla cancel sentinel (0xFFFF) so the engine re-prompts for action.
         if (moveSlot == REMOTE_OPP_MOVE_SLOT_CANCEL)
         {
@@ -2178,7 +2178,7 @@ static void OpponentHandleChooseMove_RemoteWait(void)
         chosenMoveId = moveSlot & (MAX_MON_MOVES - 1);
         move = moveInfo->moves[chosenMoveId];
 
-        // Safety: if slave picked an empty slot, fall back to a valid random move.
+        // Safety: if follower picked an empty slot, fall back to a valid random move.
         if (move == MOVE_NONE)
         {
             do
