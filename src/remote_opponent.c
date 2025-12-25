@@ -37,6 +37,10 @@ enum
     REMOTE_OPP_MSG_CHOOSE_MOVE = 2,
     REMOTE_OPP_MSG_REQUEST_ACTION = 3,
     REMOTE_OPP_MSG_CHOOSE_ACTION = 4,
+    REMOTE_OPP_MSG_REQUEST_DECISION = 5,
+    REMOTE_OPP_MSG_CHOOSE_DECISION = 6,
+    REMOTE_OPP_MSG_REQUEST_DECISION_DOUBLE = 7,
+    REMOTE_OPP_MSG_CHOOSE_DECISION_DOUBLE = 8,
 };
 
 struct RemoteOppRequest
@@ -87,6 +91,68 @@ struct RemoteOppActionResponse
     u8 unused;
 };
 
+struct RemoteOppDecisionRequest
+{
+    u8 type;
+    u8 seq;
+    u8 battlerId;
+    u8 unused;
+    u8 targetBattlerLeft;
+    u8 targetBattlerRight;
+    u8 unused2[2];
+    struct RemoteOpponentMonInfo controlledMon;
+    struct RemoteOpponentMonInfo targetMonLeft;
+    struct RemoteOpponentMonInfo targetMonRight;
+    struct RemoteOpponentMoveInfo moveInfo;
+    struct RemoteOpponentPartyInfo party;
+    u16 trainerItems[MAX_TRAINER_ITEMS];
+};
+
+struct RemoteOppDecisionRequestDouble
+{
+    u8 type;
+    u8 seq;
+    u8 battlerIdLeft;
+    u8 battlerIdRight;
+    u8 targetBattlerLeft;
+    u8 targetBattlerRight;
+    u8 unused2[2];
+    struct RemoteOpponentMonInfo controlledMonLeft;
+    struct RemoteOpponentMonInfo controlledMonRight;
+    struct RemoteOpponentMonInfo targetMonLeft;
+    struct RemoteOpponentMonInfo targetMonRight;
+    struct RemoteOpponentMoveInfo moveInfoLeft;
+    struct RemoteOpponentMoveInfo moveInfoRight;
+    struct RemoteOpponentPartyInfo party;
+    u16 trainerItems[MAX_TRAINER_ITEMS];
+};
+
+struct RemoteOppDecisionResponse
+{
+    u8 type;
+    u8 seq;
+    u8 battlerId;
+    u8 action;
+    u8 param1;
+    u8 param2;
+    u8 unused[2];
+};
+
+struct RemoteOppDecisionResponseDouble
+{
+    u8 type;
+    u8 seq;
+    u8 battlerIdLeft;
+    u8 actionLeft;
+    u8 param1Left;
+    u8 param2Left;
+    u8 battlerIdRight;
+    u8 actionRight;
+    u8 param1Right;
+    u8 param2Right;
+    u8 unused[2];
+};
+
 static EWRAM_DATA bool8 sRemoteOppLinkOpened = FALSE;
 static EWRAM_DATA u8 sRemoteOppHandshakeDelay = 0;
 static EWRAM_DATA bool8 sRemoteOppWasReady = FALSE;
@@ -103,9 +169,14 @@ static EWRAM_DATA u16 sSlaveFrameCounter = 0;
 static EWRAM_DATA u8 sSlaveUiLastStatus = 0xFF;
 static EWRAM_DATA u8 sSlaveUiLastPending = 0xFF;
 static EWRAM_DATA u8 sSlaveUiLastSelectedSlot = 0xFF;
+static EWRAM_DATA u8 sSlaveUiLastActionCursor = 0xFF;
 static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiControlledMon;
+static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiControlledMonLeft;
+static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiControlledMonRight;
 static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiTargetMon;
 static EWRAM_DATA struct RemoteOpponentMoveInfo sSlaveUiMoveInfo;
+static EWRAM_DATA struct RemoteOpponentMoveInfo sSlaveUiMoveInfoLeft;
+static EWRAM_DATA struct RemoteOpponentMoveInfo sSlaveUiMoveInfoRight;
 static EWRAM_DATA struct RemoteOpponentPartyInfo sSlaveUiPartyInfo;
 static EWRAM_DATA u16 sSlaveUiTrainerItems[MAX_TRAINER_ITEMS];
 static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiTargetMonLeft;
@@ -113,6 +184,17 @@ static EWRAM_DATA struct RemoteOpponentMonInfo sSlaveUiTargetMonRight;
 static EWRAM_DATA u8 sSlaveUiTargetBattlerLeft = 0;
 static EWRAM_DATA u8 sSlaveUiTargetBattlerRight = 0;
 static EWRAM_DATA u8 sSlaveSelectedTargetBattler = 0;
+static EWRAM_DATA bool8 sSlavePendingIsDouble = FALSE;
+static EWRAM_DATA u8 sSlavePendingBattlerIdLeft = 0;
+static EWRAM_DATA u8 sSlavePendingBattlerIdRight = 0xFF;
+// 0 = left battler selection, 1 = right battler selection, 2 = waiting for partner request
+static EWRAM_DATA u8 sSlaveDoubleStage = 0;
+static EWRAM_DATA u8 sSlaveDoubleLeftAction = 0;
+static EWRAM_DATA u8 sSlaveDoubleLeftParam1 = 0;
+static EWRAM_DATA u8 sSlaveDoubleLeftParam2 = 0;
+// True right after we send a choice to the leader and are waiting for the next request.
+// Used to avoid briefly showing the READY (green) status between request/response phases.
+static EWRAM_DATA bool8 sFollowerAwaitingLeaderRequest = FALSE;
 
 #ifdef REMOTE_OPPONENT_LEADER
 static EWRAM_DATA bool8 sLeaderHasCachedPacket = FALSE;
@@ -143,6 +225,7 @@ enum
     SLAVE_UI_STATUS_NEED_TWO_PLAYERS,
     SLAVE_UI_STATUS_EXCHANGE_INCOMPLETE,
     SLAVE_UI_STATUS_READY,
+    SLAVE_UI_STATUS_WAITING,
     SLAVE_UI_STATUS_PENDING,
 };
 
@@ -182,6 +265,10 @@ static const u8 sText_NoLink[] = _("No link");
 static const u8 sText_WaitingPlayers[] = _("Waiting players");
 static const u8 sText_Exchanging[] = _("Exchanging data");
 static const u8 sText_Ready[] = _("Ready");
+static const u8 sText_Waiting[] = _("Waiting");
+
+static void SlaveUi_DoubleSwapActiveMons(void);
+static void SlaveUi_StartDoubleStage(u8 stage);
 static const u8 sText_ChooseMove[] = _("Choose move");
 static const u8 sText_ControlsShort[] = _("A Select  B Back  L/R Target");
 static const u8 sText_ChooseAction[] = _("Choose action");
@@ -244,6 +331,8 @@ static const u8 *GetSlaveStatusText(u8 status)
         return sText_Exchanging;
     case SLAVE_UI_STATUS_READY:
         return sText_Ready;
+    case SLAVE_UI_STATUS_WAITING:
+        return sText_Waiting;
     case SLAVE_UI_STATUS_PENDING:
         return sText_ChooseMove;
     }
@@ -389,10 +478,7 @@ static void SlaveUi_DrawMoves(void)
 {
     u8 i;
     u8 y;
-    u8 text[64];
     u8 line[128];
-    u16 selectedMove;
-    u8 moveType;
 
     // Layout uses 8 lines at 16px each (fits exactly in a 16-tile window).
     FillWindowPixelBuffer(WIN_MAIN, PIXEL_FILL(1));
@@ -408,6 +494,7 @@ static void SlaveUi_DrawMoves(void)
     y = 48;
     for (i = 0; i < MAX_MON_MOVES; i++)
     {
+        u8 text[64];
         u8 *ptr;
 
         if (i == (sSlaveSelectedSlot & 3))
@@ -427,25 +514,111 @@ static void SlaveUi_DrawMoves(void)
         y += 16;
     }
 
-    // Bottom line: TYPE + controls (target is indicated inline on the player line).
-    selectedMove = sSlaveUiMoveInfo.moves[sSlaveSelectedSlot & 3];
-    StringCopy(line, sText_SpaceType);
-    if (selectedMove != MOVE_NONE)
-    {
-        moveType = gBattleMoves[selectedMove].type;
-        StringAppend(line, gTypeNames[moveType]);
-    }
-    else
-    {
-        StringAppend(line, sText_Dash);
-    }
-
-    StringAppend(line, sText_Space);
-    StringAppend(line, sText_ControlsShort);
-    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, 112, 0, NULL);
+    // Bottom line: controls only.
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_ControlsShort, 0, 112, 0, NULL);
 
     PutWindowTilemap(WIN_MAIN);
     CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
+
+    // Keep the incremental redraw logic in sync.
+    sSlaveUiLastSelectedSlot = (sSlaveSelectedSlot & 3);
+}
+
+static void SlaveUi_DrawMoveRow(u8 moveSlot, bool8 selected)
+{
+    u8 text[64];
+    u8 *ptr;
+    u16 y = 48 + (moveSlot * 16);
+    u32 windowWidthTiles;
+
+    windowWidthTiles = GetWindowAttribute(WIN_MAIN, WINDOW_WIDTH);
+
+    // Clear only this row (16px tall).
+    FillWindowPixelRect(WIN_MAIN, PIXEL_FILL(1), 0, y, windowWidthTiles * 8, 16);
+
+    if (selected)
+        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, y, 0, NULL);
+
+    text[0] = EOS;
+    StringAppend(text, GetMoveNameOrDash(sSlaveUiMoveInfo.moves[moveSlot]));
+
+    if (sSlaveUiMoveInfo.moves[moveSlot] != MOVE_NONE)
+    {
+        ptr = StringAppend(text, sText_SpacePP);
+        ptr = ConvertIntToDecimalStringN(ptr, sSlaveUiMoveInfo.currentPp[moveSlot], STR_CONV_MODE_LEFT_ALIGN, 2);
+        ptr = StringAppend(ptr, sText_Slash);
+        ptr = ConvertIntToDecimalStringN(ptr, sSlaveUiMoveInfo.maxPp[moveSlot], STR_CONV_MODE_LEFT_ALIGN, 2);
+    }
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, text, 8, y, 0, NULL);
+
+    // Copy just this row (2 tiles tall) to VRAM.
+    CopyWindowRectToVram(WIN_MAIN, COPYWIN_GFX, 0, (y / 8), windowWidthTiles, 2);
+}
+
+static void SlaveUi_DrawMoveFooter(void)
+{
+    u32 windowWidthTiles;
+    u16 y = 112;
+
+    windowWidthTiles = GetWindowAttribute(WIN_MAIN, WINDOW_WIDTH);
+
+    FillWindowPixelRect(WIN_MAIN, PIXEL_FILL(1), 0, y, windowWidthTiles * 8, 16);
+
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, sText_ControlsShort, 0, y, 0, NULL);
+
+    CopyWindowRectToVram(WIN_MAIN, COPYWIN_GFX, 0, (y / 8), windowWidthTiles, 2);
+}
+
+static void SlaveUi_DrawMoveTargetsLine(void)
+{
+    u8 line[128];
+    u32 windowWidthTiles;
+    u16 y = 32;
+
+    windowWidthTiles = GetWindowAttribute(WIN_MAIN, WINDOW_WIDTH);
+
+    FillWindowPixelRect(WIN_MAIN, PIXEL_FILL(1), 0, y, windowWidthTiles * 8, 16);
+    BuildYouMonsLineForMoveMenu(line);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, line, 0, y, 0, NULL);
+    CopyWindowRectToVram(WIN_MAIN, COPYWIN_GFX, 0, (y / 8), windowWidthTiles, 2);
+}
+
+static void SlaveUi_UpdateActionCursor(u8 prevCursor, u8 newCursor)
+{
+    u32 windowWidthTiles;
+    u16 yPrev;
+    u16 yNew;
+
+    // Arrow is printed at x=0 for the selected action.
+    // Clear only that 1-tile column (8px wide) for the affected rows.
+    windowWidthTiles = GetWindowAttribute(WIN_MAIN, WINDOW_WIDTH);
+    (void)windowWidthTiles; // Silence unused warning in case windowWidthTiles isn't referenced in some builds.
+
+    yPrev = (prevCursor == 0) ? 56 : (prevCursor == 1) ? 72 : 88;
+    yNew = (newCursor == 0) ? 56 : (newCursor == 1) ? 72 : 88;
+
+    if (prevCursor != newCursor)
+    {
+        FillWindowPixelRect(WIN_MAIN, PIXEL_FILL(1), 0, yPrev, 8, 16);
+        FillWindowPixelRect(WIN_MAIN, PIXEL_FILL(1), 0, yNew, 8, 16);
+        AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, yNew, 0, NULL);
+
+        CopyWindowRectToVram(WIN_MAIN, COPYWIN_GFX, 0, (yPrev / 8), 1, 2);
+        CopyWindowRectToVram(WIN_MAIN, COPYWIN_GFX, 0, (yNew / 8), 1, 2);
+    }
+}
+
+static void SlaveUi_UpdateArrowAtY(u16 yPrev, u16 yNew)
+{
+    if (yPrev == yNew)
+        return;
+
+    FillWindowPixelRect(WIN_MAIN, PIXEL_FILL(1), 0, yPrev, 8, 16);
+    FillWindowPixelRect(WIN_MAIN, PIXEL_FILL(1), 0, yNew, 8, 16);
+    AddTextPrinterParameterized(WIN_MAIN, FONT_NORMAL, gText_SelectorArrow2, 0, yNew, 0, NULL);
+
+    CopyWindowRectToVram(WIN_MAIN, COPYWIN_GFX, 0, (yPrev / 8), 1, 2);
+    CopyWindowRectToVram(WIN_MAIN, COPYWIN_GFX, 0, (yNew / 8), 1, 2);
 }
 
 enum
@@ -486,6 +659,45 @@ static void SlaveUi_DrawActionMenu(void)
 
     PutWindowTilemap(WIN_MAIN);
     CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
+
+    sSlaveUiLastActionCursor = sSlaveActionCursor;
+}
+
+static void SlaveUi_DoubleSwapActiveMons(void)
+{
+    u8 tmp = sSlaveUiPartyInfo.currentMonId;
+    sSlaveUiPartyInfo.currentMonId = sSlaveUiPartyInfo.partnerMonId;
+    sSlaveUiPartyInfo.partnerMonId = tmp;
+}
+
+static void SlaveUi_StartDoubleStage(u8 stage)
+{
+    if (stage == 0)
+    {
+        if (sSlaveDoubleStage == 1)
+            SlaveUi_DoubleSwapActiveMons();
+        sSlaveDoubleStage = 0;
+        sSlavePendingBattlerId = sSlavePendingBattlerIdLeft;
+        sSlaveUiControlledMon = sSlaveUiControlledMonLeft;
+        sSlaveUiMoveInfo = sSlaveUiMoveInfoLeft;
+    }
+    else
+    {
+        if (sSlaveDoubleStage == 0)
+            SlaveUi_DoubleSwapActiveMons();
+        sSlaveDoubleStage = 1;
+        sSlavePendingBattlerId = sSlavePendingBattlerIdRight;
+        sSlaveUiControlledMon = sSlaveUiControlledMonRight;
+        sSlaveUiMoveInfo = sSlaveUiMoveInfoRight;
+    }
+
+    sSlavePendingIsAction = TRUE;
+    sSlaveActionSubscreen = SLAVE_ACTION_SUBSCREEN_MENU;
+    sSlaveActionCursor = 0;
+    sSlaveUiLastSelectedSlot = 0xFF;
+    sSlaveUiLastActionCursor = 0xFF;
+    sSlaveSelectedSlot = sSlaveUiPartyInfo.currentMonId;
+    SlaveUi_DrawActionMenu();
 }
 
 static void BuildPartyLine(u8 *dst, u8 slot, const struct RemoteOpponentPartyInfo *party)
@@ -555,6 +767,8 @@ static void SlaveUi_DrawParty(void)
 
     PutWindowTilemap(WIN_MAIN);
     CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
+
+    sSlaveUiLastSelectedSlot = (sSlaveSelectedSlot % PARTY_SIZE);
 }
 
 static bool8 SlaveUi_IsValidItemSlot(u8 slot)
@@ -617,6 +831,8 @@ static void SlaveUi_DrawBag(void)
 
     PutWindowTilemap(WIN_MAIN);
     CopyWindowToVram(WIN_MAIN, COPYWIN_FULL);
+
+    sSlaveUiLastSelectedSlot = (sSlaveSelectedSlot % MAX_TRAINER_ITEMS);
 }
 
 static bool8 SlaveUi_IsValidSwitchSlot(u8 slot)
@@ -775,6 +991,78 @@ static bool32 Follower_PeekPacket(u8 *outFromId, const u8 **outData, u16 *outSiz
 static void Follower_ConsumePeekedPacket(void)
 {
     sFollowerHasCachedPacket = FALSE;
+}
+
+static bool8 Slave_TryConsumePartnerDecisionRequest(
+    u8 expectedSeq,
+    u8 expectedBattlerIdLeft,
+    u8 *outBattlerIdRight,
+    struct RemoteOpponentMonInfo *outControlledMonRight,
+    struct RemoteOpponentMoveInfo *outMoveInfoRight)
+{
+    u8 fromId;
+    u16 size;
+    const u8 *data;
+
+    if (Follower_PeekPacket(&fromId, &data, &size))
+    {
+        const struct RemoteOppDecisionRequest *req2 = (const struct RemoteOppDecisionRequest *)data;
+        if (size >= sizeof(*req2)
+         && req2->type == REMOTE_OPP_MSG_REQUEST_DECISION
+         && req2->seq == expectedSeq
+         && req2->battlerId != expectedBattlerIdLeft)
+        {
+            *outBattlerIdRight = req2->battlerId;
+            *outControlledMonRight = req2->controlledMon;
+            *outMoveInfoRight = req2->moveInfo;
+            Follower_ConsumePeekedPacket();
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static bool8 Slave_PeekDecisionRequestSeq(u8 *outSeq)
+{
+    u8 fromId;
+    u16 size;
+    const u8 *data;
+
+    if (!Follower_PeekPacket(&fromId, &data, &size))
+        return FALSE;
+
+    // NOTE: size is always BLOCK_BUFFER_SIZE due to link API; validate via struct sizes.
+    if (size >= sizeof(struct RemoteOppDecisionRequest))
+    {
+        const struct RemoteOppDecisionRequest *req = (const struct RemoteOppDecisionRequest *)data;
+        if (req->type == REMOTE_OPP_MSG_REQUEST_DECISION)
+        {
+            *outSeq = req->seq;
+            return TRUE;
+        }
+    }
+
+    if (size >= sizeof(struct RemoteOppDecisionRequestDouble))
+    {
+        const struct RemoteOppDecisionRequestDouble *reqD = (const struct RemoteOppDecisionRequestDouble *)data;
+        if (reqD->type == REMOTE_OPP_MSG_REQUEST_DECISION_DOUBLE)
+        {
+            *outSeq = reqD->seq;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+static void Slave_ResetPendingState(void)
+{
+    sSlavePending = FALSE;
+    sSlavePendingIsAction = FALSE;
+    sSlavePendingIsDouble = FALSE;
+    sSlavePendingBattlerIdRight = 0xFF;
+    sSlaveDoubleStage = 0;
+    sSlaveUiLastStatus = 0xFF;
 }
 #endif
 
@@ -1055,6 +1343,208 @@ bool32 RemoteOpponent_Leader_TryRecvActionChoice2(u8 expectedSeq, u8 expectedBat
     return TRUE;
 }
 
+bool32 RemoteOpponent_Leader_SendDecisionRequest2(
+    u8 seq,
+    u8 battlerId,
+    const struct RemoteOpponentMonInfo *controlledMon,
+    u8 targetBattlerLeft,
+    const struct RemoteOpponentMonInfo *targetMonLeft,
+    u8 targetBattlerRight,
+    const struct RemoteOpponentMonInfo *targetMonRight,
+    const struct RemoteOpponentMoveInfo *moveInfo,
+    const struct RemoteOpponentPartyInfo *partyInfo)
+{
+    struct RemoteOppDecisionRequest req;
+    u8 i;
+
+    if (!RemoteOpponent_IsReady())
+        return FALSE;
+
+    if (!IsLinkTaskFinished())
+        return FALSE;
+
+    req.type = REMOTE_OPP_MSG_REQUEST_DECISION;
+    req.seq = seq;
+    req.battlerId = battlerId;
+    req.unused = 0;
+    req.targetBattlerLeft = targetBattlerLeft;
+    req.targetBattlerRight = targetBattlerRight;
+    req.unused2[0] = 0;
+    req.unused2[1] = 0;
+    req.controlledMon = *controlledMon;
+    req.targetMonLeft = *targetMonLeft;
+    req.targetMonRight = *targetMonRight;
+    req.moveInfo = *moveInfo;
+    req.party = *partyInfo;
+
+    for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+        req.trainerItems[i] = ITEM_NONE;
+
+#ifdef REMOTE_OPPONENT_LEADER
+    if (gBattleResources != NULL && gBattleResources->battleHistory != NULL)
+    {
+        for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+            req.trainerItems[i] = gBattleResources->battleHistory->trainerItems[i];
+    }
+#endif
+
+    return SendBlock(BitmaskAllOtherLinkPlayers(), &req, sizeof(req));
+}
+
+bool32 RemoteOpponent_Leader_SendDecisionRequestDouble2(
+    u8 seq,
+    u8 battlerIdLeft,
+    u8 battlerIdRight,
+    const struct RemoteOpponentMonInfo *controlledMonLeft,
+    const struct RemoteOpponentMonInfo *controlledMonRight,
+    u8 targetBattlerLeft,
+    const struct RemoteOpponentMonInfo *targetMonLeft,
+    u8 targetBattlerRight,
+    const struct RemoteOpponentMonInfo *targetMonRight,
+    const struct RemoteOpponentMoveInfo *moveInfoLeft,
+    const struct RemoteOpponentMoveInfo *moveInfoRight,
+    const struct RemoteOpponentPartyInfo *partyInfo)
+{
+    struct RemoteOppDecisionRequestDouble req;
+    u8 i;
+
+    if (!RemoteOpponent_IsReady())
+        return FALSE;
+
+    if (!IsLinkTaskFinished())
+        return FALSE;
+
+    req.type = REMOTE_OPP_MSG_REQUEST_DECISION_DOUBLE;
+    req.seq = seq;
+    req.battlerIdLeft = battlerIdLeft;
+    req.battlerIdRight = battlerIdRight;
+    req.targetBattlerLeft = targetBattlerLeft;
+    req.targetBattlerRight = targetBattlerRight;
+    req.unused2[0] = 0;
+    req.unused2[1] = 0;
+    req.controlledMonLeft = *controlledMonLeft;
+    req.controlledMonRight = *controlledMonRight;
+    req.targetMonLeft = *targetMonLeft;
+    req.targetMonRight = *targetMonRight;
+    req.moveInfoLeft = *moveInfoLeft;
+    req.moveInfoRight = *moveInfoRight;
+    req.party = *partyInfo;
+
+    for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+        req.trainerItems[i] = ITEM_NONE;
+
+#ifdef REMOTE_OPPONENT_LEADER
+    if (gBattleResources != NULL && gBattleResources->battleHistory != NULL)
+    {
+        for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+            req.trainerItems[i] = gBattleResources->battleHistory->trainerItems[i];
+    }
+#endif
+
+    return SendBlock(BitmaskAllOtherLinkPlayers(), &req, sizeof(req));
+}
+
+bool32 RemoteOpponent_Leader_TryRecvDecisionChoice2(
+    u8 expectedSeq,
+    u8 expectedBattlerId,
+    u8 *outAction,
+    u8 *outParam1,
+    u8 *outParam2)
+{
+    u8 fromId;
+    u16 size;
+    const u8 *data;
+    const struct RemoteOppDecisionResponse *resp;
+
+    if (!RemoteOpponent_IsReady())
+        return FALSE;
+
+#ifdef REMOTE_OPPONENT_LEADER
+    if (!Leader_PeekPacket(&fromId, &data, &size))
+        return FALSE;
+#else
+    if (!TryRecvPacket(&fromId, &data, &size))
+        return FALSE;
+#endif
+
+    resp = (const struct RemoteOppDecisionResponse *)data;
+    if (resp->type != REMOTE_OPP_MSG_CHOOSE_DECISION)
+        return FALSE;
+    if (resp->battlerId != expectedBattlerId)
+        return FALSE;
+    if (resp->seq != expectedSeq)
+    {
+#ifdef REMOTE_OPPONENT_LEADER
+        Leader_ConsumePeekedPacket();
+#endif
+        return FALSE;
+    }
+
+    *outAction = resp->action;
+    *outParam1 = resp->param1;
+    *outParam2 = resp->param2;
+
+#ifdef REMOTE_OPPONENT_LEADER
+    Leader_ConsumePeekedPacket();
+#endif
+    return TRUE;
+}
+
+bool32 RemoteOpponent_Leader_TryRecvDecisionChoiceDouble2(
+    u8 expectedSeq,
+    u8 expectedBattlerIdLeft,
+    u8 expectedBattlerIdRight,
+    u8 *outActionLeft,
+    u8 *outParam1Left,
+    u8 *outParam2Left,
+    u8 *outActionRight,
+    u8 *outParam1Right,
+    u8 *outParam2Right)
+{
+    u8 fromId;
+    u16 size;
+    const u8 *data;
+    const struct RemoteOppDecisionResponseDouble *resp;
+
+    if (!RemoteOpponent_IsReady())
+        return FALSE;
+
+#ifdef REMOTE_OPPONENT_LEADER
+    if (!Leader_PeekPacket(&fromId, &data, &size))
+        return FALSE;
+#else
+    if (!TryRecvPacket(&fromId, &data, &size))
+        return FALSE;
+#endif
+
+    resp = (const struct RemoteOppDecisionResponseDouble *)data;
+    if (resp->type != REMOTE_OPP_MSG_CHOOSE_DECISION_DOUBLE)
+        return FALSE;
+    if (resp->battlerIdLeft != expectedBattlerIdLeft)
+        return FALSE;
+    if (resp->battlerIdRight != expectedBattlerIdRight)
+        return FALSE;
+    if (resp->seq != expectedSeq)
+    {
+#ifdef REMOTE_OPPONENT_LEADER
+        Leader_ConsumePeekedPacket();
+#endif
+        return FALSE;
+    }
+
+    *outActionLeft = resp->actionLeft;
+    *outParam1Left = resp->param1Left;
+    *outParam2Left = resp->param2Left;
+    *outActionRight = resp->actionRight;
+    *outParam1Right = resp->param1Right;
+    *outParam2Right = resp->param2Right;
+
+#ifdef REMOTE_OPPONENT_LEADER
+    Leader_ConsumePeekedPacket();
+#endif
+    return TRUE;
+}
+
 bool32 RemoteOpponent_Leader_SendMoveRequest(
     u8 seq,
     u8 battlerId,
@@ -1207,6 +1697,176 @@ bool32 RemoteOpponent_Follower_TryRecvMoveRequest(
     return TRUE;
 }
 
+bool32 RemoteOpponent_Follower_TryRecvDecisionRequest(
+    u8 *outSeq,
+    u8 *outBattlerId,
+    u8 *outTargetBattlerLeft,
+    u8 *outTargetBattlerRight,
+    struct RemoteOpponentMonInfo *outControlledMon,
+    struct RemoteOpponentMonInfo *outTargetMonLeft,
+    struct RemoteOpponentMonInfo *outTargetMonRight,
+    struct RemoteOpponentMoveInfo *outMoveInfo,
+    struct RemoteOpponentPartyInfo *outPartyInfo,
+    u16 outTrainerItems[MAX_TRAINER_ITEMS])
+{
+    u8 fromId;
+    u16 size;
+    const u8 *data;
+    const struct RemoteOppDecisionRequest *req;
+    u8 i;
+
+    if (!RemoteOpponent_IsReady())
+        return FALSE;
+
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    if (!Follower_PeekPacket(&fromId, &data, &size))
+        return FALSE;
+#else
+    if (!TryRecvPacket(&fromId, &data, &size))
+        return FALSE;
+#endif
+
+    req = (const struct RemoteOppDecisionRequest *)data;
+    if (req->type != REMOTE_OPP_MSG_REQUEST_DECISION)
+        return FALSE;
+
+    *outSeq = req->seq;
+    *outBattlerId = req->battlerId;
+    *outTargetBattlerLeft = req->targetBattlerLeft;
+    *outTargetBattlerRight = req->targetBattlerRight;
+    *outControlledMon = req->controlledMon;
+    *outTargetMonLeft = req->targetMonLeft;
+    *outTargetMonRight = req->targetMonRight;
+    *outMoveInfo = req->moveInfo;
+    *outPartyInfo = req->party;
+    for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+        outTrainerItems[i] = req->trainerItems[i];
+
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    Follower_ConsumePeekedPacket();
+#endif
+    return TRUE;
+}
+
+bool32 RemoteOpponent_Follower_TryRecvDecisionRequestDouble(
+    u8 *outSeq,
+    u8 *outBattlerIdLeft,
+    u8 *outBattlerIdRight,
+    u8 *outTargetBattlerLeft,
+    u8 *outTargetBattlerRight,
+    struct RemoteOpponentMonInfo *outControlledMonLeft,
+    struct RemoteOpponentMonInfo *outControlledMonRight,
+    struct RemoteOpponentMonInfo *outTargetMonLeft,
+    struct RemoteOpponentMonInfo *outTargetMonRight,
+    struct RemoteOpponentMoveInfo *outMoveInfoLeft,
+    struct RemoteOpponentMoveInfo *outMoveInfoRight,
+    struct RemoteOpponentPartyInfo *outPartyInfo,
+    u16 outTrainerItems[MAX_TRAINER_ITEMS])
+{
+    u8 fromId;
+    u16 size;
+    const u8 *data;
+    const struct RemoteOppDecisionRequestDouble *req;
+    u8 i;
+
+    if (!RemoteOpponent_IsReady())
+        return FALSE;
+
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    if (!Follower_PeekPacket(&fromId, &data, &size))
+        return FALSE;
+#else
+    if (!TryRecvPacket(&fromId, &data, &size))
+        return FALSE;
+#endif
+
+    req = (const struct RemoteOppDecisionRequestDouble *)data;
+    if (req->type != REMOTE_OPP_MSG_REQUEST_DECISION_DOUBLE)
+        return FALSE;
+
+    *outSeq = req->seq;
+    *outBattlerIdLeft = req->battlerIdLeft;
+    *outBattlerIdRight = req->battlerIdRight;
+    *outTargetBattlerLeft = req->targetBattlerLeft;
+    *outTargetBattlerRight = req->targetBattlerRight;
+    *outControlledMonLeft = req->controlledMonLeft;
+    *outControlledMonRight = req->controlledMonRight;
+    *outTargetMonLeft = req->targetMonLeft;
+    *outTargetMonRight = req->targetMonRight;
+    *outMoveInfoLeft = req->moveInfoLeft;
+    *outMoveInfoRight = req->moveInfoRight;
+    *outPartyInfo = req->party;
+    for (i = 0; i < MAX_TRAINER_ITEMS; i++)
+        outTrainerItems[i] = req->trainerItems[i];
+
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    Follower_ConsumePeekedPacket();
+#endif
+    return TRUE;
+}
+
+bool32 RemoteOpponent_Follower_SendDecisionChoice2(
+    u8 seq,
+    u8 battlerId,
+    u8 action,
+    u8 param1,
+    u8 param2)
+{
+    struct RemoteOppDecisionResponse resp;
+
+    if (!RemoteOpponent_IsReady())
+        return FALSE;
+
+    if (!IsLinkTaskFinished())
+        return FALSE;
+
+    resp.type = REMOTE_OPP_MSG_CHOOSE_DECISION;
+    resp.seq = seq;
+    resp.battlerId = battlerId;
+    resp.action = action;
+    resp.param1 = param1;
+    resp.param2 = param2;
+    resp.unused[0] = 0;
+    resp.unused[1] = 0;
+
+    return SendBlock(BitmaskAllOtherLinkPlayers(), &resp, sizeof(resp));
+}
+
+bool32 RemoteOpponent_Follower_SendDecisionChoiceDouble2(
+    u8 seq,
+    u8 battlerIdLeft,
+    u8 actionLeft,
+    u8 param1Left,
+    u8 param2Left,
+    u8 battlerIdRight,
+    u8 actionRight,
+    u8 param1Right,
+    u8 param2Right)
+{
+    struct RemoteOppDecisionResponseDouble resp;
+
+    if (!RemoteOpponent_IsReady())
+        return FALSE;
+
+    if (!IsLinkTaskFinished())
+        return FALSE;
+
+    resp.type = REMOTE_OPP_MSG_CHOOSE_DECISION_DOUBLE;
+    resp.seq = seq;
+    resp.battlerIdLeft = battlerIdLeft;
+    resp.actionLeft = actionLeft;
+    resp.param1Left = param1Left;
+    resp.param2Left = param2Left;
+    resp.battlerIdRight = battlerIdRight;
+    resp.actionRight = actionRight;
+    resp.param1Right = param1Right;
+    resp.param2Right = param2Right;
+    resp.unused[0] = 0;
+    resp.unused[1] = 0;
+
+    return SendBlock(BitmaskAllOtherLinkPlayers(), &resp, sizeof(resp));
+}
+
 bool32 RemoteOpponent_Follower_TryRecvActionRequest(
     u8 *outSeq,
     u8 *outBattlerId,
@@ -1318,13 +1978,23 @@ void CB2_RemoteOpponentFollower(void)
 {
     u8 seq;
     u8 battlerId;
+    u8 battlerIdLeft;
+    u8 battlerIdRight;
     u8 targetBattlerLeft;
     u8 targetBattlerRight;
+    u8 fromId;
+    u16 size;
+    const u8 *data;
     struct RemoteOpponentMonInfo controlledMon;
+    struct RemoteOpponentMonInfo controlledMonLeft;
+    struct RemoteOpponentMonInfo controlledMonRight;
     struct RemoteOpponentMonInfo targetMonLeft;
     struct RemoteOpponentMonInfo targetMonRight;
     struct RemoteOpponentMoveInfo moveInfo;
+    struct RemoteOpponentMoveInfo moveInfoLeft;
+    struct RemoteOpponentMoveInfo moveInfoRight;
     struct RemoteOpponentPartyInfo partyInfo;
+    u16 trainerItems[MAX_TRAINER_ITEMS];
     u8 uiStatus;
 
     RemoteOpponent_OpenLinkIfNeeded();
@@ -1340,7 +2010,7 @@ void CB2_RemoteOpponentFollower(void)
     // - yellow: remote players received but player count < 2
     // - magenta: player data exchange incomplete / linkType mismatch
     // - green: ready, no pending request
-    // - blue shades: pending request (shade indicates selected slot)
+    // - blue: pending request
     if (!IsLinkConnectionEstablished())
     {
         SetSlaveBackdropColor(RGB(31, 0, 0));
@@ -1361,6 +2031,19 @@ void CB2_RemoteOpponentFollower(void)
         SetSlaveBackdropColor(RGB(31, 0, 31));
         uiStatus = SLAVE_UI_STATUS_EXCHANGE_INCOMPLETE;
     }
+    else if (sFollowerAwaitingLeaderRequest)
+    {
+        // After we send a decision, show a green WAITING screen until the next request arrives.
+        SetSlaveBackdropColor(RGB(0, 31, 0));
+        uiStatus = SLAVE_UI_STATUS_WAITING;
+    }
+    else if (sSlavePending && sSlavePendingIsDouble && sSlaveDoubleStage == 2)
+    {
+        // In bundled doubles, we may need to wait for the partner battler's request to arrive
+        // before we can continue to the second selection.
+        SetSlaveBackdropColor(RGB(0, 31, 0));
+        uiStatus = SLAVE_UI_STATUS_WAITING;
+    }
     else if (!sSlavePending)
     {
         SetSlaveBackdropColor(RGB(0, 31, 0));
@@ -1368,7 +2051,9 @@ void CB2_RemoteOpponentFollower(void)
     }
     else
     {
-        SetSlaveBackdropColor(sSlaveSlotColors[sSlaveSelectedSlot & 3]);
+        // Keep a single, stable menu blue for all follower menus.
+        // Key it to the active mon slot so it matches the battle menu shade.
+        SetSlaveBackdropColor(sSlaveSlotColors[sSlaveUiPartyInfo.currentMonId & 3]);
         uiStatus = SLAVE_UI_STATUS_PENDING;
     }
 
@@ -1397,51 +2082,162 @@ void CB2_RemoteOpponentFollower(void)
         }
     }
 
-    // Accept new requests at any time; the latest request wins.
-    if (RemoteOpponent_Follower_TryRecvActionRequest2(&seq, &battlerId, &controlledMon, &targetMonLeft, &targetMonRight, &partyInfo))
+    // While we're mid-selection, do NOT restart the UI on duplicate requests.
+    // (The leader may retry sends while waiting; we must keep menuing stable.)
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    if (sSlavePending)
+    {
+        u8 peekSeq;
+        // If a new turn started (seq changed), abandon the stale UI and accept the new request.
+        if (Slave_PeekDecisionRequestSeq(&peekSeq) && peekSeq != sSlavePendingSeq)
+            Slave_ResetPendingState();
+    }
+#endif
+
+    // Accept new requests only when idle; prefer the double-decision request if present.
+    if (!sSlavePending && RemoteOpponent_Follower_TryRecvDecisionRequestDouble(
+            &seq,
+            &battlerIdLeft,
+            &battlerIdRight,
+            &targetBattlerLeft,
+            &targetBattlerRight,
+            &controlledMonLeft,
+            &controlledMonRight,
+            &targetMonLeft,
+            &targetMonRight,
+            &moveInfoLeft,
+            &moveInfoRight,
+            &partyInfo,
+            trainerItems))
     {
         sSlavePending = TRUE;
         sSlavePendingIsAction = TRUE;
+        sSlavePendingIsDouble = TRUE;
+        sSlaveDoubleStage = 0;
+        sFollowerAwaitingLeaderRequest = FALSE;
         sSlavePendingSeq = seq;
-        sSlavePendingBattlerId = battlerId;
+        sSlavePendingBattlerIdLeft = battlerIdLeft;
+        sSlavePendingBattlerIdRight = battlerIdRight;
+        sSlavePendingBattlerId = battlerIdLeft;
         sSlaveActionCursor = 0;
         sSlaveActionSubscreen = SLAVE_ACTION_SUBSCREEN_MENU;
         sSlaveSelectedSlot = partyInfo.currentMonId;
-        sSlaveUiControlledMon = controlledMon;
+        sSlaveUiControlledMonLeft = controlledMonLeft;
+        sSlaveUiControlledMonRight = controlledMonRight;
+        sSlaveUiControlledMon = controlledMonLeft;
         sSlaveUiTargetMonLeft = targetMonLeft;
         sSlaveUiTargetMonRight = targetMonRight;
         // Keep existing single-target HUD field populated (used by some UI and as a fallback).
         sSlaveUiTargetMon = (targetMonLeft.species != SPECIES_NONE) ? targetMonLeft : targetMonRight;
         sSlaveUiPartyInfo = partyInfo;
-        SlaveUi_DrawActionMenu();
-    }
+        CpuCopy16(trainerItems, sSlaveUiTrainerItems, sizeof(sSlaveUiTrainerItems));
 
-    if (RemoteOpponent_Follower_TryRecvMoveRequest(&seq, &battlerId, &targetBattlerLeft, &targetBattlerRight, &controlledMon, &targetMonLeft, &targetMonRight, &moveInfo))
-    {
-        sSlavePending = TRUE;
-        sSlavePendingIsAction = FALSE;
-        sSlavePendingSeq = seq;
-        sSlavePendingBattlerId = battlerId;
-        sSlaveSelectedSlot = 0;
-
-        sSlaveUiControlledMon = controlledMon;
-        sSlaveUiTargetMonLeft = targetMonLeft;
-        sSlaveUiTargetMonRight = targetMonRight;
         sSlaveUiTargetBattlerLeft = targetBattlerLeft;
         sSlaveUiTargetBattlerRight = targetBattlerRight;
+
         // Default target: prefer left if valid, otherwise right.
         if (sSlaveUiTargetMonLeft.species != SPECIES_NONE)
             sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerLeft;
         else
             sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerRight;
 
-        // Keep existing single-target HUD field populated (used by action menus).
-        sSlaveUiTargetMon = (targetMonLeft.species != SPECIES_NONE) ? targetMonLeft : targetMonRight;
-        sSlaveUiMoveInfo = moveInfo;
-        SlaveUi_DrawMoves();
+        sSlaveUiMoveInfoLeft = moveInfoLeft;
+        sSlaveUiMoveInfoRight = moveInfoRight;
+        sSlaveUiMoveInfo = moveInfoLeft;
+        SlaveUi_DrawActionMenu();
     }
 
+    // Single-battler request (singles, or backwards-compatible doubles behavior).
+    if (!sSlavePending && RemoteOpponent_Follower_TryRecvDecisionRequest(&seq, &battlerId, &targetBattlerLeft, &targetBattlerRight, &controlledMon, &targetMonLeft, &targetMonRight, &moveInfo, &partyInfo, trainerItems))
+    {
+        // If the leader sent two decision requests back-to-back (same seq), treat this as a
+        // bundled doubles selection and keep all menuing local until both decisions are chosen.
+        battlerIdLeft = battlerId;
+        controlledMonLeft = controlledMon;
+        moveInfoLeft = moveInfo;
+        battlerIdRight = 0xFF;
+        controlledMonRight = controlledMon;
+        moveInfoRight = moveInfo;
+
+        // In doubles, the leader may send a second decision request (same seq) for the partner.
+        // Try to consume it immediately if already available.
+    #ifdef REMOTE_OPPONENT_FOLLOWER
+        if (partyInfo.partnerMonId != partyInfo.currentMonId)
+        {
+                Slave_TryConsumePartnerDecisionRequest(seq, battlerIdLeft, &battlerIdRight, &controlledMonRight, &moveInfoRight);
+        }
+    #endif
+
+        sSlavePending = TRUE;
+        sSlavePendingIsAction = TRUE;
+        // Detect doubles via partyInfo (in singles, partnerMonId == currentMonId).
+        sSlavePendingIsDouble = (partyInfo.partnerMonId != partyInfo.currentMonId);
+        sSlaveDoubleStage = 0;
+        sFollowerAwaitingLeaderRequest = FALSE;
+        sSlavePendingSeq = seq;
+        sSlavePendingBattlerId = battlerId;
+        sSlavePendingBattlerIdLeft = battlerIdLeft;
+        sSlavePendingBattlerIdRight = battlerIdRight;
+        sSlaveActionCursor = 0;
+        sSlaveActionSubscreen = SLAVE_ACTION_SUBSCREEN_MENU;
+        sSlaveSelectedSlot = partyInfo.currentMonId;
+        sSlaveUiControlledMonLeft = controlledMonLeft;
+        sSlaveUiControlledMonRight = controlledMonRight;
+        sSlaveUiControlledMon = controlledMonLeft;
+        sSlaveUiTargetMonLeft = targetMonLeft;
+        sSlaveUiTargetMonRight = targetMonRight;
+        // Keep existing single-target HUD field populated (used by some UI and as a fallback).
+        sSlaveUiTargetMon = (targetMonLeft.species != SPECIES_NONE) ? targetMonLeft : targetMonRight;
+        sSlaveUiPartyInfo = partyInfo;
+        CpuCopy16(trainerItems, sSlaveUiTrainerItems, sizeof(sSlaveUiTrainerItems));
+
+        sSlaveUiTargetBattlerLeft = targetBattlerLeft;
+        sSlaveUiTargetBattlerRight = targetBattlerRight;
+
+        // Default target: prefer left if valid, otherwise right.
+        if (sSlaveUiTargetMonLeft.species != SPECIES_NONE)
+            sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerLeft;
+        else
+            sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerRight;
+
+        sSlaveUiMoveInfoLeft = moveInfoLeft;
+        sSlaveUiMoveInfoRight = moveInfoRight;
+        sSlaveUiMoveInfo = moveInfoLeft;
+
+        if (sSlavePendingIsDouble)
+            SlaveUi_StartDoubleStage(0);
+        else
+            SlaveUi_DrawActionMenu();
+    }
+
+#ifdef REMOTE_OPPONENT_FOLLOWER
+    // While choosing the left battler's decision in doubles, consume the partner request
+    // whenever it arrives. This avoids requiring both requests to be received in the same tick.
+    if (sSlavePending
+     && sSlavePendingIsDouble
+     && sSlavePendingBattlerIdRight == 0xFF
+     && sSlaveDoubleStage != 1)
+    {
+        if (Slave_TryConsumePartnerDecisionRequest(
+                sSlavePendingSeq,
+                sSlavePendingBattlerIdLeft,
+                &sSlavePendingBattlerIdRight,
+                &sSlaveUiControlledMonRight,
+                &sSlaveUiMoveInfoRight))
+        {
+            // If we were waiting after locking in the left decision, continue to stage 1 now.
+            if (sSlaveDoubleStage == 2)
+                SlaveUi_StartDoubleStage(1);
+        }
+    }
+#endif
+
     if (!sSlavePending)
+        return;
+
+    // If the left decision is already locked in but we haven't received the partner request yet,
+    // wait here until the partner request arrives (then stage 1 will begin).
+    if (sSlavePendingIsDouble && sSlaveDoubleStage == 2)
         return;
 
     if (sSlavePendingIsAction)
@@ -1453,6 +2249,8 @@ void CB2_RemoteOpponentFollower(void)
         {
             if (gMain.newKeys & (DPAD_UP | DPAD_DOWN))
             {
+                u8 prevCursor = sSlaveActionCursor;
+
                 if (gMain.newKeys & DPAD_UP)
                 {
                     if (sSlaveActionCursor > 0)
@@ -1467,18 +2265,28 @@ void CB2_RemoteOpponentFollower(void)
                     else
                         sSlaveActionCursor = 0;
                 }
-                SlaveUi_DrawActionMenu();
+
+                if (sSlaveUiLastActionCursor == 0xFF)
+                {
+                    SlaveUi_DrawActionMenu();
+                }
+                else
+                {
+                    SlaveUi_UpdateActionCursor(prevCursor, sSlaveActionCursor);
+                    sSlaveUiLastActionCursor = sSlaveActionCursor;
+                }
             }
 
             if (gMain.newKeys & A_BUTTON)
             {
                 if (sSlaveActionCursor == 0)
                 {
-                    if (RemoteOpponent_Follower_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_FIGHT, 0))
-                    {
-                        sSlavePending = FALSE;
-                        SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
-                    }
+                    // All decision menuing is local; only send once a final selection is made.
+                    sSlavePendingIsAction = FALSE;
+                    sSlaveSelectedSlot = 0;
+                    SlaveUi_DrawMoves();
+                    // Prevent an immediate redraw on the next tick.
+                    sSlaveUiLastSelectedSlot = (sSlaveSelectedSlot & 3);
                 }
                 else if (sSlaveActionCursor == 1)
                 {
@@ -1495,13 +2303,34 @@ void CB2_RemoteOpponentFollower(void)
                 }
             }
 
-            // Intentionally do not handle B on this menu.
-            // The prompt is coming from the leader; cancelling locally desyncs UX.
+            // In doubles:
+            // - If we're handling a double-decision request, backtracking is fully local.
+            // - Otherwise (single-battler request), backtracking requires leader coordination.
+            if (gMain.newKeys & B_BUTTON)
+            {
+                if (sSlavePendingIsDouble && sSlaveDoubleStage == 1)
+                {
+                    // Go back to the partner selection locally.
+                    SlaveUi_StartDoubleStage(0);
+                    return;
+                }
+
+                if (!sSlavePendingIsDouble && (sSlavePendingBattlerId & BIT_FLANK) != B_FLANK_LEFT)
+                {
+                    if (RemoteOpponent_Follower_SendDecisionChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_ACTION_CANCEL_PARTNER, 0, 0))
+                    {
+                        sSlavePending = FALSE;
+                        sFollowerAwaitingLeaderRequest = TRUE;
+                    }
+                }
+            }
 
             return;
         }
         else if (sSlaveActionSubscreen == SLAVE_ACTION_SUBSCREEN_PARTY)
         {
+            u8 prevSlot = (sSlaveSelectedSlot % PARTY_SIZE);
+
             if (gMain.newKeys & DPAD_UP)
             {
                 if (sSlaveSelectedSlot > 0)
@@ -1513,10 +2342,18 @@ void CB2_RemoteOpponentFollower(void)
                     sSlaveSelectedSlot++;
             }
 
-            if (sSlaveSelectedSlot != sSlaveUiLastSelectedSlot)
+            if ((sSlaveSelectedSlot % PARTY_SIZE) != prevSlot)
             {
-                sSlaveUiLastSelectedSlot = sSlaveSelectedSlot;
-                SlaveUi_DrawParty();
+                u8 newSlot = (sSlaveSelectedSlot % PARTY_SIZE);
+                if (sSlaveUiLastSelectedSlot == 0xFF)
+                {
+                    SlaveUi_DrawParty();
+                }
+                else
+                {
+                    SlaveUi_UpdateArrowAtY(16 + (prevSlot * 16), 16 + (newSlot * 16));
+                }
+                sSlaveUiLastSelectedSlot = newSlot;
             }
 
             if (gMain.newKeys & A_BUTTON)
@@ -1524,10 +2361,44 @@ void CB2_RemoteOpponentFollower(void)
                 if (!SlaveUi_IsValidSwitchSlot(sSlaveSelectedSlot))
                     return;
 
-                if (RemoteOpponent_Follower_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_SWITCH, sSlaveSelectedSlot))
+                if (sSlavePendingIsDouble)
                 {
-                    sSlavePending = FALSE;
-                    SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
+                    if (sSlaveDoubleStage == 0)
+                    {
+                        sSlaveDoubleLeftAction = REMOTE_OPP_ACTION_SWITCH;
+                        sSlaveDoubleLeftParam1 = sSlaveSelectedSlot;
+                        sSlaveDoubleLeftParam2 = 0;
+                        if (sSlavePendingBattlerIdRight != 0xFF)
+                            SlaveUi_StartDoubleStage(1);
+                        else
+                            sSlaveDoubleStage = 2;
+                    }
+                    else
+                    {
+                        if (RemoteOpponent_Follower_SendDecisionChoiceDouble2(
+                                sSlavePendingSeq,
+                                sSlavePendingBattlerIdLeft,
+                                sSlaveDoubleLeftAction,
+                                sSlaveDoubleLeftParam1,
+                                sSlaveDoubleLeftParam2,
+                                sSlavePendingBattlerIdRight,
+                                REMOTE_OPP_ACTION_SWITCH,
+                                sSlaveSelectedSlot,
+                                0))
+                        {
+                            sSlavePending = FALSE;
+                            sSlavePendingIsDouble = FALSE;
+                            sFollowerAwaitingLeaderRequest = TRUE;
+                        }
+                    }
+                }
+                else
+                {
+                    if (RemoteOpponent_Follower_SendDecisionChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_ACTION_SWITCH, sSlaveSelectedSlot, 0))
+                    {
+                        sSlavePending = FALSE;
+                        sFollowerAwaitingLeaderRequest = TRUE;
+                    }
                 }
             }
 
@@ -1542,6 +2413,8 @@ void CB2_RemoteOpponentFollower(void)
         else
         {
             // Bag subscreen
+            u8 prevSlot = (sSlaveSelectedSlot % MAX_TRAINER_ITEMS);
+
             if (gMain.newKeys & DPAD_UP)
             {
                 if (sSlaveSelectedSlot > 0)
@@ -1553,10 +2426,18 @@ void CB2_RemoteOpponentFollower(void)
                     sSlaveSelectedSlot++;
             }
 
-            if (sSlaveSelectedSlot != sSlaveUiLastSelectedSlot)
+            if ((sSlaveSelectedSlot % MAX_TRAINER_ITEMS) != prevSlot)
             {
-                sSlaveUiLastSelectedSlot = sSlaveSelectedSlot;
-                SlaveUi_DrawBag();
+                u8 newSlot = (sSlaveSelectedSlot % MAX_TRAINER_ITEMS);
+                if (sSlaveUiLastSelectedSlot == 0xFF)
+                {
+                    SlaveUi_DrawBag();
+                }
+                else
+                {
+                    SlaveUi_UpdateArrowAtY(48 + (prevSlot * 16), 48 + (newSlot * 16));
+                }
+                sSlaveUiLastSelectedSlot = newSlot;
             }
 
             if (gMain.newKeys & A_BUTTON)
@@ -1564,10 +2445,44 @@ void CB2_RemoteOpponentFollower(void)
                 if (!SlaveUi_IsValidItemSlot(sSlaveSelectedSlot))
                     return;
 
-                if (RemoteOpponent_Follower_SendActionChoice(sSlavePendingSeq, REMOTE_OPP_ACTION_ITEM, sSlaveSelectedSlot))
+                if (sSlavePendingIsDouble)
                 {
-                    sSlavePending = FALSE;
-                    SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
+                    if (sSlaveDoubleStage == 0)
+                    {
+                        sSlaveDoubleLeftAction = REMOTE_OPP_ACTION_ITEM;
+                        sSlaveDoubleLeftParam1 = sSlaveSelectedSlot;
+                        sSlaveDoubleLeftParam2 = 0;
+                        if (sSlavePendingBattlerIdRight != 0xFF)
+                            SlaveUi_StartDoubleStage(1);
+                        else
+                            sSlaveDoubleStage = 2;
+                    }
+                    else
+                    {
+                        if (RemoteOpponent_Follower_SendDecisionChoiceDouble2(
+                                sSlavePendingSeq,
+                                sSlavePendingBattlerIdLeft,
+                                sSlaveDoubleLeftAction,
+                                sSlaveDoubleLeftParam1,
+                                sSlaveDoubleLeftParam2,
+                                sSlavePendingBattlerIdRight,
+                                REMOTE_OPP_ACTION_ITEM,
+                                sSlaveSelectedSlot,
+                                0))
+                        {
+                            sSlavePending = FALSE;
+                            sSlavePendingIsDouble = FALSE;
+                            sFollowerAwaitingLeaderRequest = TRUE;
+                        }
+                    }
+                }
+                else
+                {
+                    if (RemoteOpponent_Follower_SendDecisionChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_ACTION_ITEM, sSlaveSelectedSlot, 0))
+                    {
+                        sSlavePending = FALSE;
+                        sFollowerAwaitingLeaderRequest = TRUE;
+                    }
                 }
             }
 
@@ -1597,7 +2512,7 @@ void CB2_RemoteOpponentFollower(void)
             else
                 sSlaveSelectedTargetBattler = sSlaveUiTargetBattlerLeft;
 
-            SlaveUi_DrawMoves();
+            SlaveUi_DrawMoveTargetsLine();
         }
     }
 
@@ -1634,30 +2549,78 @@ void CB2_RemoteOpponentFollower(void)
         }
     }
 
-    if (sSlaveSelectedSlot != sSlaveUiLastSelectedSlot)
+    if ((sSlaveSelectedSlot & 3) != (sSlaveUiLastSelectedSlot & 3))
     {
-        sSlaveUiLastSelectedSlot = sSlaveSelectedSlot;
-        SlaveUi_DrawMoves();
+        u8 prevSlot = (sSlaveUiLastSelectedSlot & 3);
+        u8 newSlot = (sSlaveSelectedSlot & 3);
+
+        // If we don't have a valid previous selection (e.g. after a full redraw),
+        // fall back to a full draw to keep things simple.
+        if (sSlaveUiLastSelectedSlot == 0xFF)
+        {
+            SlaveUi_DrawMoves();
+        }
+        else
+        {
+            SlaveUi_UpdateArrowAtY(48 + (prevSlot * 16), 48 + (newSlot * 16));
+            // Footer is static (controls-only), no need to redraw.
+        }
+
+        sSlaveUiLastSelectedSlot = newSlot;
     }
 
     if (gMain.newKeys & A_BUTTON)
     {
-        if (RemoteOpponent_Follower_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, sSlaveSelectedSlot, sSlaveSelectedTargetBattler))
+        if (sSlavePendingIsDouble)
         {
-            sSlavePending = FALSE;
-            SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
+            if (sSlaveDoubleStage == 0)
+            {
+                sSlaveDoubleLeftAction = REMOTE_OPP_ACTION_FIGHT;
+                sSlaveDoubleLeftParam1 = sSlaveSelectedSlot;
+                sSlaveDoubleLeftParam2 = sSlaveSelectedTargetBattler;
+                if (sSlavePendingBattlerIdRight != 0xFF)
+                    SlaveUi_StartDoubleStage(1);
+                else
+                    sSlaveDoubleStage = 2;
+            }
+            else
+            {
+                if (RemoteOpponent_Follower_SendDecisionChoiceDouble2(
+                        sSlavePendingSeq,
+                        sSlavePendingBattlerIdLeft,
+                        sSlaveDoubleLeftAction,
+                        sSlaveDoubleLeftParam1,
+                        sSlaveDoubleLeftParam2,
+                        sSlavePendingBattlerIdRight,
+                        REMOTE_OPP_ACTION_FIGHT,
+                        sSlaveSelectedSlot,
+                        sSlaveSelectedTargetBattler))
+                {
+                    sSlavePending = FALSE;
+                    sSlavePendingIsDouble = FALSE;
+                    sFollowerAwaitingLeaderRequest = TRUE;
+                }
+            }
+        }
+        else
+        {
+            if (RemoteOpponent_Follower_SendDecisionChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_ACTION_FIGHT, sSlaveSelectedSlot, sSlaveSelectedTargetBattler))
+            {
+                sSlavePending = FALSE;
+                sFollowerAwaitingLeaderRequest = TRUE;
+            }
         }
     }
 
     if (gMain.newKeys & B_BUTTON)
     {
-        // Mirror vanilla behavior: B cancels move selection and returns to the action menu.
-        // We must inform the leader so the battle engine can transition back.
-        if (RemoteOpponent_Follower_SendMoveChoice2(sSlavePendingSeq, sSlavePendingBattlerId, REMOTE_OPP_MOVE_SLOT_CANCEL, sSlaveSelectedTargetBattler))
-        {
-            sSlavePending = FALSE;
-            SlaveUi_DrawStatus(SLAVE_UI_STATUS_READY);
-        }
+        // Local-only back: keep the leader waiting for a move choice.
+        // This avoids extra link traffic when the user returns to FIGHT again.
+        sSlavePendingIsAction = TRUE;
+        sSlaveActionSubscreen = SLAVE_ACTION_SUBSCREEN_MENU;
+        sSlaveActionCursor = 0;
+        sSlaveUiLastSelectedSlot = 0xFF;
+        SlaveUi_DrawActionMenu();
     }
 }
 

@@ -13,6 +13,8 @@
 
 #ifdef REMOTE_OPPONENT
 
+#include "data.h" // MAX_TRAINER_ITEMS
+
 struct RemoteOpponentMonInfo
 {
 	u16 species;
@@ -47,6 +49,9 @@ enum
 	REMOTE_OPP_ACTION_FIGHT = 0,
 	REMOTE_OPP_ACTION_SWITCH = 1,
 	REMOTE_OPP_ACTION_ITEM = 2,
+	// Special: used in doubles to back out from the partner's action selection.
+	// The leader translates this to B_ACTION_CANCEL_PARTNER.
+	REMOTE_OPP_ACTION_CANCEL_PARTNER = 3,
 };
 
 // Special move slot used by the follower to indicate "cancel/back" from the move menu.
@@ -88,8 +93,59 @@ bool32 RemoteOpponent_Leader_SendActionRequest2(
 	const struct RemoteOpponentMonInfo *targetMonRight,
 	const struct RemoteOpponentPartyInfo *partyInfo);
 
+// LEADER: request a full decision from the follower (action + any required submenu input).
+// The request includes all data needed to navigate menus locally: moves, party, and trainer items.
+bool32 RemoteOpponent_Leader_SendDecisionRequest2(
+	u8 seq,
+	u8 battlerId,
+	const struct RemoteOpponentMonInfo *controlledMon,
+	u8 targetBattlerLeft,
+	const struct RemoteOpponentMonInfo *targetMonLeft,
+	u8 targetBattlerRight,
+	const struct RemoteOpponentMonInfo *targetMonRight,
+	const struct RemoteOpponentMoveInfo *moveInfo,
+	const struct RemoteOpponentPartyInfo *partyInfo);
+
+// LEADER: request full decisions for both opponents in a double battle.
+// Allows the follower to pick actions/moves for both battlers locally with no intermediate link traffic.
+bool32 RemoteOpponent_Leader_SendDecisionRequestDouble2(
+	u8 seq,
+	u8 battlerIdLeft,
+	u8 battlerIdRight,
+	const struct RemoteOpponentMonInfo *controlledMonLeft,
+	const struct RemoteOpponentMonInfo *controlledMonRight,
+	u8 targetBattlerLeft,
+	const struct RemoteOpponentMonInfo *targetMonLeft,
+	u8 targetBattlerRight,
+	const struct RemoteOpponentMonInfo *targetMonRight,
+	const struct RemoteOpponentMoveInfo *moveInfoLeft,
+	const struct RemoteOpponentMoveInfo *moveInfoRight,
+	const struct RemoteOpponentPartyInfo *partyInfo);
+
 // LEADER: check for an action response. Returns TRUE when a valid response is received.
 bool32 RemoteOpponent_Leader_TryRecvActionChoice(u8 expectedSeq, u8 *outAction, u8 *outData);
+
+// LEADER: check for a decision response.
+// For REMOTE_OPP_ACTION_FIGHT: outParam1 = moveSlot, outParam2 = targetBattlerId.
+// For REMOTE_OPP_ACTION_SWITCH/ITEM: outParam1 = slot index, outParam2 unused.
+bool32 RemoteOpponent_Leader_TryRecvDecisionChoice2(
+	u8 expectedSeq,
+	u8 expectedBattlerId,
+	u8 *outAction,
+	u8 *outParam1,
+	u8 *outParam2);
+
+// LEADER: check for a double-decision response.
+bool32 RemoteOpponent_Leader_TryRecvDecisionChoiceDouble2(
+	u8 expectedSeq,
+	u8 expectedBattlerIdLeft,
+	u8 expectedBattlerIdRight,
+	u8 *outActionLeft,
+	u8 *outParam1Left,
+	u8 *outParam2Left,
+	u8 *outActionRight,
+	u8 *outParam1Right,
+	u8 *outParam2Right);
 
 // FOLLOWER: check for a move request. Returns TRUE when a request is received.
 bool32 RemoteOpponent_Follower_TryRecvMoveRequest(
@@ -122,6 +178,55 @@ bool32 RemoteOpponent_Follower_TryRecvActionRequest2(
 
 // FOLLOWER: send selected action back to the leader.
 bool32 RemoteOpponent_Follower_SendActionChoice(u8 seq, u8 action, u8 data);
+
+// FOLLOWER: check for a decision request (includes moves + party + items).
+bool32 RemoteOpponent_Follower_TryRecvDecisionRequest(
+	u8 *outSeq,
+	u8 *outBattlerId,
+	u8 *outTargetBattlerLeft,
+	u8 *outTargetBattlerRight,
+	struct RemoteOpponentMonInfo *outControlledMon,
+	struct RemoteOpponentMonInfo *outTargetMonLeft,
+	struct RemoteOpponentMonInfo *outTargetMonRight,
+	struct RemoteOpponentMoveInfo *outMoveInfo,
+	struct RemoteOpponentPartyInfo *outPartyInfo,
+	u16 outTrainerItems[MAX_TRAINER_ITEMS]);
+
+// FOLLOWER: check for a double-decision request.
+bool32 RemoteOpponent_Follower_TryRecvDecisionRequestDouble(
+	u8 *outSeq,
+	u8 *outBattlerIdLeft,
+	u8 *outBattlerIdRight,
+	u8 *outTargetBattlerLeft,
+	u8 *outTargetBattlerRight,
+	struct RemoteOpponentMonInfo *outControlledMonLeft,
+	struct RemoteOpponentMonInfo *outControlledMonRight,
+	struct RemoteOpponentMonInfo *outTargetMonLeft,
+	struct RemoteOpponentMonInfo *outTargetMonRight,
+	struct RemoteOpponentMoveInfo *outMoveInfoLeft,
+	struct RemoteOpponentMoveInfo *outMoveInfoRight,
+	struct RemoteOpponentPartyInfo *outPartyInfo,
+	u16 outTrainerItems[MAX_TRAINER_ITEMS]);
+
+// FOLLOWER: send final decision back to the leader.
+bool32 RemoteOpponent_Follower_SendDecisionChoice2(
+	u8 seq,
+	u8 battlerId,
+	u8 action,
+	u8 param1,
+	u8 param2);
+
+// FOLLOWER: send final decisions for both opponents in a double battle.
+bool32 RemoteOpponent_Follower_SendDecisionChoiceDouble2(
+	u8 seq,
+	u8 battlerIdLeft,
+	u8 actionLeft,
+	u8 param1Left,
+	u8 param2Left,
+	u8 battlerIdRight,
+	u8 actionRight,
+	u8 param1Right,
+	u8 param2Right);
 
 // Variants that also include battlerId for routing (recommended).
 bool32 RemoteOpponent_Leader_TryRecvMoveChoice2(u8 expectedSeq, u8 expectedBattlerId, u8 *outMoveSlot, u8 *outTargetBattlerId);
