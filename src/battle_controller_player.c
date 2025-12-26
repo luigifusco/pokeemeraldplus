@@ -28,6 +28,7 @@
 #include "text.h"
 #include "util.h"
 #include "window.h"
+#include "nuzlocke_delete_fainted.h"
 #include "constants/battle_anim.h"
 #include "constants/items.h"
 #include "constants/moves.h"
@@ -1106,6 +1107,7 @@ static void SwitchIn_HandleSoundAndEnd(void)
     {
         m4aMPlayVolumeControl(&gMPlayInfo_BGM, TRACKS_ALL, 0x100);
         HandleLowHpMusicChange(&gPlayerParty[gBattlerPartyIndexes[gActiveBattler]], gActiveBattler);
+        Nuzlocke_TryDeletePendingAfterSendOut(gActiveBattler);
         PlayerBufferExecCompleted();
     }
 }

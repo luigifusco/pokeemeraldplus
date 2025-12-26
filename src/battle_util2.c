@@ -11,6 +11,7 @@
 #include "random.h"
 #include "battle_scripts.h"
 #include "constants/battle_string_ids.h"
+#include "nuzlocke_delete_fainted.h"
 
 void AllocateBattleResources(void)
 {
@@ -42,6 +43,8 @@ void AllocateBattleResources(void)
         u16 currSecretBaseId = VarGet(VAR_CURRENT_SECRET_BASE);
         CreateSecretBaseEnemyParty(&gSaveBlock1Ptr->secretBases[currSecretBaseId]);
     }
+
+    Nuzlocke_ResetPendingFaintedDeletions();
 }
 
 void FreeBattleResources(void)
