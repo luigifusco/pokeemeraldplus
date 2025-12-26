@@ -125,6 +125,7 @@ def main() -> None:
 
     flag_random_evos = tk.BooleanVar(value=False)
     flag_walk_fast = tk.BooleanVar(value=False)
+    flag_walk_through_walls = tk.BooleanVar(value=False)
     flag_instant_text = tk.BooleanVar(value=False)
     flag_skip_transition = tk.BooleanVar(value=False)
     flag_force_doubles = tk.BooleanVar(value=False)
@@ -195,6 +196,7 @@ def main() -> None:
 
         add_bool_flag("RANDOM_EVOLUTIONS", flag_random_evos.get())
         add_bool_flag("WALK_FAST", flag_walk_fast.get())
+        add_bool_flag("WALK_THROUGH_WALLS", flag_walk_through_walls.get())
         add_bool_flag("INSTANT_TEXT", flag_instant_text.get())
         add_bool_flag("SKIP_BATTLE_TRANSITION", flag_skip_transition.get())
         add_bool_flag("FORCE_DOUBLE_BATTLES", flag_force_doubles.get())
@@ -414,20 +416,24 @@ def main() -> None:
     walk_fast_cb.grid(row=1, column=0, sticky="w")
     add_tooltip(walk_fast_cb, "Increase player walking speed (build flag).")
 
+    wtw_cb = ttk.Checkbutton(build_group, text="WALK_THROUGH_WALLS", variable=flag_walk_through_walls)
+    wtw_cb.grid(row=2, column=0, sticky="w")
+    add_tooltip(wtw_cb, "Allow the player to ignore impassable tiles (build flag).")
+
     instant_text_cb = ttk.Checkbutton(build_group, text="INSTANT_TEXT", variable=flag_instant_text)
-    instant_text_cb.grid(row=2, column=0, sticky="w")
+    instant_text_cb.grid(row=3, column=0, sticky="w")
     add_tooltip(instant_text_cb, "Make in-game text display instantly (build flag).")
 
     skip_transition_cb = ttk.Checkbutton(build_group, text="SKIP_BATTLE_TRANSITION", variable=flag_skip_transition)
-    skip_transition_cb.grid(row=3, column=0, sticky="w")
+    skip_transition_cb.grid(row=4, column=0, sticky="w")
     add_tooltip(skip_transition_cb, "Skip the battle transition effect (build flag).")
 
     force_doubles_cb = ttk.Checkbutton(build_group, text="FORCE_DOUBLE_BATTLES", variable=flag_force_doubles)
-    force_doubles_cb.grid(row=4, column=0, sticky="w")
+    force_doubles_cb.grid(row=5, column=0, sticky="w")
     add_tooltip(force_doubles_cb, "Force double battles everywhere (build flag).")
 
     steal_team_cb = ttk.Checkbutton(build_group, text="STEAL_TRAINER_TEAM", variable=flag_steal_trainer_team)
-    steal_team_cb.grid(row=5, column=0, sticky="w")
+    steal_team_cb.grid(row=6, column=0, sticky="w")
     add_tooltip(steal_team_cb, "After winning a trainer battle, replace your party with theirs (build flag).")
 
     remote_opp_cb = ttk.Checkbutton(
@@ -435,14 +441,14 @@ def main() -> None:
         text="REMOTE_OPPONENT_CONTROL",
         variable=flag_remote_opponent,
     )
-    remote_opp_cb.grid(row=6, column=0, sticky="w", pady=(8, 0))
+    remote_opp_cb.grid(row=7, column=0, sticky="w", pady=(8, 0))
     add_tooltip(
         remote_opp_cb,
         "Build pokeemerald.gba with remote opponent control enabled, then also build follower.gba (transport-only ROM).",
     )
 
     wait_frame = ttk.Frame(build_group)
-    wait_frame.grid(row=7, column=0, sticky="w", pady=(8, 0))
+    wait_frame.grid(row=8, column=0, sticky="w", pady=(8, 0))
 
     wait_label = ttk.Label(wait_frame, text="WAIT_TIME_DIVISOR")
     wait_label.pack(side="left")
@@ -470,7 +476,7 @@ def main() -> None:
     add_tooltip(wait_scale, "Select 1, 2, 4, 8, 16, or 32.")
 
     build_btn = ttk.Button(build_group, text="Build", command=do_build)
-    build_btn.grid(row=8, column=0, sticky="w", pady=(10, 0))
+    build_btn.grid(row=9, column=0, sticky="w", pady=(10, 0))
     add_tooltip(build_btn, "Run randomizer (or restore) then build the ROM.")
 
     output.pack(fill="both", expand=True, padx=10, pady=(0, 10))

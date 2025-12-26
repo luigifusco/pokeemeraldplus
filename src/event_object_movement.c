@@ -4658,9 +4658,19 @@ static u8 GetCollisionInDirection(struct ObjectEvent *objectEvent, u8 direction)
 u8 GetCollisionAtCoords(struct ObjectEvent *objectEvent, s16 x, s16 y, u32 dir)
 {
     u8 direction = dir;
+
+#ifdef WALK_THROUGH_WALLS
+    bool8 ignoreImpassableTilesForThisObject = (objectEvent == &gObjectEvents[gPlayerAvatar.objectEventId]);
+#else
+    bool8 ignoreImpassableTilesForThisObject = FALSE;
+#endif
+
     if (IsCoordOutsideObjectEventMovementRange(objectEvent, x, y))
         return COLLISION_OUTSIDE_RANGE;
-    else if (MapGridGetCollisionAt(x, y) || GetMapBorderIdAt(x, y) == CONNECTION_INVALID || IsMetatileDirectionallyImpassable(objectEvent, x, y, direction))
+    else if (GetMapBorderIdAt(x, y) == CONNECTION_INVALID
+          || (!ignoreImpassableTilesForThisObject
+              && (MapGridGetCollisionAt(x, y)
+               || IsMetatileDirectionallyImpassable(objectEvent, x, y, direction))))
         return COLLISION_IMPASSABLE;
     else if (objectEvent->trackedByCamera && !CanCameraMoveInDirection(direction))
         return COLLISION_IMPASSABLE;
@@ -4675,9 +4685,18 @@ u8 GetCollisionFlagsAtCoords(struct ObjectEvent *objectEvent, s16 x, s16 y, u8 d
 {
     u8 flags = 0;
 
+#ifdef WALK_THROUGH_WALLS
+    bool8 ignoreImpassableTilesForThisObject = (objectEvent == &gObjectEvents[gPlayerAvatar.objectEventId]);
+#else
+    bool8 ignoreImpassableTilesForThisObject = FALSE;
+#endif
+
     if (IsCoordOutsideObjectEventMovementRange(objectEvent, x, y))
         flags |= 1 << (COLLISION_OUTSIDE_RANGE - 1);
-    if (MapGridGetCollisionAt(x, y) || GetMapBorderIdAt(x, y) == CONNECTION_INVALID || IsMetatileDirectionallyImpassable(objectEvent, x, y, direction) || (objectEvent->trackedByCamera && !CanCameraMoveInDirection(direction)))
+    if (GetMapBorderIdAt(x, y) == CONNECTION_INVALID
+     || (!ignoreImpassableTilesForThisObject
+         && (MapGridGetCollisionAt(x, y) || IsMetatileDirectionallyImpassable(objectEvent, x, y, direction)))
+     || (objectEvent->trackedByCamera && !CanCameraMoveInDirection(direction)))
         flags |= 1 << (COLLISION_IMPASSABLE - 1);
     if (IsElevationMismatchAt(objectEvent->currentElevation, x, y))
         flags |= 1 << (COLLISION_ELEVATION_MISMATCH - 1);
