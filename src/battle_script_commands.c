@@ -970,11 +970,15 @@ static void Cmd_attackcanceler(void)
 
     for (i = 0; i < gBattlersCount; i++)
     {
-        if ((gProtectStructs[gBattlerByTurnOrder[i]].stealMove) && gBattleMoves[gCurrentMove].flags & FLAG_SNATCH_AFFECTED)
+        u8 snatcher = gBattlerByTurnOrder[i];
+        if ((gAbsentBattlerFlags & gBitTable[snatcher])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[snatcher]))
+            continue;
+        if ((gProtectStructs[snatcher].stealMove) && gBattleMoves[gCurrentMove].flags & FLAG_SNATCH_AFFECTED)
         {
-            PressurePPLose(gBattlerAttacker, gBattlerByTurnOrder[i], MOVE_SNATCH);
-            gProtectStructs[gBattlerByTurnOrder[i]].stealMove = FALSE;
-            gBattleScripting.battler = gBattlerByTurnOrder[i];
+            PressurePPLose(gBattlerAttacker, snatcher, MOVE_SNATCH);
+            gProtectStructs[snatcher].stealMove = FALSE;
+            gBattleScripting.battler = snatcher;
             BattleScriptPushCursor();
             gBattlescriptCurrInstr = BattleScript_SnatchedMove;
             return;
@@ -1800,6 +1804,32 @@ static void Cmd_attackanimation(void)
 
 static void Cmd_waitanimation(void)
 {
+#ifdef OVERLAP_BATTLE_ANIMS
+    // Common battle scripts are written like:
+    //   attackanimation
+    //   waitanimation
+    //   effectivenesssound
+    //   hitanimation / playanimation
+    //   waitanimation
+    // Skipping the first wait when an animation command follows immediately lets the
+    // attacker and target animations overlap, while the later wait still synchronizes.
+    if (gBattleControllerExecFlags != 0)
+    {
+        u8 nextCmd = gBattlescriptCurrInstr[1];
+        // Many scripts insert a sound command between the wait and the target animation.
+        if (nextCmd == 0x0E /* Cmd_effectivenesssound */)
+            nextCmd = gBattlescriptCurrInstr[2];
+
+        if (nextCmd == 0x45 /* Cmd_playanimation */
+         || nextCmd == 0x46 /* Cmd_playanimation_var */
+         || nextCmd == 0x5C /* Cmd_hitanimation */)
+        {
+            gBattlescriptCurrInstr++;
+            return;
+        }
+    }
+#endif
+
     if (gBattleControllerExecFlags == 0)
         gBattlescriptCurrInstr++;
 }
@@ -2000,10 +2030,27 @@ static void Cmd_critmessage(void)
 
 static void Cmd_effectivenesssound(void)
 {
+#ifdef OVERLAP_BATTLE_ANIMS
+    // Allow this to run while another battler's controller is active so we can
+    // reach the subsequent hit/target animation. Still avoid sending commands
+    // to a controller that's already busy.
+    gActiveBattler = gBattlerTarget;
+    if (gBattleTypeFlags & BATTLE_TYPE_LINK)
+    {
+        if (gBattleControllerExecFlags)
+            return;
+    }
+    else
+    {
+        if (IS_BATTLE_CONTROLLER_ACTIVE_ON_LOCAL(gActiveBattler))
+            return;
+    }
+#else
     if (gBattleControllerExecFlags)
         return;
 
     gActiveBattler = gBattlerTarget;
+#endif
     if (!(gMoveResultFlags & MOVE_RESULT_MISSED))
     {
         switch (gMoveResultFlags & (u8)(~MOVE_RESULT_MISSED))
@@ -4025,6 +4072,11 @@ static void Cmd_playanimation(void)
     gActiveBattler = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);
     argumentPtr = T2_READ_PTR(gBattlescriptCurrInstr + 3);
 
+#ifdef OVERLAP_BATTLE_ANIMS
+    if (!(gBattleTypeFlags & BATTLE_TYPE_LINK) && IS_BATTLE_CONTROLLER_ACTIVE_ON_LOCAL(gActiveBattler))
+        return;
+#endif
+
     if (gBattlescriptCurrInstr[2] == B_ANIM_STATS_CHANGE
      || gBattlescriptCurrInstr[2] == B_ANIM_SNATCH_MOVE
      || gBattlescriptCurrInstr[2] == B_ANIM_SUBSTITUTE_FADE)
@@ -4068,6 +4120,11 @@ static void Cmd_playanimation_var(void)
     gActiveBattler = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);
     animationIdPtr = T2_READ_PTR(gBattlescriptCurrInstr + 2);
     argumentPtr = T2_READ_PTR(gBattlescriptCurrInstr + 6);
+
+#ifdef OVERLAP_BATTLE_ANIMS
+    if (!(gBattleTypeFlags & BATTLE_TYPE_LINK) && IS_BATTLE_CONTROLLER_ACTIVE_ON_LOCAL(gActiveBattler))
+        return;
+#endif
 
     if (*animationIdPtr == B_ANIM_STATS_CHANGE
      || *animationIdPtr == B_ANIM_SNATCH_MOVE
@@ -4482,7 +4539,9 @@ static void Cmd_moveend(void)
                 && !(gHitMarker & HITMARKER_NO_ATTACKSTRING))
             {
                 u8 battler = GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gBattlerTarget)));
-                if (gBattleMons[battler].hp != 0)
+                if (!(gAbsentBattlerFlags & gBitTable[battler])
+                    && !(gBattleStruct->absentBattlerFlags & gBitTable[battler])
+                    && gBattleMons[battler].hp != 0)
                 {
                     gBattlerTarget = battler;
                     gHitMarker |= HITMARKER_NO_ATTACKSTRING;
@@ -4704,6 +4763,7 @@ static void Cmd_switchinanim(void)
         HandleSetPokedexFlag(SpeciesToNationalPokedexNum(gBattleMons[gActiveBattler].species), FLAG_SET_SEEN, gBattleMons[gActiveBattler].personality);
 
     gAbsentBattlerFlags &= ~(gBitTable[gActiveBattler]);
+    gBattleStruct->absentBattlerFlags &= ~(gBitTable[gActiveBattler]);
 
     BtlController_EmitSwitchInAnim(B_COMM_TO_CONTROLLER, gBattlerPartyIndexes[gActiveBattler], gBattlescriptCurrInstr[2]);
     MarkBattlerForControllerExec(gActiveBattler);
@@ -4901,6 +4961,7 @@ static void Cmd_openpartyscreen(void)
                     if (HasNoMonsToSwitch(gActiveBattler, PARTY_SIZE, PARTY_SIZE))
                     {
                         gAbsentBattlerFlags |= gBitTable[gActiveBattler];
+                        gBattleStruct->absentBattlerFlags |= gBitTable[gActiveBattler];
                         gHitMarker &= ~HITMARKER_FAINTED(gActiveBattler);
                         BtlController_EmitLinkStandbyMsg(B_COMM_TO_CONTROLLER, LINK_STANDBY_MSG_ONLY, FALSE);
                         MarkBattlerForControllerExec(gActiveBattler);
@@ -4930,6 +4991,7 @@ static void Cmd_openpartyscreen(void)
                 if (HasNoMonsToSwitch(gActiveBattler, PARTY_SIZE, PARTY_SIZE))
                 {
                     gAbsentBattlerFlags |= gBitTable[gActiveBattler];
+                    gBattleStruct->absentBattlerFlags |= gBitTable[gActiveBattler];
                     gHitMarker &= ~HITMARKER_FAINTED(gActiveBattler);
                     BtlController_EmitCantSwitch(B_COMM_TO_CONTROLLER);
                     MarkBattlerForControllerExec(gActiveBattler);
@@ -4952,6 +5014,7 @@ static void Cmd_openpartyscreen(void)
                 if (HasNoMonsToSwitch(gActiveBattler, PARTY_SIZE, PARTY_SIZE))
                 {
                     gAbsentBattlerFlags |= gBitTable[gActiveBattler];
+                    gBattleStruct->absentBattlerFlags |= gBitTable[gActiveBattler];
                     gHitMarker &= ~HITMARKER_FAINTED(gActiveBattler);
                     BtlController_EmitCantSwitch(B_COMM_TO_CONTROLLER);
                     MarkBattlerForControllerExec(gActiveBattler);
@@ -4973,6 +5036,7 @@ static void Cmd_openpartyscreen(void)
                 if (HasNoMonsToSwitch(gActiveBattler, PARTY_SIZE, PARTY_SIZE))
                 {
                     gAbsentBattlerFlags |= gBitTable[gActiveBattler];
+                    gBattleStruct->absentBattlerFlags |= gBitTable[gActiveBattler];
                     gHitMarker &= ~HITMARKER_FAINTED(gActiveBattler);
                     BtlController_EmitCantSwitch(B_COMM_TO_CONTROLLER);
                     MarkBattlerForControllerExec(gActiveBattler);
@@ -4995,6 +5059,7 @@ static void Cmd_openpartyscreen(void)
                 if (HasNoMonsToSwitch(gActiveBattler, PARTY_SIZE, PARTY_SIZE))
                 {
                     gAbsentBattlerFlags |= gBitTable[gActiveBattler];
+                    gBattleStruct->absentBattlerFlags |= gBitTable[gActiveBattler];
                     gHitMarker &= ~HITMARKER_FAINTED(gActiveBattler);
                     BtlController_EmitCantSwitch(B_COMM_TO_CONTROLLER);
                     MarkBattlerForControllerExec(gActiveBattler);
@@ -5058,6 +5123,7 @@ static void Cmd_openpartyscreen(void)
                     if (HasNoMonsToSwitch(gActiveBattler, gBattleBufferB[0][1], PARTY_SIZE))
                     {
                         gAbsentBattlerFlags |= gBitTable[gActiveBattler];
+                        gBattleStruct->absentBattlerFlags |= gBitTable[gActiveBattler];
                         gHitMarker &= ~HITMARKER_FAINTED(gActiveBattler);
                         BtlController_EmitCantSwitch(B_COMM_TO_CONTROLLER);
                         MarkBattlerForControllerExec(gActiveBattler);
@@ -5074,6 +5140,7 @@ static void Cmd_openpartyscreen(void)
                     if (HasNoMonsToSwitch(gActiveBattler, gBattleBufferB[1][1], PARTY_SIZE))
                     {
                         gAbsentBattlerFlags |= gBitTable[gActiveBattler];
+                        gBattleStruct->absentBattlerFlags |= gBitTable[gActiveBattler];
                         gHitMarker &= ~HITMARKER_FAINTED(gActiveBattler);
                         BtlController_EmitCantSwitch(B_COMM_TO_CONTROLLER);
                         MarkBattlerForControllerExec(gActiveBattler);
@@ -5124,6 +5191,7 @@ static void Cmd_openpartyscreen(void)
         {
             gActiveBattler = battler;
             gAbsentBattlerFlags |= gBitTable[gActiveBattler];
+            gBattleStruct->absentBattlerFlags |= gBitTable[gActiveBattler];
             gHitMarker &= ~HITMARKER_FAINTED(gActiveBattler);
             gBattlescriptCurrInstr = jumpPtr;
         }
@@ -5575,6 +5643,11 @@ static void Cmd_yesnoboxstoplearningmove(void)
 static void Cmd_hitanimation(void)
 {
     gActiveBattler = GetBattlerForBattleScript(gBattlescriptCurrInstr[1]);
+
+#ifdef OVERLAP_BATTLE_ANIMS
+    if (!(gBattleTypeFlags & BATTLE_TYPE_LINK) && IS_BATTLE_CONTROLLER_ACTIVE_ON_LOCAL(gActiveBattler))
+        return;
+#endif
 
     if (gMoveResultFlags & MOVE_RESULT_NO_EFFECT)
     {
@@ -6560,7 +6633,9 @@ static void Cmd_tryexplosion(void)
     // Explosion can only fail if any battler has Damp
     for (gBattlerTarget = 0; gBattlerTarget < gBattlersCount; gBattlerTarget++)
     {
-        if (gBattleMons[gBattlerTarget].ability == ABILITY_DAMP)
+        if (!(gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+            && !(gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget])
+            && gBattleMons[gBattlerTarget].ability == ABILITY_DAMP)
             break;
     }
 
@@ -8730,7 +8805,8 @@ static void Cmd_magnitudedamagecalculation(void)
     {
         if (gBattlerTarget == gBattlerAttacker)
             continue;
-        if (!(gAbsentBattlerFlags & gBitTable[gBattlerTarget])) // a valid target was found
+        if (!(gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+         && !(gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget])) // a valid target was found
             break;
     }
 
@@ -8937,7 +9013,8 @@ static void Cmd_selectfirstvalidtarget(void)
     {
         if (gBattlerTarget == gBattlerAttacker)
             continue;
-        if (!(gAbsentBattlerFlags & gBitTable[gBattlerTarget]))
+        if (!(gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+         && !(gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget]))
             break;
     }
     gBattlescriptCurrInstr++;
@@ -9594,7 +9671,8 @@ static void Cmd_trygetintimidatetarget(void)
     {
         if (GetBattlerSide(gBattlerTarget) == side)
             continue;
-        if (!(gAbsentBattlerFlags & gBitTable[gBattlerTarget]))
+        if (!(gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+         && !(gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget]))
             break;
     }
 

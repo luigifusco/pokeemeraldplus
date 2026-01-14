@@ -1689,7 +1689,8 @@ static void OpponentHandleChooseAction(void)
          && ((gActiveBattler & BIT_FLANK) != B_FLANK_LEFT))
         {
             u8 partnerBattler = GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)));
-            if (!(gAbsentBattlerFlags & gBitTable[partnerBattler]))
+            if (!(gAbsentBattlerFlags & gBitTable[partnerBattler])
+             && !(gBattleStruct->absentBattlerFlags & gBitTable[partnerBattler]))
             {
                 state->expectedSeq = sRemoteOppSeq;
                 state->connectTimeout = 0;
@@ -1900,7 +1901,11 @@ static void BuildRemoteOppPartyInfo(struct RemoteOpponentPartyInfo *outParty)
     outParty->firstMonId = firstId;
     outParty->lastMonId = lastId;
     outParty->currentMonId = gBattlerPartyIndexes[gActiveBattler];
-    outParty->partnerMonId = gBattlerPartyIndexes[partnerBattler];
+    if ((gAbsentBattlerFlags & gBitTable[partnerBattler])
+     || (gBattleStruct->absentBattlerFlags & gBitTable[partnerBattler]))
+        outParty->partnerMonId = PARTY_SIZE;
+    else
+        outParty->partnerMonId = gBattlerPartyIndexes[partnerBattler];
 
     for (i = 0; i < PARTY_SIZE; i++)
     {
@@ -1955,7 +1960,8 @@ static void OpponentHandleChooseAction_RemoteWait(void)
     canBundleDouble = (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
         && !(gBattleTypeFlags & (BATTLE_TYPE_TWO_OPPONENTS | BATTLE_TYPE_TOWER_LINK_MULTI))
         && ((gActiveBattler & BIT_FLANK) == B_FLANK_LEFT)
-        && !(gAbsentBattlerFlags & gBitTable[partnerBattler]);
+        && !(gAbsentBattlerFlags & gBitTable[partnerBattler])
+        && !(gBattleStruct->absentBattlerFlags & gBitTable[partnerBattler]);
 
     if (gMain.vblankCounter1 != state->lastVBlank)
     {

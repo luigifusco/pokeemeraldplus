@@ -881,6 +881,10 @@ bool8 IsBattlerSpritePresent(u8 battler)
     }
     else
     {
+        if ((gAbsentBattlerFlags & gBitTable[battler])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[battler]))
+            return FALSE;
+
         if (gBattlerPositions[battler] == 0xff)
         {
             return FALSE;

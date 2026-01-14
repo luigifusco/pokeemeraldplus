@@ -585,6 +585,8 @@ static void SetBattlePartyIds(void)
     {
         for (i = 0; i < gBattlersCount; i++)
         {
+            bool8 found = FALSE;
+
             for (j = 0; j < PARTY_SIZE; j++)
             {
                 if (i < 2)
@@ -597,6 +599,7 @@ static void SetBattlePartyIds(void)
                          && !GetMonData(&gPlayerParty[j], MON_DATA_IS_EGG))
                         {
                             gBattlerPartyIndexes[i] = j;
+                            found = TRUE;
                             break;
                         }
                     }
@@ -608,6 +611,7 @@ static void SetBattlePartyIds(void)
                          && !GetMonData(&gEnemyParty[j], MON_DATA_IS_EGG))
                         {
                             gBattlerPartyIndexes[i] = j;
+                            found = TRUE;
                             break;
                         }
                     }
@@ -623,6 +627,7 @@ static void SetBattlePartyIds(void)
                          && gBattlerPartyIndexes[i - 2] != j)
                         {
                             gBattlerPartyIndexes[i] = j;
+                            found = TRUE;
                             break;
                         }
                     }
@@ -635,10 +640,19 @@ static void SetBattlePartyIds(void)
                          && gBattlerPartyIndexes[i - 2] != j)
                         {
                             gBattlerPartyIndexes[i] = j;
+                            found = TRUE;
                             break;
                         }
                     }
                 }
+            }
+
+            // If a second Pokémon can't be found for this side in a double battle, keep the
+            // party index valid (avoid uninitialized garbage) and mark the battler absent.
+            if (!found && i >= 2)
+            {
+                gBattlerPartyIndexes[i] = gBattlerPartyIndexes[i - 2];
+                gAbsentBattlerFlags |= gBitTable[i];
             }
         }
 
@@ -1150,7 +1164,13 @@ void BtlController_EmitPrintString(u8 bufferId, u16 stringId)
     stringInfo->moveType = gBattleMoves[gCurrentMove].type;
 
     for (i = 0; i < MAX_BATTLERS_COUNT; i++)
-        stringInfo->abilities[i] = gBattleMons[i].ability;
+    {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            stringInfo->abilities[i] = ABILITY_NONE;
+        else
+            stringInfo->abilities[i] = gBattleMons[i].ability;
+    }
     for (i = 0; i < TEXT_BUFF_ARRAY_COUNT; i++)
     {
         stringInfo->textBuffs[0][i] = gBattleTextBuff1[i];
@@ -1179,7 +1199,13 @@ void BtlController_EmitPrintSelectionString(u8 bufferId, u16 stringId)
     stringInfo->bakScriptPartyIdx = gBattleStruct->scriptPartyIdx;
 
     for (i = 0; i < MAX_BATTLERS_COUNT; i++)
-        stringInfo->abilities[i] = gBattleMons[i].ability;
+    {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            stringInfo->abilities[i] = ABILITY_NONE;
+        else
+            stringInfo->abilities[i] = gBattleMons[i].ability;
+    }
     for (i = 0; i < TEXT_BUFF_ARRAY_COUNT; i++)
     {
         stringInfo->textBuffs[0][i] = gBattleTextBuff1[i];

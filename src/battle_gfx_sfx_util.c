@@ -925,7 +925,12 @@ void CopyAllBattleSpritesInvisibilities(void)
     s32 i;
 
     for (i = 0; i < gBattlersCount; i++)
-        gBattleSpritesDataPtr->battlerData[i].invisible = gSprites[gBattlerSpriteIds[i]].invisible;
+    {
+        if (IsBattlerSpritePresent(i))
+            gBattleSpritesDataPtr->battlerData[i].invisible = gSprites[gBattlerSpriteIds[i]].invisible;
+        else
+            gBattleSpritesDataPtr->battlerData[i].invisible = TRUE;
+    }
 }
 
 void CopyBattleSpriteInvisibility(u8 battler)
@@ -1148,12 +1153,18 @@ void HandleBattleLowHpMusicChange(void)
         u8 playerBattler1 = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
         u8 playerBattler2 = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
         u8 battler1PartyId = GetPartyIdFromBattlePartyId(gBattlerPartyIndexes[playerBattler1]);
-        u8 battler2PartyId = GetPartyIdFromBattlePartyId(gBattlerPartyIndexes[playerBattler2]);
 
         if (GetMonData(&gPlayerParty[battler1PartyId], MON_DATA_HP) != 0)
             HandleLowHpMusicChange(&gPlayerParty[battler1PartyId], playerBattler1);
-        if (IsDoubleBattle() && GetMonData(&gPlayerParty[battler2PartyId], MON_DATA_HP) != 0)
-            HandleLowHpMusicChange(&gPlayerParty[battler2PartyId], playerBattler2);
+
+        if (IsDoubleBattle()
+         && !(gAbsentBattlerFlags & gBitTable[playerBattler2])
+         && !(gBattleStruct->absentBattlerFlags & gBitTable[playerBattler2]))
+        {
+            u8 battler2PartyId = GetPartyIdFromBattlePartyId(gBattlerPartyIndexes[playerBattler2]);
+            if (GetMonData(&gPlayerParty[battler2PartyId], MON_DATA_HP) != 0)
+                HandleLowHpMusicChange(&gPlayerParty[battler2PartyId], playerBattler2);
+        }
     }
 }
 
@@ -1188,20 +1199,28 @@ void LoadAndCreateEnemyShadowSprites(void)
     LoadCompressedSpriteSheet(&gSpriteSheet_EnemyShadow);
 
     battler = GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT);
-    gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteId = CreateSprite(&gSpriteTemplate_EnemyShadow,
-                                                                                    GetBattlerSpriteCoord(battler, BATTLER_COORD_X),
-                                                                                    GetBattlerSpriteCoord(battler, BATTLER_COORD_Y) + 29,
-                                                                                    0xC8);
-    gSprites[gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteId].data[0] = battler;
-
-    if (IsDoubleBattle())
+    if (!(gAbsentBattlerFlags & gBitTable[battler])
+     && !(gBattleStruct->absentBattlerFlags & gBitTable[battler]))
     {
-        battler = GetBattlerAtPosition(B_POSITION_OPPONENT_RIGHT);
         gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteId = CreateSprite(&gSpriteTemplate_EnemyShadow,
                                                                                         GetBattlerSpriteCoord(battler, BATTLER_COORD_X),
                                                                                         GetBattlerSpriteCoord(battler, BATTLER_COORD_Y) + 29,
                                                                                         0xC8);
         gSprites[gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteId].data[0] = battler;
+    }
+
+    if (IsDoubleBattle())
+    {
+        battler = GetBattlerAtPosition(B_POSITION_OPPONENT_RIGHT);
+        if (!(gAbsentBattlerFlags & gBitTable[battler])
+         && !(gBattleStruct->absentBattlerFlags & gBitTable[battler]))
+        {
+            gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteId = CreateSprite(&gSpriteTemplate_EnemyShadow,
+                                                                                            GetBattlerSpriteCoord(battler, BATTLER_COORD_X),
+                                                                                            GetBattlerSpriteCoord(battler, BATTLER_COORD_Y) + 29,
+                                                                                            0xC8);
+            gSprites[gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteId].data[0] = battler;
+        }
     }
 }
 
@@ -1239,6 +1258,9 @@ void SpriteCB_SetInvisible(struct Sprite *sprite)
 
 void SetBattlerShadowSpriteCallback(u8 battler, u16 species)
 {
+    if (gAbsentBattlerFlags & gBitTable[battler])
+        return;
+
     // The player's shadow is never seen.
     if (GetBattlerSide(battler) == B_SIDE_PLAYER)
         return;

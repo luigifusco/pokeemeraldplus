@@ -1356,6 +1356,14 @@ static void Cmd_get_ability(void)
     else
         battler = gBattlerTarget;
 
+    if ((gAbsentBattlerFlags & gBitTable[battler])
+     || (gBattleStruct->absentBattlerFlags & gBitTable[battler]))
+    {
+        AI_THINKING_STRUCT->funcResult = ABILITY_NONE;
+        gAIScriptPtr += 2;
+        return;
+    }
+
     if (gActiveBattler != battler)
     {
         if (BATTLE_HISTORY->abilities[battler] != 0)
@@ -1408,6 +1416,10 @@ static void Cmd_check_ability(void)
 {
     u32 battler = BattleAI_GetWantedBattler(gAIScriptPtr[1]);
     u32 ability = gAIScriptPtr[2];
+
+    if ((gAbsentBattlerFlags & gBitTable[battler])
+     || (gBattleStruct->absentBattlerFlags & gBitTable[battler]))
+        ability = 0;
 
     if (gAIScriptPtr[1] == AI_TARGET || gAIScriptPtr[1] == AI_TARGET_PARTNER)
     {

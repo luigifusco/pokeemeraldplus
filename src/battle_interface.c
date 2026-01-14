@@ -1059,9 +1059,17 @@ void UpdateOamPriorityInAllHealthboxes(u8 priority)
 
     for (i = 0; i < gBattlersCount; i++)
     {
-        u8 healthboxLeftSpriteId = gHealthboxSpriteIds[i];
-        u8 healthboxRightSpriteId = gSprites[gHealthboxSpriteIds[i]].oam.affineParam;
-        u8 healthbarSpriteId = gSprites[gHealthboxSpriteIds[i]].hMain_HealthBarSpriteId;
+        u8 healthboxLeftSpriteId;
+        u8 healthboxRightSpriteId;
+        u8 healthbarSpriteId;
+
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            continue;
+
+        healthboxLeftSpriteId = gHealthboxSpriteIds[i];
+        healthboxRightSpriteId = gSprites[gHealthboxSpriteIds[i]].oam.affineParam;
+        healthbarSpriteId = gSprites[gHealthboxSpriteIds[i]].hMain_HealthBarSpriteId;
 
         gSprites[healthboxLeftSpriteId].oam.priority = priority;
         gSprites[healthboxRightSpriteId].oam.priority = priority;
@@ -1380,6 +1388,9 @@ void SwapHpBarsWithHpText(void)
 
     for (i = 0; i < gBattlersCount; i++)
     {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            continue;
         if (gSprites[gHealthboxSpriteIds[i]].callback == SpriteCallbackDummy
          && GetBattlerSide(i) != B_SIDE_OPPONENT
          && (IsDoubleBattle() || GetBattlerSide(i) != B_SIDE_PLAYER))

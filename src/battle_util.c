@@ -151,6 +151,8 @@ void HandleAction_UseMove(void)
     if (gSideTimers[side].followmeTimer != 0
         && gBattleMoves[gCurrentMove].target == MOVE_TARGET_SELECTED
         && GetBattlerSide(gBattlerAttacker) != GetBattlerSide(gSideTimers[side].followmeTarget)
+        && !(gAbsentBattlerFlags & gBitTable[gSideTimers[side].followmeTarget])
+        && !(gBattleStruct->absentBattlerFlags & gBitTable[gSideTimers[side].followmeTarget])
         && gBattleMons[gSideTimers[side].followmeTarget].hp != 0)
     {
         gBattlerTarget = gSideTimers[side].followmeTarget;
@@ -165,6 +167,9 @@ void HandleAction_UseMove(void)
         side = GetBattlerSide(gBattlerAttacker);
         for (gActiveBattler = 0; gActiveBattler < gBattlersCount; gActiveBattler++)
         {
+            if ((gAbsentBattlerFlags & gBitTable[gActiveBattler])
+             || (gBattleStruct->absentBattlerFlags & gBitTable[gActiveBattler]))
+                continue;
             if (side != GetBattlerSide(gActiveBattler)
                 && *(gBattleStruct->moveTarget + gBattlerAttacker) != gActiveBattler
                 && gBattleMons[gActiveBattler].ability == ABILITY_LIGHTNING_ROD
@@ -197,7 +202,8 @@ void HandleAction_UseMove(void)
                 gBattlerTarget = *(gBattleStruct->moveTarget + gBattlerAttacker);
             }
 
-            if (gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+            if ((gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+             || (gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget]))
             {
                 if (GetBattlerSide(gBattlerAttacker) != GetBattlerSide(gBattlerTarget))
                 {
@@ -206,7 +212,8 @@ void HandleAction_UseMove(void)
                 else
                 {
                     gBattlerTarget = GetBattlerAtPosition(BATTLE_OPPOSITE(GetBattlerPosition(gBattlerAttacker)));
-                    if (gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+                    if ((gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+                     || (gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget]))
                         gBattlerTarget = GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gBattlerTarget)));
                 }
             }
@@ -237,7 +244,8 @@ void HandleAction_UseMove(void)
                 gBattlerTarget = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
         }
 
-        if (gAbsentBattlerFlags & gBitTable[gBattlerTarget]
+        if (((gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+             || (gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget]))
             && GetBattlerSide(gBattlerAttacker) != GetBattlerSide(gBattlerTarget))
         {
             gBattlerTarget = GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gBattlerTarget)));
@@ -246,7 +254,8 @@ void HandleAction_UseMove(void)
     else
     {
         gBattlerTarget = *(gBattleStruct->moveTarget + gBattlerAttacker);
-        if (gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+        if ((gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget]))
         {
             if (GetBattlerSide(gBattlerAttacker) != GetBattlerSide(gBattlerTarget))
             {
@@ -255,7 +264,8 @@ void HandleAction_UseMove(void)
             else
             {
                 gBattlerTarget = GetBattlerAtPosition(BATTLE_OPPOSITE(GetBattlerPosition(gBattlerAttacker)));
-                if (gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+                if ((gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+                 || (gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget]))
                     gBattlerTarget = GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gBattlerTarget)));
             }
         }
@@ -758,6 +768,12 @@ void PressurePPLose(u8 target, u8 attacker, u16 move)
 {
     int moveIndex;
 
+    if ((gAbsentBattlerFlags & gBitTable[target])
+     || (gBattleStruct->absentBattlerFlags & gBitTable[target])
+     || (gAbsentBattlerFlags & gBitTable[attacker])
+     || (gBattleStruct->absentBattlerFlags & gBitTable[attacker]))
+        return;
+
     if (gBattleMons[target].ability != ABILITY_PRESSURE)
         return;
 
@@ -789,6 +805,9 @@ void PressurePPLoseOnUsingImprison(u8 attacker)
 
     for (i = 0; i < gBattlersCount; i++)
     {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            continue;
         if (atkSide != GetBattlerSide(i) && gBattleMons[i].ability == ABILITY_PRESSURE)
         {
             for (j = 0; j < MAX_MON_MOVES; j++)
@@ -820,6 +839,9 @@ void PressurePPLoseOnUsingPerishSong(u8 attacker)
 
     for (i = 0; i < gBattlersCount; i++)
     {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            continue;
         if (gBattleMons[i].ability == ABILITY_PRESSURE && i != attacker)
         {
             for (j = 0; j < MAX_MON_MOVES; j++)
@@ -1164,6 +1186,9 @@ u8 GetImprisonedMovesCount(u8 battler, u16 move)
 
     for (i = 0; i < gBattlersCount; i++)
     {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            continue;
         if (battlerSide != GetBattlerSide(i) && gStatuses3[i] & STATUS3_IMPRISONED_OTHERS)
         {
             s32 j;
@@ -1200,10 +1225,18 @@ u8 DoFieldEndTurnEffects(void)
     u8 effect = 0;
     s32 i;
 
-    for (gBattlerAttacker = 0; gBattlerAttacker < gBattlersCount && gAbsentBattlerFlags & gBitTable[gBattlerAttacker]; gBattlerAttacker++)
+    for (gBattlerAttacker = 0;
+        gBattlerAttacker < gBattlersCount
+        && ((gAbsentBattlerFlags & gBitTable[gBattlerAttacker])
+        || (gBattleStruct->absentBattlerFlags & gBitTable[gBattlerAttacker]));
+        gBattlerAttacker++)
     {
     }
-    for (gBattlerTarget = 0; gBattlerTarget < gBattlersCount && gAbsentBattlerFlags & gBitTable[gBattlerTarget]; gBattlerTarget++)
+    for (gBattlerTarget = 0;
+        gBattlerTarget < gBattlersCount
+        && ((gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+        || (gBattleStruct->absentBattlerFlags & gBitTable[gBattlerTarget]));
+        gBattlerTarget++)
     {
     }
 
@@ -1923,7 +1956,10 @@ bool8 HandleFaintedMonActions(void)
             for (i = 0; i < gBattlersCount; i++)
             {
                 if (gAbsentBattlerFlags & gBitTable[i] && !HasNoMonsToSwitch(i, PARTY_SIZE, PARTY_SIZE))
+                {
                     gAbsentBattlerFlags &= ~(gBitTable[i]);
+                    gBattleStruct->absentBattlerFlags &= ~(gBitTable[i]);
+                }
             }
             // fall through
         case 1:
@@ -3108,7 +3144,10 @@ u8 AbilityBattleEffects(u8 caseID, u8 battler, u8 ability, u8 special, u16 moveA
             side = GetBattlerSide(battler);
             for (i = 0; i < gBattlersCount; i++)
             {
-                if (GetBattlerSide(i) != side && gBattleMons[i].ability == ability)
+                if (!(gAbsentBattlerFlags & gBitTable[i])
+                    && !(gBattleStruct->absentBattlerFlags & gBitTable[i])
+                    && GetBattlerSide(i) != side
+                    && gBattleMons[i].ability == ability)
                 {
                     gLastUsedAbility = ability;
                     effect = i + 1;
@@ -3119,7 +3158,10 @@ u8 AbilityBattleEffects(u8 caseID, u8 battler, u8 ability, u8 special, u16 moveA
             side = GetBattlerSide(battler);
             for (i = 0; i < gBattlersCount; i++)
             {
-                if (GetBattlerSide(i) == side && gBattleMons[i].ability == ability)
+                if (!(gAbsentBattlerFlags & gBitTable[i])
+                    && !(gBattleStruct->absentBattlerFlags & gBitTable[i])
+                    && GetBattlerSide(i) == side
+                    && gBattleMons[i].ability == ability)
                 {
                     gLastUsedAbility = ability;
                     effect = i + 1;
@@ -3158,7 +3200,10 @@ u8 AbilityBattleEffects(u8 caseID, u8 battler, u8 ability, u8 special, u16 moveA
         case ABILITYEFFECT_CHECK_ON_FIELD: // 19
             for (i = 0; i < gBattlersCount; i++)
             {
-                if (gBattleMons[i].ability == ability && gBattleMons[i].hp != 0)
+                if (!(gAbsentBattlerFlags & gBitTable[i])
+                    && !(gBattleStruct->absentBattlerFlags & gBitTable[i])
+                    && gBattleMons[i].ability == ability
+                    && gBattleMons[i].hp != 0)
                 {
                     gLastUsedAbility = ability;
                     effect = i + 1;
@@ -3168,7 +3213,10 @@ u8 AbilityBattleEffects(u8 caseID, u8 battler, u8 ability, u8 special, u16 moveA
         case ABILITYEFFECT_CHECK_FIELD_EXCEPT_BATTLER: // 15
             for (i = 0; i < gBattlersCount; i++)
             {
-                if (gBattleMons[i].ability == ability && i != battler)
+                if (!(gAbsentBattlerFlags & gBitTable[i])
+                    && !(gBattleStruct->absentBattlerFlags & gBitTable[i])
+                    && gBattleMons[i].ability == ability
+                    && i != battler)
                 {
                     gLastUsedAbility = ability;
                     effect = i + 1;
@@ -3179,7 +3227,10 @@ u8 AbilityBattleEffects(u8 caseID, u8 battler, u8 ability, u8 special, u16 moveA
             side = GetBattlerSide(battler);
             for (i = 0; i < gBattlersCount; i++)
             {
-                if (GetBattlerSide(i) != side && gBattleMons[i].ability == ability)
+                if (!(gAbsentBattlerFlags & gBitTable[i])
+                    && !(gBattleStruct->absentBattlerFlags & gBitTable[i])
+                    && GetBattlerSide(i) != side
+                    && gBattleMons[i].ability == ability)
                 {
                     gLastUsedAbility = ability;
                     effect++;
@@ -3190,7 +3241,10 @@ u8 AbilityBattleEffects(u8 caseID, u8 battler, u8 ability, u8 special, u16 moveA
             side = GetBattlerSide(battler);
             for (i = 0; i < gBattlersCount; i++)
             {
-                if (GetBattlerSide(i) == side && gBattleMons[i].ability == ability)
+                if (!(gAbsentBattlerFlags & gBitTable[i])
+                    && !(gBattleStruct->absentBattlerFlags & gBitTable[i])
+                    && GetBattlerSide(i) == side
+                    && gBattleMons[i].ability == ability)
                 {
                     gLastUsedAbility = ability;
                     effect++;
@@ -3200,7 +3254,10 @@ u8 AbilityBattleEffects(u8 caseID, u8 battler, u8 ability, u8 special, u16 moveA
         case ABILITYEFFECT_COUNT_ON_FIELD: // 18
             for (i = 0; i < gBattlersCount; i++)
             {
-                if (gBattleMons[i].ability == ability && i != battler)
+                if (!(gAbsentBattlerFlags & gBitTable[i])
+                    && !(gBattleStruct->absentBattlerFlags & gBitTable[i])
+                    && gBattleMons[i].ability == ability
+                    && i != battler)
                 {
                     gLastUsedAbility = ability;
                     effect++;

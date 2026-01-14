@@ -15,6 +15,7 @@
 #include "battle_interface.h"
 #include "battle_anim.h"
 #include "data.h"
+#include "util.h"
 
 // this file's functions
 static void CB2_ReshowBattleScreenAfterMenu(void);
@@ -138,13 +139,15 @@ static void CB2_ReshowBattleScreenAfterMenu(void)
 
             opponentBattler = GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT);
             species = GetMonData(&gEnemyParty[gBattlerPartyIndexes[opponentBattler]], MON_DATA_SPECIES);
-            SetBattlerShadowSpriteCallback(opponentBattler, species);
+            if (!(gAbsentBattlerFlags & gBitTable[opponentBattler]))
+                SetBattlerShadowSpriteCallback(opponentBattler, species);
 
             if (IsDoubleBattle())
             {
                 opponentBattler = GetBattlerAtPosition(B_POSITION_OPPONENT_RIGHT);
                 species = GetMonData(&gEnemyParty[gBattlerPartyIndexes[opponentBattler]], MON_DATA_SPECIES);
-                SetBattlerShadowSpriteCallback(opponentBattler, species);
+                if (!(gAbsentBattlerFlags & gBitTable[opponentBattler]))
+                    SetBattlerShadowSpriteCallback(opponentBattler, species);
             }
 
             ActionSelectionCreateCursorAt(gActionSelectionCursor[gBattlerInMenuId], 0);
@@ -184,6 +187,9 @@ static bool8 LoadBattlerSpriteGfx(u8 battler)
 {
     if (battler < gBattlersCount)
     {
+        if (gAbsentBattlerFlags & gBitTable[battler])
+            return TRUE;
+
         if (GetBattlerSide(battler) != B_SIDE_PLAYER)
         {
             if (!gBattleSpritesDataPtr->battlerData[battler].behindSubstitute)
@@ -210,6 +216,13 @@ static void CreateBattlerSprite(u8 battler)
     if (battler < gBattlersCount)
     {
         u8 posY;
+
+        if (gAbsentBattlerFlags & gBitTable[battler])
+        {
+            gBattlerSpriteIds[battler] = CreateInvisibleSpriteWithCallback(SpriteCallbackDummy);
+            gSprites[gBattlerSpriteIds[battler]].data[0] = battler;
+            return;
+        }
 
         if (gBattleSpritesDataPtr->battlerData[battler].behindSubstitute)
             posY = GetSubstituteSpriteDefault_Y(battler);
@@ -288,6 +301,12 @@ static void CreateHealthboxSprite(u8 battler)
 
         gHealthboxSpriteIds[battler] = healthboxSpriteId;
         InitBattlerHealthboxCoords(battler);
+        if (gAbsentBattlerFlags & gBitTable[battler])
+        {
+            SetHealthboxSpriteInvisible(healthboxSpriteId);
+            return;
+        }
+
         SetHealthboxSpriteVisible(healthboxSpriteId);
 
         if (GetBattlerSide(battler) != B_SIDE_PLAYER)

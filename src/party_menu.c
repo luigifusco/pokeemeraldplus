@@ -1,4 +1,5 @@
 #include "global.h"
+#include "util.h"
 #include "malloc.h"
 #include "battle.h"
 #include "battle_anim.h"
@@ -5818,7 +5819,9 @@ static bool8 TrySwitchInPokemon(void)
     }
     for (i = 0; i < gBattlersCount; i++)
     {
-        if (GetBattlerSide(i) == B_SIDE_PLAYER && GetPartyIdFromBattleSlot(slot) == gBattlerPartyIndexes[i])
+        if (GetBattlerSide(i) == B_SIDE_PLAYER
+            && !(gAbsentBattlerFlags & gBitTable[i])
+            && GetPartyIdFromBattleSlot(slot) == gBattlerPartyIndexes[i])
         {
             GetMonNickname(&gPlayerParty[slot], gStringVar1);
             StringExpandPlaceholders(gStringVar4, gText_PkmnAlreadyInBattle);
@@ -5884,7 +5887,8 @@ static void BufferBattlePartyOrder(u8 *partyBattleOrder, u8 flankId)
         }
         return;
     }
-    else if (IsDoubleBattle() == FALSE)
+    else if (IsDoubleBattle() == FALSE
+          || (gAbsentBattlerFlags & gBitTable[GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT)]))
     {
         j = 1;
         partyIds[0] = gBattlerPartyIndexes[GetBattlerAtPosition(B_POSITION_PLAYER_LEFT)];
@@ -5955,7 +5959,8 @@ static void BufferBattlePartyOrderBySide(u8 *partyBattleOrder, u8 flankId, u8 ba
         }
         return;
     }
-    else if (IsDoubleBattle() == FALSE)
+    else if (IsDoubleBattle() == FALSE
+          || (gAbsentBattlerFlags & gBitTable[rightBattler]))
     {
         j = 1;
         partyIndexes[0] = gBattlerPartyIndexes[leftBattler];

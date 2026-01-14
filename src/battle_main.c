@@ -4104,6 +4104,9 @@ u8 IsRunningFromBattleImpossible(void)
 
     for (i = 0; i < gBattlersCount; i++)
     {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            continue;
         if (side != GetBattlerSide(i)
          && gBattleMons[i].ability == ABILITY_SHADOW_TAG)
         {
@@ -4342,43 +4345,57 @@ static void HandleTurnActionSelectionState(void)
                     MarkBattlerForControllerExec(gActiveBattler);
                     break;
                 case B_ACTION_CANCEL_PARTNER:
+                {
+                    u8 battler = GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)));
+
                     gBattleCommunication[gActiveBattler] = STATE_WAIT_SET_BEFORE_ACTION;
-                    gBattleCommunication[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))] = STATE_BEFORE_ACTION_CHOSEN;
+                    if (!(gAbsentBattlerFlags & gBitTable[battler])
+                     && !(gBattleStruct->absentBattlerFlags & gBitTable[battler]))
+                        gBattleCommunication[battler] = STATE_BEFORE_ACTION_CHOSEN;
                     RecordedBattle_ClearBattlerAction(gActiveBattler, 1);
-                    if (gBattleMons[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))].status2 & STATUS2_MULTIPLETURNS
-                        || gBattleMons[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))].status2 & STATUS2_RECHARGE)
+
+                    if ((gAbsentBattlerFlags & gBitTable[battler])
+                     || (gBattleStruct->absentBattlerFlags & gBitTable[battler]))
                     {
                         BtlController_EmitEndBounceEffect(B_COMM_TO_CONTROLLER);
                         MarkBattlerForControllerExec(gActiveBattler);
                         return;
                     }
-                    else if (gChosenActionByBattler[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))] == B_ACTION_SWITCH)
+                    if (gBattleMons[battler].status2 & STATUS2_MULTIPLETURNS
+                        || gBattleMons[battler].status2 & STATUS2_RECHARGE)
                     {
-                        RecordedBattle_ClearBattlerAction(GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler))), 2);
+                        BtlController_EmitEndBounceEffect(B_COMM_TO_CONTROLLER);
+                        MarkBattlerForControllerExec(gActiveBattler);
+                        return;
                     }
-                    else if (gChosenActionByBattler[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))] == B_ACTION_RUN)
+                    else if (gChosenActionByBattler[battler] == B_ACTION_SWITCH)
                     {
-                        RecordedBattle_ClearBattlerAction(GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler))), 1);
+                        RecordedBattle_ClearBattlerAction(battler, 2);
                     }
-                    else if (gChosenActionByBattler[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))] == B_ACTION_USE_MOVE
-                             && (gProtectStructs[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))].noValidMoves
-                                || gDisableStructs[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))].encoredMove))
+                    else if (gChosenActionByBattler[battler] == B_ACTION_RUN)
                     {
-                        RecordedBattle_ClearBattlerAction(GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler))), 1);
+                        RecordedBattle_ClearBattlerAction(battler, 1);
+                    }
+                    else if (gChosenActionByBattler[battler] == B_ACTION_USE_MOVE
+                             && (gProtectStructs[battler].noValidMoves
+                                || gDisableStructs[battler].encoredMove))
+                    {
+                        RecordedBattle_ClearBattlerAction(battler, 1);
                     }
                     else if (gBattleTypeFlags & BATTLE_TYPE_PALACE
-                             && gChosenActionByBattler[GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler)))] == B_ACTION_USE_MOVE)
+                             && gChosenActionByBattler[battler] == B_ACTION_USE_MOVE)
                     {
                         gRngValue = gBattlePalaceMoveSelectionRngValue;
-                        RecordedBattle_ClearBattlerAction(GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler))), 1);
+                        RecordedBattle_ClearBattlerAction(battler, 1);
                     }
                     else
                     {
-                        RecordedBattle_ClearBattlerAction(GetBattlerAtPosition(BATTLE_PARTNER(GetBattlerPosition(gActiveBattler))), 3);
+                        RecordedBattle_ClearBattlerAction(battler, 3);
                     }
                     BtlController_EmitEndBounceEffect(B_COMM_TO_CONTROLLER);
                     MarkBattlerForControllerExec(gActiveBattler);
                     return;
+                }
                 }
 
                 if (gBattleTypeFlags & BATTLE_TYPE_TRAINER

@@ -4920,6 +4920,9 @@ static void UNUSED AnimTask_HideBattlersHealthbox(u8 taskId)
     u8 i;
     for (i = 0; i < gBattlersCount; i++)
     {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            continue;
         if (gBattleAnimArgs[0] == TRUE && GetBattlerSide(i) == B_SIDE_PLAYER)
             SetHealthboxSpriteInvisible(gHealthboxSpriteIds[i]);
 
@@ -4934,7 +4937,12 @@ static void UNUSED AnimTask_ShowBattlersHealthbox(u8 taskId)
 {
     u8 i;
     for (i = 0; i < gBattlersCount; i++)
+    {
+        if ((gAbsentBattlerFlags & gBitTable[i])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[i]))
+            continue;
         SetHealthboxSpriteVisible(gHealthboxSpriteIds[i]);
+    }
 
     DestroyAnimVisualTask(taskId);
 }
