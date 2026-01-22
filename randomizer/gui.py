@@ -286,7 +286,7 @@ def main() -> None:
     top.columnconfigure(1, weight=1)
 
     randomizer_group = ttk.Labelframe(top, text="Randomizer", padding=10)
-    randomizer_group.grid(row=0, column=0, sticky="nw")
+    randomizer_group.grid(row=0, column=0, sticky="nsew")
 
     wild_cb = ttk.Checkbutton(randomizer_group, text="Wild", variable=randomize_wild)
     wild_cb.grid(row=0, column=0, sticky="w")
@@ -299,6 +299,10 @@ def main() -> None:
     trainers_cb = ttk.Checkbutton(randomizer_group, text="Trainers", variable=randomize_trainers)
     trainers_cb.grid(row=2, column=0, sticky="w")
     add_tooltip(trainers_cb, "Randomize trainer party species.")
+
+    random_evos_cb = ttk.Checkbutton(randomizer_group, text="RANDOM_EVOLUTIONS", variable=flag_random_evos)
+    random_evos_cb.grid(row=3, column=0, sticky="w", pady=(6, 0))
+    add_tooltip(random_evos_cb, "Randomize evolutions (build flag).")
 
     def sync_randomizer_mode_ui() -> None:
         if randomize_per_occurrence.get():
@@ -319,7 +323,7 @@ def main() -> None:
         variable=randomize_per_occurrence,
         command=sync_randomizer_mode_ui,
     )
-    per_occ_cb.grid(row=3, column=0, sticky="w", pady=(6, 0))
+    per_occ_cb.grid(row=4, column=0, sticky="w", pady=(6, 0))
     add_tooltip(per_occ_cb, "Replace every SPECIES_* occurrence independently (more chaotic).")
 
     per_map_cb = ttk.Checkbutton(
@@ -328,17 +332,20 @@ def main() -> None:
         variable=randomize_per_map,
         command=sync_randomizer_mode_ui,
     )
-    per_map_cb.grid(row=4, column=0, sticky="w")
+    per_map_cb.grid(row=5, column=0, sticky="w")
     add_tooltip(per_map_cb, "Wild encounters only: keep replacements consistent within each map.")
 
     sync_randomizer_mode_ui()
 
     restore_btn = ttk.Button(randomizer_group, text="Restore repo files", command=do_restore)
-    restore_btn.grid(row=5, column=0, sticky="w", pady=(8, 0))
+    restore_btn.grid(row=6, column=0, sticky="w", pady=(8, 0))
     add_tooltip(restore_btn, "Overwrite the repo's src/ files with the copies in randomizer/ (undo randomization).")
 
-    wild_level_frame = ttk.Frame(randomizer_group)
-    wild_level_frame.grid(row=6, column=0, sticky="w", pady=(10, 0))
+    levels_group = ttk.Labelframe(top, text="Level modifiers", padding=10)
+    levels_group.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+
+    wild_level_frame = ttk.Frame(levels_group)
+    wild_level_frame.grid(row=0, column=0, sticky="w")
 
     wild_level_label = ttk.Label(wild_level_frame, text="Wild Level %")
     wild_level_label.pack(side="left")
@@ -374,8 +381,8 @@ def main() -> None:
     wild_level_reset_btn.pack(side="left", padx=(8, 0))
     add_tooltip(wild_level_reset_btn, "Reset wild level scaling to 0%.")
 
-    trainer_level_frame = ttk.Frame(randomizer_group)
-    trainer_level_frame.grid(row=7, column=0, sticky="w", pady=(6, 0))
+    trainer_level_frame = ttk.Frame(levels_group)
+    trainer_level_frame.grid(row=1, column=0, sticky="w", pady=(6, 0))
 
     trainer_level_label = ttk.Label(trainer_level_frame, text="Trainer Level %")
     trainer_level_label.pack(side="left")
@@ -414,72 +421,41 @@ def main() -> None:
     add_tooltip(trainer_level_reset_btn, "Reset trainer level scaling to 0%.")
 
     build_group = ttk.Labelframe(top, text="Build", padding=10)
-    build_group.grid(row=0, column=1, sticky="nw", padx=(10, 0))
+    build_group.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+    build_group.columnconfigure(0, weight=1)
+    build_group.columnconfigure(1, weight=1)
 
-    random_evos_cb = ttk.Checkbutton(build_group, text="RANDOM_EVOLUTIONS", variable=flag_random_evos)
-    random_evos_cb.grid(row=0, column=0, sticky="w")
-    add_tooltip(random_evos_cb, "Randomize evolutions (build flag).")
+    speed_group = ttk.Labelframe(build_group, text="Speed / Skips", padding=8)
+    speed_group.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
 
-    walk_fast_cb = ttk.Checkbutton(build_group, text="WALK_FAST", variable=flag_walk_fast)
-    walk_fast_cb.grid(row=1, column=0, sticky="w")
+    rules_group = ttk.Labelframe(build_group, text="Rules / Restrictions", padding=8)
+    rules_group.grid(row=1, column=0, sticky="nsew", padx=(0, 10), pady=(10, 0))
+
+    util_group = ttk.Labelframe(build_group, text="Utility", padding=8)
+    util_group.grid(row=0, column=1, rowspan=2, sticky="nsew")
+
+    actions_frame = ttk.Frame(build_group)
+    actions_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(12, 0))
+
+    # Speed / Skips
+    walk_fast_cb = ttk.Checkbutton(speed_group, text="WALK_FAST", variable=flag_walk_fast)
+    walk_fast_cb.grid(row=0, column=0, sticky="w")
     add_tooltip(walk_fast_cb, "Increase player walking speed (build flag).")
 
-    wtw_cb = ttk.Checkbutton(build_group, text="WALK_THROUGH_WALLS", variable=flag_walk_through_walls)
-    wtw_cb.grid(row=2, column=0, sticky="w")
-    add_tooltip(wtw_cb, "Allow the player to ignore impassable tiles (build flag).")
-
-    nuzlocke_delete_fainted_cb = ttk.Checkbutton(
-        build_group,
-        text="NUZLOCKE_DELETE_FAINTED",
-        variable=flag_nuzlocke_delete_fainted,
-    )
-    nuzlocke_delete_fainted_cb.grid(row=3, column=0, sticky="w")
-    add_tooltip(
-        nuzlocke_delete_fainted_cb,
-        "Nuzlocke rule: delete a party Pokémon after it faints (deferred until a replacement is sent out).",
-    )
-
-    instant_text_cb = ttk.Checkbutton(build_group, text="INSTANT_TEXT", variable=flag_instant_text)
-    instant_text_cb.grid(row=4, column=0, sticky="w")
+    instant_text_cb = ttk.Checkbutton(speed_group, text="INSTANT_TEXT", variable=flag_instant_text)
+    instant_text_cb.grid(row=1, column=0, sticky="w")
     add_tooltip(instant_text_cb, "Make in-game text display instantly (build flag).")
 
-    skip_transition_cb = ttk.Checkbutton(build_group, text="SKIP_BATTLE_TRANSITION", variable=flag_skip_transition)
-    skip_transition_cb.grid(row=5, column=0, sticky="w")
+    skip_transition_cb = ttk.Checkbutton(speed_group, text="SKIP_BATTLE_TRANSITION", variable=flag_skip_transition)
+    skip_transition_cb.grid(row=2, column=0, sticky="w")
     add_tooltip(skip_transition_cb, "Skip the battle transition effect (build flag).")
 
-    skip_fade_cb = ttk.Checkbutton(build_group, text="SKIP_FADE_ANIMS", variable=flag_skip_fade_anims)
-    skip_fade_cb.grid(row=6, column=0, sticky="w")
+    skip_fade_cb = ttk.Checkbutton(speed_group, text="SKIP_FADE_ANIMS", variable=flag_skip_fade_anims)
+    skip_fade_cb.grid(row=3, column=0, sticky="w")
     add_tooltip(skip_fade_cb, "Compile-time: make fade-in/out screen transitions instant (doors, menus, bag, etc).")
 
-    force_doubles_cb = ttk.Checkbutton(build_group, text="FORCE_DOUBLE_BATTLES", variable=flag_force_doubles)
-    force_doubles_cb.grid(row=7, column=0, sticky="w")
-    add_tooltip(force_doubles_cb, "Force double battles everywhere (build flag).")
-
-    steal_team_cb = ttk.Checkbutton(build_group, text="STEAL_TRAINER_TEAM", variable=flag_steal_trainer_team)
-    steal_team_cb.grid(row=8, column=0, sticky="w")
-    add_tooltip(steal_team_cb, "After winning a trainer battle, replace your party with theirs (build flag).")
-
-    no_exp_cb = ttk.Checkbutton(build_group, text="NO_EXP", variable=flag_no_exp)
-    no_exp_cb.grid(row=9, column=0, sticky="w")
-    add_tooltip(no_exp_cb, "Compile-time: prevent Pokémon from gaining experience.")
-
-    no_pokeballs_cb = ttk.Checkbutton(build_group, text="NO_POKEBALLS", variable=flag_no_pokeballs)
-    no_pokeballs_cb.grid(row=10, column=0, sticky="w")
-    add_tooltip(no_pokeballs_cb, "Compile-time: prevent using Poké Balls.")
-
-    remote_opp_cb = ttk.Checkbutton(
-        build_group,
-        text="REMOTE_OPPONENT_CONTROL",
-        variable=flag_remote_opponent,
-    )
-    remote_opp_cb.grid(row=11, column=0, sticky="w", pady=(8, 0))
-    add_tooltip(
-        remote_opp_cb,
-        "Build pokeemerald.gba with remote opponent control enabled, then also build follower.gba (transport-only ROM).",
-    )
-
-    wait_frame = ttk.Frame(build_group)
-    wait_frame.grid(row=12, column=0, sticky="w", pady=(8, 0))
+    wait_frame = ttk.Frame(speed_group)
+    wait_frame.grid(row=4, column=0, sticky="w", pady=(8, 0))
 
     wait_label = ttk.Label(wait_frame, text="WAIT_TIME_DIVISOR")
     wait_label.pack(side="left")
@@ -506,8 +482,52 @@ def main() -> None:
     wait_scale.pack(side="left")
     add_tooltip(wait_scale, "Select 1, 2, 4, 8, 16, or 32.")
 
-    build_btn = ttk.Button(build_group, text="Build", command=do_build)
-    build_btn.grid(row=12, column=0, sticky="w", pady=(10, 0))
+    # Rules / Restrictions
+    nuzlocke_delete_fainted_cb = ttk.Checkbutton(
+        rules_group,
+        text="NUZLOCKE_DELETE_FAINTED",
+        variable=flag_nuzlocke_delete_fainted,
+    )
+    nuzlocke_delete_fainted_cb.grid(row=0, column=0, sticky="w")
+    add_tooltip(
+        nuzlocke_delete_fainted_cb,
+        "Nuzlocke rule: delete a party Pokémon after it faints (deferred until a replacement is sent out).",
+    )
+
+    force_doubles_cb = ttk.Checkbutton(rules_group, text="FORCE_DOUBLE_BATTLES", variable=flag_force_doubles)
+    force_doubles_cb.grid(row=1, column=0, sticky="w")
+    add_tooltip(force_doubles_cb, "Force double battles everywhere (build flag).")
+
+    steal_team_cb = ttk.Checkbutton(rules_group, text="STEAL_TRAINER_TEAM", variable=flag_steal_trainer_team)
+    steal_team_cb.grid(row=2, column=0, sticky="w")
+    add_tooltip(steal_team_cb, "After winning a trainer battle, replace your party with theirs (build flag).")
+
+    no_exp_cb = ttk.Checkbutton(rules_group, text="NO_EXP", variable=flag_no_exp)
+    no_exp_cb.grid(row=3, column=0, sticky="w", pady=(6, 0))
+    add_tooltip(no_exp_cb, "Compile-time: prevent Pokémon from gaining experience.")
+
+    no_pokeballs_cb = ttk.Checkbutton(rules_group, text="NO_POKEBALLS", variable=flag_no_pokeballs)
+    no_pokeballs_cb.grid(row=4, column=0, sticky="w")
+    add_tooltip(no_pokeballs_cb, "Compile-time: prevent using Poké Balls.")
+
+    # Utility
+    wtw_cb = ttk.Checkbutton(util_group, text="WALK_THROUGH_WALLS", variable=flag_walk_through_walls)
+    wtw_cb.grid(row=0, column=0, sticky="w")
+    add_tooltip(wtw_cb, "Allow the player to ignore impassable tiles (build flag).")
+
+    remote_opp_cb = ttk.Checkbutton(
+        util_group,
+        text="REMOTE_OPPONENT_CONTROL",
+        variable=flag_remote_opponent,
+    )
+    remote_opp_cb.grid(row=1, column=0, sticky="w", pady=(6, 0))
+    add_tooltip(
+        remote_opp_cb,
+        "Build pokeemerald.gba with remote opponent control enabled, then also build follower.gba (transport-only ROM).",
+    )
+
+    build_btn = ttk.Button(actions_frame, text="Build", command=do_build)
+    build_btn.grid(row=0, column=0, sticky="w")
     add_tooltip(build_btn, "Run randomizer (or restore) then build the ROM.")
 
     output.pack(fill="both", expand=True, padx=10, pady=(0, 10))
