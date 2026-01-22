@@ -381,7 +381,10 @@
 
 #define STRINGID_CANTTHROWBALLTWOMONS       381
 
-#define BATTLESTRINGS_COUNT                 382
+// Build-time feature flags / optional restrictions.
+#define STRINGID_CANTUSEPOKEBALLS           382
+
+#define BATTLESTRINGS_COUNT                 383
 
 // This is the string id that gBattleStringsTable starts with.
 // String ids before this (e.g. STRINGID_INTROMSG) are not in the table,

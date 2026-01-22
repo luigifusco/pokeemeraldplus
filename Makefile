@@ -214,6 +214,13 @@ NO_EXP ?= 0
 ifeq ($(NO_EXP),1)
 	CPPFLAGS += -DNO_EXP
 endif
+
+# Compile-time toggle: prevent using Poké Balls.
+# Usage: make NO_POKEBALLS=1
+NO_POKEBALLS ?= 0
+ifeq ($(NO_POKEBALLS),1)
+	CPPFLAGS += -DNO_POKEBALLS
+endif
 SKIP_BATTLE_TRANSITION ?= 0
 ifeq ($(SKIP_BATTLE_TRANSITION),1)
 	CPPFLAGS += -DSKIP_BATTLE_TRANSITION

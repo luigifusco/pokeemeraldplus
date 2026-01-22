@@ -219,6 +219,7 @@ extern const u8 BattleScript_WallyBallThrow[];
 extern const u8 BattleScript_ShakeBallThrow[];
 extern const u8 BattleScript_TrainerBallBlock[];
 extern const u8 BattleScript_CantThrowBallTwoWildMons[];
+extern const u8 BattleScript_CantUsePokeBalls[];
 extern const u8 BattleScript_RunByUsingItem[];
 extern const u8 BattleScript_ActionWatchesCarefully[];
 extern const u8 BattleScript_ActionGetNear[];

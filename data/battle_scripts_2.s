@@ -115,6 +115,11 @@ BattleScript_CantThrowBallTwoWildMons::
 	waitmessage B_WAIT_TIME_LONG
 	finishaction
 
+BattleScript_CantUsePokeBalls::
+	printstring STRINGID_CANTUSEPOKEBALLS
+	waitmessage B_WAIT_TIME_LONG
+	finishaction
+
 BattleScript_PlayerUsesItem::
 	moveendcase MOVEEND_MIRROR_MOVE
 	end
