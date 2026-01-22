@@ -412,6 +412,18 @@ static void AnimTask_DrawFallingWhiteLinesOnAttacker_Step(u8 taskId)
 #define tBlend            data[12]
 #define tState            data[15]
 
+#ifdef FAST_STAT_ANIMS
+#define STAT_ANIM_FADE_INTERVAL  0
+#define STAT_ANIM_BLEND_STEP     2
+#define STAT_ANIM_WAIT_NORMAL    4
+#define STAT_ANIM_WAIT_SHARP     6
+#else
+#define STAT_ANIM_FADE_INTERVAL  1
+#define STAT_ANIM_BLEND_STEP     1
+#define STAT_ANIM_WAIT_NORMAL    20
+#define STAT_ANIM_WAIT_SHARP     30
+#endif
+
 void InitStatsChangeAnimation(u8 taskId)
 {
     u8 i;
@@ -543,12 +555,12 @@ static void StatsChangeAnimation_Step2(u8 taskId)
     if (!sAnimStatsChangeData->aSharply)
     {
         gTasks[taskId].tTargetBlend = 10;
-        gTasks[taskId].tWaitTime = 20;
+        gTasks[taskId].tWaitTime = STAT_ANIM_WAIT_NORMAL;
     }
     else
     {
         gTasks[taskId].tTargetBlend = 13;
-        gTasks[taskId].tWaitTime = 30;
+        gTasks[taskId].tWaitTime = STAT_ANIM_WAIT_SHARP;
     }
 
     gTasks[taskId].tAnimSpriteId1 = spriteId;
@@ -558,10 +570,14 @@ static void StatsChangeAnimation_Step2(u8 taskId)
     gTasks[taskId].tBattler2SpriteId = gBattlerSpriteIds[sAnimStatsChangeData->battler2];
     gTasks[taskId].func = StatsChangeAnimation_Step3;
 
+    // This SFX is relatively long and can make stat changes feel "gated" by audio.
+    // When FAST_STAT_ANIMS is enabled, skip it so the animation completes ASAP.
+#ifndef FAST_STAT_ANIMS
     if (!sAnimStatsChangeData->aDecrease)
         PlaySE12WithPanning(SE_M_STAT_INCREASE, BattleAnimAdjustPanning2(SOUND_PAN_ATTACKER));
     else
         PlaySE12WithPanning(SE_M_STAT_DECREASE, BattleAnimAdjustPanning2(SOUND_PAN_ATTACKER));
+#endif
 }
 
 static void StatsChangeAnimation_Step3(u8 taskId)
@@ -572,10 +588,12 @@ static void StatsChangeAnimation_Step3(u8 taskId)
     {
     case 0:
         // Fade in
-        if (gTasks[taskId].tFadeTimer++ > 0)
+        if (++gTasks[taskId].tFadeTimer > STAT_ANIM_FADE_INTERVAL)
         {
             gTasks[taskId].tFadeTimer = 0;
-            gTasks[taskId].tBlend++;
+            gTasks[taskId].tBlend += STAT_ANIM_BLEND_STEP;
+            if (gTasks[taskId].tBlend > gTasks[taskId].tTargetBlend)
+                gTasks[taskId].tBlend = gTasks[taskId].tTargetBlend;
             SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(gTasks[taskId].tBlend, 16 - gTasks[taskId].tBlend));
             if (gTasks[taskId].tBlend == gTasks[taskId].tTargetBlend)
                 gTasks[taskId].tState++;
@@ -588,10 +606,12 @@ static void StatsChangeAnimation_Step3(u8 taskId)
         break;
     case 2:
         // Fade out
-        if (gTasks[taskId].tFadeTimer++ > 0)
+        if (++gTasks[taskId].tFadeTimer > STAT_ANIM_FADE_INTERVAL)
         {
             gTasks[taskId].tFadeTimer = 0;
-            gTasks[taskId].tBlend--;
+            gTasks[taskId].tBlend -= STAT_ANIM_BLEND_STEP;
+            if (gTasks[taskId].tBlend < 0)
+                gTasks[taskId].tBlend = 0;
             SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(gTasks[taskId].tBlend, 16 - gTasks[taskId].tBlend));
             if (gTasks[taskId].tBlend == 0)
             {
@@ -645,6 +665,11 @@ static void StatsChangeAnimation_Step3(u8 taskId)
 #undef tFadeTimer
 #undef tBlend
 #undef tState
+
+#undef STAT_ANIM_FADE_INTERVAL
+#undef STAT_ANIM_BLEND_STEP
+#undef STAT_ANIM_WAIT_NORMAL
+#undef STAT_ANIM_WAIT_SHARP
 
 void AnimTask_Flash(u8 taskId)
 {

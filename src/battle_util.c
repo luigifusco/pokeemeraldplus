@@ -337,9 +337,17 @@ void HandleAction_UseItem(void)
 
 #ifdef NO_POKEBALLS
         // Build-time toggle: prevent using Poké Balls.
-        // Put the ball back and show an error message.
-        AddBagItem(gLastUsedItem, 1);
-        gBattlescriptCurrInstr = BattleScript_CantUsePokeBalls;
+        // Exception: allow the Wally catching tutorial to proceed normally.
+        if (gBattleTypeFlags & BATTLE_TYPE_WALLY_TUTORIAL)
+        {
+            gBattlescriptCurrInstr = gBattlescriptsForBallThrow[gLastUsedItem];
+        }
+        else
+        {
+            // Put the ball back and show an error message.
+            AddBagItem(gLastUsedItem, 1);
+            gBattlescriptCurrInstr = BattleScript_CantUsePokeBalls;
+        }
 #else
 
         if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
@@ -445,14 +453,18 @@ bool8 TryRunFromBattle(u8 battler)
     u8 holdEffect;
     u8 pyramidMultiplier;
     u16 speedVar;
+    u16 battlerSpeed;
     u16 opponentSpeed;
 
-    // In wild double battles, use the sum of the remaining opponents' speeds.
-    // If only one opponent remains, only that opponent is used.
+    battlerSpeed = gBattleMons[battler].speed;
+
+    // In wild double battles, compare the summed speed of remaining battlers.
+    // If only one battler remains on either side, only that battler is used.
     if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
      && !(gBattleTypeFlags & BATTLE_TYPE_TRAINER))
     {
         u8 otherFoe;
+        u8 partner;
 
         opponentSpeed = 0;
         otherFoe = BATTLE_PARTNER(BATTLE_OPPOSITE(battler));
@@ -468,6 +480,25 @@ bool8 TryRunFromBattle(u8 battler)
         // Safety fallback: should never be 0 in a valid battle state.
         if (opponentSpeed == 0)
             opponentSpeed = gBattleMons[BATTLE_OPPOSITE(battler)].speed;
+
+        // Only the player can run; when the player has two active battlers,
+        // use the sum of their speeds (mirrors opponentSpeed sum above).
+        if (GetBattlerSide(battler) == B_SIDE_PLAYER)
+        {
+            battlerSpeed = 0;
+            partner = BATTLE_PARTNER(battler);
+
+            if (!(gAbsentBattlerFlags & gBitTable[battler])
+             && gBattleMons[battler].hp != 0)
+                battlerSpeed += gBattleMons[battler].speed;
+
+            if (!(gAbsentBattlerFlags & gBitTable[partner])
+             && gBattleMons[partner].hp != 0)
+                battlerSpeed += gBattleMons[partner].speed;
+
+            if (battlerSpeed == 0)
+                battlerSpeed = gBattleMons[battler].speed;
+        }
     }
     else
     {
@@ -493,7 +524,7 @@ bool8 TryRunFromBattle(u8 battler)
         {
             gBattleStruct->runTries++;
             pyramidMultiplier = GetPyramidRunMultiplier();
-            speedVar = (gBattleMons[battler].speed * pyramidMultiplier) / opponentSpeed + (gBattleStruct->runTries * 30);
+            speedVar = (battlerSpeed * pyramidMultiplier) / opponentSpeed + (gBattleStruct->runTries * 30);
             if (speedVar > (Random() & 0xFF))
             {
                 gLastUsedAbility = ABILITY_RUN_AWAY;
@@ -521,13 +552,13 @@ bool8 TryRunFromBattle(u8 battler)
             if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE)
             {
                 pyramidMultiplier = GetPyramidRunMultiplier();
-                speedVar = (gBattleMons[battler].speed * pyramidMultiplier) / opponentSpeed + (gBattleStruct->runTries * 30);
+                speedVar = (battlerSpeed * pyramidMultiplier) / opponentSpeed + (gBattleStruct->runTries * 30);
                 if (speedVar > (Random() & 0xFF))
                     effect++;
             }
-            else if (gBattleMons[battler].speed < opponentSpeed)
+            else if (battlerSpeed < opponentSpeed)
             {
-                speedVar = (gBattleMons[battler].speed * 128) / opponentSpeed + (gBattleStruct->runTries * 30);
+                speedVar = (battlerSpeed * 128) / opponentSpeed + (gBattleStruct->runTries * 30);
                 if (speedVar > (Random() & 0xFF))
                     effect++;
             }

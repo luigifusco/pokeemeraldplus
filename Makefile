@@ -228,6 +228,13 @@ SKIP_FADE_ANIMS ?= 0
 ifeq ($(SKIP_FADE_ANIMS),1)
 	CPPFLAGS += -DSKIP_FADE_ANIMS
 endif
+
+# Compile-time toggle: speed up stat-change animations (Atk/Def/etc rose/fell).
+# Usage: make FAST_STAT_ANIMS=1
+FAST_STAT_ANIMS ?= 0
+ifeq ($(FAST_STAT_ANIMS),1)
+	CPPFLAGS += -DFAST_STAT_ANIMS
+endif
 SKIP_BATTLE_TRANSITION ?= 0
 ifeq ($(SKIP_BATTLE_TRANSITION),1)
 	CPPFLAGS += -DSKIP_BATTLE_TRANSITION

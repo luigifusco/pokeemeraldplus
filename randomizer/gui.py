@@ -130,6 +130,7 @@ def main() -> None:
     flag_instant_text = tk.BooleanVar(value=False)
     flag_skip_transition = tk.BooleanVar(value=False)
     flag_skip_fade_anims = tk.BooleanVar(value=False)
+    flag_fast_stat_anims = tk.BooleanVar(value=False)
     flag_force_doubles = tk.BooleanVar(value=False)
     flag_steal_trainer_team = tk.BooleanVar(value=False)
     flag_no_exp = tk.BooleanVar(value=False)
@@ -205,6 +206,7 @@ def main() -> None:
         add_bool_flag("INSTANT_TEXT", flag_instant_text.get())
         add_bool_flag("SKIP_BATTLE_TRANSITION", flag_skip_transition.get())
         add_bool_flag("SKIP_FADE_ANIMS", flag_skip_fade_anims.get())
+        add_bool_flag("FAST_STAT_ANIMS", flag_fast_stat_anims.get())
         add_bool_flag("FORCE_DOUBLE_BATTLES", flag_force_doubles.get())
         add_bool_flag("STEAL_TRAINER_TEAM", flag_steal_trainer_team.get())
         add_bool_flag("NO_EXP", flag_no_exp.get())
@@ -454,8 +456,12 @@ def main() -> None:
     skip_fade_cb.grid(row=3, column=0, sticky="w")
     add_tooltip(skip_fade_cb, "Compile-time: make fade-in/out screen transitions instant (doors, menus, bag, etc).")
 
+    fast_stat_cb = ttk.Checkbutton(speed_group, text="FAST_STAT_ANIMS", variable=flag_fast_stat_anims)
+    fast_stat_cb.grid(row=4, column=0, sticky="w")
+    add_tooltip(fast_stat_cb, "Compile-time: speed up the stat-change (rose/fell) animation.")
+
     wait_frame = ttk.Frame(speed_group)
-    wait_frame.grid(row=4, column=0, sticky="w", pady=(8, 0))
+    wait_frame.grid(row=5, column=0, sticky="w", pady=(8, 0))
 
     wait_label = ttk.Label(wait_frame, text="WAIT_TIME_DIVISOR")
     wait_label.pack(side="left")
