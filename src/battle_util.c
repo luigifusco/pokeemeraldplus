@@ -436,7 +436,35 @@ bool8 TryRunFromBattle(u8 battler)
     bool8 effect = FALSE;
     u8 holdEffect;
     u8 pyramidMultiplier;
-    u8 speedVar;
+    u16 speedVar;
+    u16 opponentSpeed;
+
+    // In wild double battles, use the sum of the remaining opponents' speeds.
+    // If only one opponent remains, only that opponent is used.
+    if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+     && !(gBattleTypeFlags & BATTLE_TYPE_TRAINER))
+    {
+        u8 otherFoe;
+
+        opponentSpeed = 0;
+        otherFoe = BATTLE_PARTNER(BATTLE_OPPOSITE(battler));
+
+        if (!(gAbsentBattlerFlags & gBitTable[BATTLE_OPPOSITE(battler)])
+         && gBattleMons[BATTLE_OPPOSITE(battler)].hp != 0)
+            opponentSpeed += gBattleMons[BATTLE_OPPOSITE(battler)].speed;
+
+        if (!(gAbsentBattlerFlags & gBitTable[otherFoe])
+         && gBattleMons[otherFoe].hp != 0)
+            opponentSpeed += gBattleMons[otherFoe].speed;
+
+        // Safety fallback: should never be 0 in a valid battle state.
+        if (opponentSpeed == 0)
+            opponentSpeed = gBattleMons[BATTLE_OPPOSITE(battler)].speed;
+    }
+    else
+    {
+        opponentSpeed = gBattleMons[BATTLE_OPPOSITE(battler)].speed;
+    }
 
     if (gBattleMons[battler].item == ITEM_ENIGMA_BERRY)
         holdEffect = gEnigmaBerries[battler].holdEffect;
@@ -457,7 +485,7 @@ bool8 TryRunFromBattle(u8 battler)
         {
             gBattleStruct->runTries++;
             pyramidMultiplier = GetPyramidRunMultiplier();
-            speedVar = (gBattleMons[battler].speed * pyramidMultiplier) / (gBattleMons[BATTLE_OPPOSITE(battler)].speed) + (gBattleStruct->runTries * 30);
+            speedVar = (gBattleMons[battler].speed * pyramidMultiplier) / opponentSpeed + (gBattleStruct->runTries * 30);
             if (speedVar > (Random() & 0xFF))
             {
                 gLastUsedAbility = ABILITY_RUN_AWAY;
@@ -478,18 +506,20 @@ bool8 TryRunFromBattle(u8 battler)
     }
     else
     {
-        if (!(gBattleTypeFlags & BATTLE_TYPE_DOUBLE))
+        // Allow running from wild double battles. Use summed foe speed above.
+        if (!(gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+         || !(gBattleTypeFlags & BATTLE_TYPE_TRAINER))
         {
             if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE)
             {
                 pyramidMultiplier = GetPyramidRunMultiplier();
-                speedVar = (gBattleMons[battler].speed * pyramidMultiplier) / (gBattleMons[BATTLE_OPPOSITE(battler)].speed) + (gBattleStruct->runTries * 30);
+                speedVar = (gBattleMons[battler].speed * pyramidMultiplier) / opponentSpeed + (gBattleStruct->runTries * 30);
                 if (speedVar > (Random() & 0xFF))
                     effect++;
             }
-            else if (gBattleMons[battler].speed < gBattleMons[BATTLE_OPPOSITE(battler)].speed)
+            else if (gBattleMons[battler].speed < opponentSpeed)
             {
-                speedVar = (gBattleMons[battler].speed * 128) / (gBattleMons[BATTLE_OPPOSITE(battler)].speed) + (gBattleStruct->runTries * 30);
+                speedVar = (gBattleMons[battler].speed * 128) / opponentSpeed + (gBattleStruct->runTries * 30);
                 if (speedVar > (Random() & 0xFF))
                     effect++;
             }
