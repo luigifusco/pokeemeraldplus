@@ -221,6 +221,13 @@ NO_POKEBALLS ?= 0
 ifeq ($(NO_POKEBALLS),1)
 	CPPFLAGS += -DNO_POKEBALLS
 endif
+
+# Compile-time toggle: skip/instant-complete visual fade in/out animations.
+# Usage: make SKIP_FADE_ANIMS=1
+SKIP_FADE_ANIMS ?= 0
+ifeq ($(SKIP_FADE_ANIMS),1)
+	CPPFLAGS += -DSKIP_FADE_ANIMS
+endif
 SKIP_BATTLE_TRANSITION ?= 0
 ifeq ($(SKIP_BATTLE_TRANSITION),1)
 	CPPFLAGS += -DSKIP_BATTLE_TRANSITION

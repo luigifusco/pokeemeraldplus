@@ -783,18 +783,58 @@ void FadeScreen(u8 mode, s8 delay)
         if (useWeatherPal)
             CpuFastCopy(gPlttBufferFaded, gPlttBufferUnfaded, PLTT_SIZE);
 
+#ifdef SKIP_FADE_ANIMS
+        BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, fadeColor);
+#else
         BeginNormalPaletteFade(PALETTES_ALL, delay, 0, 16, fadeColor);
+#endif
         gWeatherPtr->palProcessingState = WEATHER_PAL_STATE_SCREEN_FADING_OUT;
     }
     else
     {
         gWeatherPtr->fadeDestColor = fadeColor;
+
+#ifdef SKIP_FADE_ANIMS
+        if (useWeatherPal)
+        {
+            // Weather fades normally do custom per-frame blending; apply the final
+            // palette state immediately.
+            switch (gWeatherPtr->currWeather)
+            {
+            case WEATHER_RAIN:
+            case WEATHER_RAIN_THUNDERSTORM:
+            case WEATHER_DOWNPOUR:
+            case WEATHER_SNOW:
+            case WEATHER_SHADE:
+                ApplyColorMap(0, 32, 3);
+                gWeatherPtr->colorMapIndex = 3;
+                break;
+            case WEATHER_DROUGHT:
+                ApplyColorMap(0, 32, -6);
+                gWeatherPtr->colorMapIndex = -6;
+                break;
+            case WEATHER_FOG_HORIZONTAL:
+                ApplyFogBlend(0, gWeatherPtr->fadeDestColor);
+                gWeatherPtr->colorMapIndex = 0;
+                break;
+            }
+
+            CpuCopy32(gPlttBufferFaded, (void *)PLTT, PLTT_SIZE);
+        }
+        else
+        {
+            BeginNormalPaletteFade(PALETTES_ALL, 0, 16, 0, fadeColor);
+        }
+
+        gWeatherPtr->palProcessingState = WEATHER_PAL_STATE_IDLE;
+#else
         if (useWeatherPal)
             gWeatherPtr->fadeScreenCounter = 0;
         else
             BeginNormalPaletteFade(PALETTES_ALL, delay, 16, 0, fadeColor);
 
         gWeatherPtr->palProcessingState = WEATHER_PAL_STATE_SCREEN_FADING_IN;
+#endif
         gWeatherPtr->fadeInFirstFrame = TRUE;
         gWeatherPtr->fadeInTimer = 0;
         Weather_SetBlendCoeffs(gWeatherPtr->currBlendEVA, gWeatherPtr->currBlendEVB);

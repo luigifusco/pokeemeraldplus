@@ -166,6 +166,30 @@ bool8 BeginNormalPaletteFade(u32 selectedPalettes, s8 delay, u8 startY, u8 targe
     }
     else
     {
+#ifdef SKIP_FADE_ANIMS
+        // Complete the fade immediately (no animation), but still apply the final
+        // palette state so callers that expect the screen to be black/white/etc
+        // still behave correctly.
+        gPaletteFade_selectedPalettes = selectedPalettes;
+        gPaletteFade.delayCounter = 0;
+        gPaletteFade_delay = 0;
+        gPaletteFade.y = targetY;
+        gPaletteFade.targetY = targetY;
+        gPaletteFade.blendColor = color;
+        gPaletteFade.active = FALSE;
+        gPaletteFade.mode = NORMAL_FADE;
+        gPaletteFade.softwareFadeFinishing = FALSE;
+        gPaletteFade.softwareFadeFinishingCounter = 0;
+
+        BlendPalettes(selectedPalettes, targetY, color);
+
+        temp = gPaletteFade.bufferTransferDisabled;
+        gPaletteFade.bufferTransferDisabled = FALSE;
+        CpuCopy32(gPlttBufferFaded, (void *)PLTT, PLTT_SIZE);
+        sPlttBufferTransferPending = FALSE;
+        gPaletteFade.bufferTransferDisabled = temp;
+        return TRUE;
+#else
         gPaletteFade.deltaY = 2;
 
         if (delay < 0)
@@ -198,6 +222,7 @@ bool8 BeginNormalPaletteFade(u32 selectedPalettes, s8 delay, u8 startY, u8 targe
             UpdateBlendRegisters();
         gPaletteFade.bufferTransferDisabled = temp;
         return TRUE;
+#endif
     }
 }
 
@@ -555,6 +580,38 @@ void BeginFastPaletteFade(u8 submode)
 
 static void BeginFastPaletteFadeInternal(u8 submode)
 {
+#ifdef SKIP_FADE_ANIMS
+    // Apply the final palette state immediately.
+    gPaletteFade_submode = submode & 0x3F;
+    gPaletteFade.active = FALSE;
+    gPaletteFade.mode = NORMAL_FADE;
+    gPaletteFade.softwareFadeFinishing = FALSE;
+    gPaletteFade.softwareFadeFinishingCounter = 0;
+
+    switch (submode)
+    {
+    case FAST_FADE_IN_FROM_BLACK:
+    case FAST_FADE_IN_FROM_WHITE:
+        CpuCopy32(gPlttBufferUnfaded, gPlttBufferFaded, PLTT_SIZE);
+        break;
+    case FAST_FADE_OUT_TO_WHITE:
+        CpuFill32(0xFFFFFFFF, gPlttBufferFaded, PLTT_SIZE);
+        break;
+    case FAST_FADE_OUT_TO_BLACK:
+        CpuFill32(0x00000000, gPlttBufferFaded, PLTT_SIZE);
+        break;
+    }
+
+    {
+        u8 temp = gPaletteFade.bufferTransferDisabled;
+        gPaletteFade.bufferTransferDisabled = FALSE;
+        CpuCopy32(gPlttBufferFaded, (void *)PLTT, PLTT_SIZE);
+        sPlttBufferTransferPending = FALSE;
+        gPaletteFade.bufferTransferDisabled = temp;
+    }
+    return;
+#endif
+
     gPaletteFade.y = 31;
     gPaletteFade_submode = submode & 0x3F;
     gPaletteFade.active = TRUE;

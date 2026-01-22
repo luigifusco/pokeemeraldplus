@@ -129,6 +129,7 @@ def main() -> None:
     flag_nuzlocke_delete_fainted = tk.BooleanVar(value=False)
     flag_instant_text = tk.BooleanVar(value=False)
     flag_skip_transition = tk.BooleanVar(value=False)
+    flag_skip_fade_anims = tk.BooleanVar(value=False)
     flag_force_doubles = tk.BooleanVar(value=False)
     flag_steal_trainer_team = tk.BooleanVar(value=False)
     flag_no_exp = tk.BooleanVar(value=False)
@@ -203,6 +204,7 @@ def main() -> None:
         add_bool_flag("NUZLOCKE_DELETE_FAINTED", flag_nuzlocke_delete_fainted.get())
         add_bool_flag("INSTANT_TEXT", flag_instant_text.get())
         add_bool_flag("SKIP_BATTLE_TRANSITION", flag_skip_transition.get())
+        add_bool_flag("SKIP_FADE_ANIMS", flag_skip_fade_anims.get())
         add_bool_flag("FORCE_DOUBLE_BATTLES", flag_force_doubles.get())
         add_bool_flag("STEAL_TRAINER_TEAM", flag_steal_trainer_team.get())
         add_bool_flag("NO_EXP", flag_no_exp.get())
@@ -445,20 +447,24 @@ def main() -> None:
     skip_transition_cb.grid(row=5, column=0, sticky="w")
     add_tooltip(skip_transition_cb, "Skip the battle transition effect (build flag).")
 
+    skip_fade_cb = ttk.Checkbutton(build_group, text="SKIP_FADE_ANIMS", variable=flag_skip_fade_anims)
+    skip_fade_cb.grid(row=6, column=0, sticky="w")
+    add_tooltip(skip_fade_cb, "Compile-time: make fade-in/out screen transitions instant (doors, menus, bag, etc).")
+
     force_doubles_cb = ttk.Checkbutton(build_group, text="FORCE_DOUBLE_BATTLES", variable=flag_force_doubles)
-    force_doubles_cb.grid(row=6, column=0, sticky="w")
+    force_doubles_cb.grid(row=7, column=0, sticky="w")
     add_tooltip(force_doubles_cb, "Force double battles everywhere (build flag).")
 
     steal_team_cb = ttk.Checkbutton(build_group, text="STEAL_TRAINER_TEAM", variable=flag_steal_trainer_team)
-    steal_team_cb.grid(row=7, column=0, sticky="w")
+    steal_team_cb.grid(row=8, column=0, sticky="w")
     add_tooltip(steal_team_cb, "After winning a trainer battle, replace your party with theirs (build flag).")
 
     no_exp_cb = ttk.Checkbutton(build_group, text="NO_EXP", variable=flag_no_exp)
-    no_exp_cb.grid(row=8, column=0, sticky="w")
+    no_exp_cb.grid(row=9, column=0, sticky="w")
     add_tooltip(no_exp_cb, "Compile-time: prevent Pokémon from gaining experience.")
 
     no_pokeballs_cb = ttk.Checkbutton(build_group, text="NO_POKEBALLS", variable=flag_no_pokeballs)
-    no_pokeballs_cb.grid(row=9, column=0, sticky="w")
+    no_pokeballs_cb.grid(row=10, column=0, sticky="w")
     add_tooltip(no_pokeballs_cb, "Compile-time: prevent using Poké Balls.")
 
     remote_opp_cb = ttk.Checkbutton(
@@ -466,14 +472,14 @@ def main() -> None:
         text="REMOTE_OPPONENT_CONTROL",
         variable=flag_remote_opponent,
     )
-    remote_opp_cb.grid(row=10, column=0, sticky="w", pady=(8, 0))
+    remote_opp_cb.grid(row=11, column=0, sticky="w", pady=(8, 0))
     add_tooltip(
         remote_opp_cb,
         "Build pokeemerald.gba with remote opponent control enabled, then also build follower.gba (transport-only ROM).",
     )
 
     wait_frame = ttk.Frame(build_group)
-    wait_frame.grid(row=11, column=0, sticky="w", pady=(8, 0))
+    wait_frame.grid(row=12, column=0, sticky="w", pady=(8, 0))
 
     wait_label = ttk.Label(wait_frame, text="WAIT_TIME_DIVISOR")
     wait_label.pack(side="left")
