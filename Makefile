@@ -207,6 +207,13 @@ STEAL_TRAINER_TEAM ?= 0
 ifeq ($(STEAL_TRAINER_TEAM),1)
 	CPPFLAGS += -DSTEAL_TRAINER_TEAM
 endif
+
+# Compile-time toggle: prevent Pokémon from gaining experience.
+# Usage: make NO_EXP=1
+NO_EXP ?= 0
+ifeq ($(NO_EXP),1)
+	CPPFLAGS += -DNO_EXP
+endif
 SKIP_BATTLE_TRANSITION ?= 0
 ifeq ($(SKIP_BATTLE_TRANSITION),1)
 	CPPFLAGS += -DSKIP_BATTLE_TRANSITION

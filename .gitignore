@@ -40,3 +40,7 @@ prefabs.json
 *.js
 /pokeemerald-*.png
 /pokeemerald_modern-*.png
+
+# Python bytecode / cache
+__pycache__/
+*.pyc

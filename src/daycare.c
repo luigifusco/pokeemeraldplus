@@ -252,9 +252,15 @@ static u16 TakeSelectedPokemonFromDaycare(struct DaycareMon *daycareMon)
 
     if (GetMonData(&pokemon, MON_DATA_LEVEL) != MAX_LEVEL)
     {
+#ifndef NO_EXP
         experience = GetMonData(&pokemon, MON_DATA_EXP) + daycareMon->steps;
         SetMonData(&pokemon, MON_DATA_EXP, &experience);
         ApplyDaycareExperience(&pokemon);
+#else
+        // Build-time toggle: prevent EXP gain (and thus daycare level-ups).
+        // Still recalculate stats to match current level (no-op in practice).
+        CalculateMonStats(&pokemon);
+#endif
     }
 
     gPlayerParty[PARTY_SIZE - 1] = pokemon;
@@ -287,9 +293,17 @@ static u8 GetLevelAfterDaycareSteps(struct BoxPokemon *mon, u32 steps)
 {
     struct BoxPokemon tempMon = *mon;
 
-    u32 experience = GetBoxMonData(mon, MON_DATA_EXP) + steps;
-    SetBoxMonData(&tempMon, MON_DATA_EXP,  &experience);
+#ifdef NO_EXP
+    // Daycare EXP is disabled for this build.
+    (void)steps;
     return GetLevelFromBoxMonExp(&tempMon);
+#else
+    {
+        u32 experience = GetBoxMonData(mon, MON_DATA_EXP) + steps;
+        SetBoxMonData(&tempMon, MON_DATA_EXP,  &experience);
+        return GetLevelFromBoxMonExp(&tempMon);
+    }
+#endif
 }
 
 static u8 GetNumLevelsGainedFromSteps(struct DaycareMon *daycareMon)
