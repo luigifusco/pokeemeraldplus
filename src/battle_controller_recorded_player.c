@@ -1661,9 +1661,17 @@ static void RecordedPlayerHandleIntroTrainerBallThrow(void)
     u8 taskId;
     u32 trainerPicId;
 
+#ifdef SKIP_BATTLE_TRANSITION
+#define INTRO_TRAINER_THROW_FRAMES 12
+#define INTRO_SENDOUT_DELAY_FRAMES 10
+#else
+#define INTRO_TRAINER_THROW_FRAMES 50
+#define INTRO_SENDOUT_DELAY_FRAMES 24
+#endif
+
     SetSpritePrimaryCoordsFromSecondaryCoords(&gSprites[gBattlerSpriteIds[gActiveBattler]]);
 
-    gSprites[gBattlerSpriteIds[gActiveBattler]].data[0] = 50;
+    gSprites[gBattlerSpriteIds[gActiveBattler]].data[0] = INTRO_TRAINER_THROW_FRAMES;
     gSprites[gBattlerSpriteIds[gActiveBattler]].data[2] = -40;
     gSprites[gBattlerSpriteIds[gActiveBattler]].data[4] = gSprites[gBattlerSpriteIds[gActiveBattler]].y;
     gSprites[gBattlerSpriteIds[gActiveBattler]].callback = StartAnimLinearTranslation;
@@ -1694,7 +1702,7 @@ static void RecordedPlayerHandleIntroTrainerBallThrow(void)
 
 static void Task_StartSendOutAnim(u8 taskId)
 {
-    if (gTasks[taskId].data[1] < 24)
+    if (gTasks[taskId].data[1] < INTRO_SENDOUT_DELAY_FRAMES)
     {
         gTasks[taskId].data[1]++;
     }
@@ -1723,6 +1731,9 @@ static void Task_StartSendOutAnim(u8 taskId)
         DestroyTask(taskId);
     }
 }
+
+#undef INTRO_TRAINER_THROW_FRAMES
+#undef INTRO_SENDOUT_DELAY_FRAMES
 
 static void RecordedPlayerHandleDrawPartyStatusSummary(void)
 {

@@ -910,7 +910,17 @@ static void SpriteCB_BallThrow_CaptureMon(struct Sprite *sprite)
 
 static void SpriteCB_PlayerMonSendOut_1(struct Sprite *sprite)
 {
-    sprite->data[0] = 25;
+#ifdef SKIP_BATTLE_TRANSITION
+#define SENDOUT_PLAYER_ARC_FRAMES 12
+#define SENDOUT_OPPONENT_WAIT_FRAMES 5
+#define SENDOUT_RELEASE_MON_2_DELAY 6
+#else
+#define SENDOUT_PLAYER_ARC_FRAMES 25
+#define SENDOUT_OPPONENT_WAIT_FRAMES 15
+#define SENDOUT_RELEASE_MON_2_DELAY 24
+#endif
+
+    sprite->data[0] = SENDOUT_PLAYER_ARC_FRAMES;
     sprite->data[2] = GetBattlerSpriteCoord(sprite->sBattler, BATTLER_COORD_X_2);
     sprite->data[4] = GetBattlerSpriteCoord(sprite->sBattler, BATTLER_COORD_Y_PIC_OFFSET) + 24;
     sprite->data[5] = -30;
@@ -981,7 +991,7 @@ static void SpriteCB_PlayerMonSendOut_2(struct Sprite *sprite)
 
 static void SpriteCB_ReleaseMon2FromBall(struct Sprite *sprite)
 {
-    if (sprite->data[0]++ > 24)
+    if (sprite->data[0]++ > SENDOUT_RELEASE_MON_2_DELAY)
     {
         sprite->data[0] = 0;
         sprite->callback = SpriteCB_ReleaseMonFromBall;
@@ -991,7 +1001,7 @@ static void SpriteCB_ReleaseMon2FromBall(struct Sprite *sprite)
 static void SpriteCB_OpponentMonSendOut(struct Sprite *sprite)
 {
     sprite->data[0]++;
-    if (sprite->data[0] > 15)
+    if (sprite->data[0] > SENDOUT_OPPONENT_WAIT_FRAMES)
     {
         sprite->data[0] = 0;
         if (IsDoubleBattle() && gBattleSpritesDataPtr->animationData->introAnimActive
@@ -1001,6 +1011,10 @@ static void SpriteCB_OpponentMonSendOut(struct Sprite *sprite)
             sprite->callback = SpriteCB_ReleaseMonFromBall;
     }
 }
+
+#undef SENDOUT_PLAYER_ARC_FRAMES
+#undef SENDOUT_OPPONENT_WAIT_FRAMES
+#undef SENDOUT_RELEASE_MON_2_DELAY
 
 #undef sBattler
 

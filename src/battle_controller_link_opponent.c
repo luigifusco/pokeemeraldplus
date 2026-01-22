@@ -1689,9 +1689,15 @@ static void LinkOpponentHandleIntroTrainerBallThrow(void)
 {
     u8 taskId;
 
+#ifdef SKIP_BATTLE_TRANSITION
+#define INTRO_TRAINER_THROW_FRAMES 10
+#else
+#define INTRO_TRAINER_THROW_FRAMES 35
+#endif
+
     SetSpritePrimaryCoordsFromSecondaryCoords(&gSprites[gBattlerSpriteIds[gActiveBattler]]);
 
-    gSprites[gBattlerSpriteIds[gActiveBattler]].data[0] = 35;
+    gSprites[gBattlerSpriteIds[gActiveBattler]].data[0] = INTRO_TRAINER_THROW_FRAMES;
     gSprites[gBattlerSpriteIds[gActiveBattler]].data[2] = 280;
     gSprites[gBattlerSpriteIds[gActiveBattler]].data[4] = gSprites[gBattlerSpriteIds[gActiveBattler]].y;
     gSprites[gBattlerSpriteIds[gActiveBattler]].callback = StartAnimLinearTranslation;
@@ -1706,6 +1712,8 @@ static void LinkOpponentHandleIntroTrainerBallThrow(void)
 
     gBattleSpritesDataPtr->animationData->introAnimActive = TRUE;
     gBattlerControllerFuncs[gActiveBattler] = LinkOpponentDummy;
+
+#undef INTRO_TRAINER_THROW_FRAMES
 }
 
 static void Task_StartSendOutAnim(u8 taskId)
