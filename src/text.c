@@ -1196,8 +1196,12 @@ static u16 RenderText(struct TextPrinter *textPrinter)
     case RENDER_STATE_SCROLL:
         if (textPrinter->scrollDistance)
         {
+            #ifdef INSTANT_TEXT
+            int speed = textPrinter->scrollDistance;
+            #else
             int scrollSpeed = GetPlayerTextSpeed();
             int speed = sWindowVerticalScrollSpeeds[scrollSpeed];
+            #endif
             if (textPrinter->scrollDistance < speed)
             {
                 ScrollWindow(textPrinter->printerTemplate.windowId, 0, textPrinter->scrollDistance, PIXEL_FILL(textPrinter->printerTemplate.bgColor));
