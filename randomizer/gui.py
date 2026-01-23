@@ -131,6 +131,7 @@ def main() -> None:
     flag_skip_transition = tk.BooleanVar(value=False)
     flag_skip_fade_anims = tk.BooleanVar(value=False)
     flag_fast_stat_anims = tk.BooleanVar(value=False)
+    flag_manual_battle_text = tk.BooleanVar(value=False)
     flag_force_doubles = tk.BooleanVar(value=False)
     flag_steal_trainer_team = tk.BooleanVar(value=False)
     flag_no_exp = tk.BooleanVar(value=False)
@@ -207,6 +208,7 @@ def main() -> None:
         add_bool_flag("SKIP_BATTLE_TRANSITION", flag_skip_transition.get())
         add_bool_flag("SKIP_FADE_ANIMS", flag_skip_fade_anims.get())
         add_bool_flag("FAST_STAT_ANIMS", flag_fast_stat_anims.get())
+        add_bool_flag("MANUAL_BATTLE_TEXT", flag_manual_battle_text.get())
         add_bool_flag("FORCE_DOUBLE_BATTLES", flag_force_doubles.get())
         add_bool_flag("STEAL_TRAINER_TEAM", flag_steal_trainer_team.get())
         add_bool_flag("NO_EXP", flag_no_exp.get())
@@ -460,8 +462,12 @@ def main() -> None:
     fast_stat_cb.grid(row=4, column=0, sticky="w")
     add_tooltip(fast_stat_cb, "Compile-time: speed up the stat-change (rose/fell) animation.")
 
+    manual_battle_text_cb = ttk.Checkbutton(speed_group, text="MANUAL_BATTLE_TEXT", variable=flag_manual_battle_text)
+    manual_battle_text_cb.grid(row=5, column=0, sticky="w")
+    add_tooltip(manual_battle_text_cb, "Compile-time: require A-press to advance every battle message.")
+
     wait_frame = ttk.Frame(speed_group)
-    wait_frame.grid(row=5, column=0, sticky="w", pady=(8, 0))
+    wait_frame.grid(row=6, column=0, sticky="w", pady=(8, 0))
 
     wait_label = ttk.Label(wait_frame, text="WAIT_TIME_DIVISOR")
     wait_label.pack(side="left")

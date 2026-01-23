@@ -235,6 +235,13 @@ FAST_STAT_ANIMS ?= 0
 ifeq ($(FAST_STAT_ANIMS),1)
 	CPPFLAGS += -DFAST_STAT_ANIMS
 endif
+
+# Compile-time toggle: require A-press to advance every battle message.
+# Usage: make MANUAL_BATTLE_TEXT=1
+MANUAL_BATTLE_TEXT ?= 0
+ifeq ($(MANUAL_BATTLE_TEXT),1)
+	CPPFLAGS += -DMANUAL_BATTLE_TEXT
+endif
 SKIP_BATTLE_TRANSITION ?= 0
 ifeq ($(SKIP_BATTLE_TRANSITION),1)
 	CPPFLAGS += -DSKIP_BATTLE_TRANSITION

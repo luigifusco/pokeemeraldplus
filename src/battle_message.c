@@ -2275,6 +2275,35 @@ void BufferStringBattle(u16 stringID)
     }
 
     BattleStringExpandPlaceholdersToDisplayedString(stringPtr);
+
+#if defined(MANUAL_BATTLE_TEXT) && MANUAL_BATTLE_TEXT
+    // Force every battle message to require button press to advance.
+    // Avoid enabling in link/recorded battles, which should remain deterministic.
+    if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_RECORDED_LINK)))
+    {
+        u32 i;
+        u8 lastChar;
+
+        // Find EOS without overrunning the buffer.
+        for (i = 0; i < ARRAY_COUNT(gDisplayedStringBattle) - 1 && gDisplayedStringBattle[i] != EOS; i++)
+        {
+        }
+
+        if (i != 0 && gDisplayedStringBattle[i] == EOS)
+        {
+            lastChar = gDisplayedStringBattle[i - 1];
+            if (lastChar != CHAR_PROMPT_CLEAR && lastChar != CHAR_PROMPT_SCROLL)
+            {
+                // Append prompt if there is room for 1 byte + EOS.
+                if (i + 1 < ARRAY_COUNT(gDisplayedStringBattle))
+                {
+                    gDisplayedStringBattle[i] = CHAR_PROMPT_CLEAR;
+                    gDisplayedStringBattle[i + 1] = EOS;
+                }
+            }
+        }
+    }
+#endif
 }
 
 u32 BattleStringExpandPlaceholdersToDisplayedString(const u8 *src)
