@@ -195,6 +195,18 @@ ifeq ($(NUZLOCKE_DELETE_FAINTED),1)
 endif
 WAIT_TIME_DIVISOR ?= 1
 CPPFLAGS += -DWAIT_TIME_DIVISOR=$(WAIT_TIME_DIVISOR)
+
+# Numeric modifier applied to opponent initial stat stages at battle start.
+# Positive values boost; negative values nerf. Clamped to MIN_STAT_STAGE..MAX_STAT_STAGE.
+# Usage: make OPPONENT_STAT_STAGE_MOD=1
+OPPONENT_STAT_STAGE_MOD ?= 0
+CPPFLAGS += -DOPPONENT_STAT_STAGE_MOD=$(OPPONENT_STAT_STAGE_MOD)
+
+# Numeric modifier applied to player's initial stat stages at battle start.
+# Positive values boost; negative values nerf. Clamped to MIN_STAT_STAGE..MAX_STAT_STAGE.
+# Usage: make PLAYER_STAT_STAGE_MOD=1
+PLAYER_STAT_STAGE_MOD ?= 0
+CPPFLAGS += -DPLAYER_STAT_STAGE_MOD=$(PLAYER_STAT_STAGE_MOD)
 INSTANT_TEXT ?= 0
 ifeq ($(INSTANT_TEXT),1)
 	CPPFLAGS += -DINSTANT_TEXT

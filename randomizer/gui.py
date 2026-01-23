@@ -138,6 +138,9 @@ def main() -> None:
     flag_no_pokeballs = tk.BooleanVar(value=False)
     flag_remote_opponent = tk.BooleanVar(value=False)
 
+    opponent_stat_stage_mod = tk.DoubleVar(value=0.0)  # -6..6
+    player_stat_stage_mod = tk.DoubleVar(value=0.0)  # -6..6
+
     wait_time_divisor_pow = tk.DoubleVar(value=0.0)  # 0..5 => 1..32
     wild_level_percent = tk.DoubleVar(value=0.0)  # -100..100
     trainer_level_percent = tk.DoubleVar(value=0.0)  # -100..100
@@ -213,6 +216,16 @@ def main() -> None:
         add_bool_flag("STEAL_TRAINER_TEAM", flag_steal_trainer_team.get())
         add_bool_flag("NO_EXP", flag_no_exp.get())
         add_bool_flag("NO_POKEBALLS", flag_no_pokeballs.get())
+
+        osm = int(round(opponent_stat_stage_mod.get()))
+        if int(round(opponent_stat_stage_mod.get())) != osm:
+            opponent_stat_stage_mod.set(float(osm))
+        make_args.append(f"OPPONENT_STAT_STAGE_MOD={osm}")
+
+        psm = int(round(player_stat_stage_mod.get()))
+        if int(round(player_stat_stage_mod.get())) != psm:
+            player_stat_stage_mod.set(float(psm))
+        make_args.append(f"PLAYER_STAT_STAGE_MOD={psm}")
 
         # Remote opponent control (leader) build: keep all selected build flags.
         # The Makefile outputs the normal ROM name (pokeemerald.gba).
@@ -521,6 +534,86 @@ def main() -> None:
     no_pokeballs_cb = ttk.Checkbutton(rules_group, text="NO_POKEBALLS", variable=flag_no_pokeballs)
     no_pokeballs_cb.grid(row=4, column=0, sticky="w")
     add_tooltip(no_pokeballs_cb, "Compile-time: prevent using Poké Balls.")
+
+    opponent_stage_frame = ttk.Frame(rules_group)
+    opponent_stage_frame.grid(row=5, column=0, sticky="w", pady=(8, 0))
+
+    opponent_stage_label = ttk.Label(opponent_stage_frame, text="OPPONENT_STAT_STAGE_MOD")
+    opponent_stage_label.pack(side="left")
+    add_tooltip(
+        opponent_stage_label,
+        "Adds this value to each opponent's initial stat stages at battle start (non-evasion).",
+    )
+
+    opponent_stage_value_label = ttk.Label(opponent_stage_frame, text="0", width=4, anchor="e")
+    opponent_stage_value_label.pack(side="left", padx=(8, 8))
+
+    def on_opponent_stage_slider(_value: str) -> None:
+        snapped = int(round(float(_value)))
+        if int(round(opponent_stat_stage_mod.get())) != snapped:
+            opponent_stat_stage_mod.set(float(snapped))
+        sign = "+" if snapped > 0 else ""
+        opponent_stage_value_label.configure(text=f"{sign}{snapped}")
+
+    opponent_stage_scale = ttk.Scale(
+        opponent_stage_frame,
+        from_=-6,
+        to=6,
+        orient="horizontal",
+        variable=opponent_stat_stage_mod,
+        command=on_opponent_stage_slider,
+        length=160,
+    )
+    opponent_stage_scale.pack(side="left")
+    add_tooltip(opponent_stage_scale, "-6 through +6 (clamped to valid stage range).")
+
+    opponent_stage_reset_btn = ttk.Button(
+        opponent_stage_frame,
+        text="Reset",
+        command=lambda: (opponent_stat_stage_mod.set(0.0), opponent_stage_value_label.configure(text="0")),
+    )
+    opponent_stage_reset_btn.pack(side="left", padx=(8, 0))
+    add_tooltip(opponent_stage_reset_btn, "Reset opponent initial stat stage modifier to 0.")
+
+    player_stage_frame = ttk.Frame(rules_group)
+    player_stage_frame.grid(row=6, column=0, sticky="w", pady=(6, 0))
+
+    player_stage_label = ttk.Label(player_stage_frame, text="PLAYER_STAT_STAGE_MOD")
+    player_stage_label.pack(side="left")
+    add_tooltip(
+        player_stage_label,
+        "Adds this value to your Pokémon's initial stat stages at battle start (Atk..SpDef).",
+    )
+
+    player_stage_value_label = ttk.Label(player_stage_frame, text="0", width=4, anchor="e")
+    player_stage_value_label.pack(side="left", padx=(8, 8))
+
+    def on_player_stage_slider(_value: str) -> None:
+        snapped = int(round(float(_value)))
+        if int(round(player_stat_stage_mod.get())) != snapped:
+            player_stat_stage_mod.set(float(snapped))
+        sign = "+" if snapped > 0 else ""
+        player_stage_value_label.configure(text=f"{sign}{snapped}")
+
+    player_stage_scale = ttk.Scale(
+        player_stage_frame,
+        from_=-6,
+        to=6,
+        orient="horizontal",
+        variable=player_stat_stage_mod,
+        command=on_player_stage_slider,
+        length=160,
+    )
+    player_stage_scale.pack(side="left")
+    add_tooltip(player_stage_scale, "-6 through +6 (clamped to valid stage range).")
+
+    player_stage_reset_btn = ttk.Button(
+        player_stage_frame,
+        text="Reset",
+        command=lambda: (player_stat_stage_mod.set(0.0), player_stage_value_label.configure(text="0")),
+    )
+    player_stage_reset_btn.pack(side="left", padx=(8, 0))
+    add_tooltip(player_stage_reset_btn, "Reset player initial stat stage modifier to 0.")
 
     # Utility
     wtw_cb = ttk.Checkbutton(util_group, text="WALK_THROUGH_WALLS", variable=flag_walk_through_walls)

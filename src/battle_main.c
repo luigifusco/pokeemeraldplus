@@ -44,6 +44,14 @@
 #include "string_util.h"
 #include "strings.h"
 #include "task.h"
+
+#ifndef OPPONENT_STAT_STAGE_MOD
+#define OPPONENT_STAT_STAGE_MOD 0
+#endif
+
+#ifndef PLAYER_STAT_STAGE_MOD
+#define PLAYER_STAT_STAGE_MOD 0
+#endif
 #include "text.h"
 #include "trig.h"
 #include "tv.h"
@@ -3480,9 +3488,14 @@ static void BattleIntroDrawTrainersOrMonsSprites(void)
             *hpOnSwitchout = gBattleMons[gActiveBattler].hp;
             for (i = 0; i < NUM_BATTLE_STATS; i++) {
                 gBattleMons[gActiveBattler].statStages[i] = DEFAULT_STAT_STAGE;
-                // if (GetBattlerSide(gActiveBattler) == B_SIDE_OPPONENT && i != STAT_EVASION) {
-                //     gBattleMons[gActiveBattler].statStages[i]++;
-                // }
+                if (i > STAT_HP && i < NUM_STATS)
+                {
+                    u8 side = GetBattlerSide(gActiveBattler);
+                    if (side == B_SIDE_OPPONENT)
+                        gBattleMons[gActiveBattler].statStages[i] += OPPONENT_STAT_STAGE_MOD;
+                    else if (side == B_SIDE_PLAYER)
+                        gBattleMons[gActiveBattler].statStages[i] += PLAYER_STAT_STAGE_MOD;
+                }
             }
             gBattleMons[gActiveBattler].status2 = 0;
         }
