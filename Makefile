@@ -227,6 +227,13 @@ ifeq ($(NO_EXP),1)
 	CPPFLAGS += -DNO_EXP
 endif
 
+# Compile-time toggle: EXP is subtracted instead of added.
+# Usage: make NEGATIVE_EXP=1
+NEGATIVE_EXP ?= 0
+ifeq ($(NEGATIVE_EXP),1)
+	CPPFLAGS += -DNEGATIVE_EXP
+endif
+
 # Compile-time toggle: prevent using Poké Balls.
 # Usage: make NO_POKEBALLS=1
 NO_POKEBALLS ?= 0

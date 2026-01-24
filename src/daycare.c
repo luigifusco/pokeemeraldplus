@@ -253,9 +253,25 @@ static u16 TakeSelectedPokemonFromDaycare(struct DaycareMon *daycareMon)
     if (GetMonData(&pokemon, MON_DATA_LEVEL) != MAX_LEVEL)
     {
 #ifndef NO_EXP
+    #ifdef NEGATIVE_EXP
+        {
+            u32 expToRemove = daycareMon->steps;
+            u32 currExp = GetMonData(&pokemon, MON_DATA_EXP);
+            u8 newLevel;
+
+            experience = (currExp > expToRemove) ? (currExp - expToRemove) : 0;
+            SetMonData(&pokemon, MON_DATA_EXP, &experience);
+
+            newLevel = GetLevelFromMonExp(&pokemon);
+            SetMonData(&pokemon, MON_DATA_LEVEL, &newLevel);
+            CalculateMonStats(&pokemon);
+            experience = GetMonData(&pokemon, MON_DATA_EXP);
+        }
+    #else
         experience = GetMonData(&pokemon, MON_DATA_EXP) + daycareMon->steps;
         SetMonData(&pokemon, MON_DATA_EXP, &experience);
         ApplyDaycareExperience(&pokemon);
+    #endif
 #else
         // Build-time toggle: prevent EXP gain (and thus daycare level-ups).
         // Still recalculate stats to match current level (no-op in practice).
@@ -299,7 +315,12 @@ static u8 GetLevelAfterDaycareSteps(struct BoxPokemon *mon, u32 steps)
     return GetLevelFromBoxMonExp(&tempMon);
 #else
     {
+    #ifdef NEGATIVE_EXP
+        u32 currExp = GetBoxMonData(mon, MON_DATA_EXP);
+        u32 experience = (currExp > steps) ? (currExp - steps) : 0;
+    #else
         u32 experience = GetBoxMonData(mon, MON_DATA_EXP) + steps;
+    #endif
         SetBoxMonData(&tempMon, MON_DATA_EXP,  &experience);
         return GetLevelFromBoxMonExp(&tempMon);
     }

@@ -135,6 +135,7 @@ def main() -> None:
     flag_force_doubles = tk.BooleanVar(value=False)
     flag_steal_trainer_team = tk.BooleanVar(value=False)
     flag_no_exp = tk.BooleanVar(value=False)
+    flag_negative_exp = tk.BooleanVar(value=False)
     flag_no_pokeballs = tk.BooleanVar(value=False)
     flag_remote_opponent = tk.BooleanVar(value=False)
 
@@ -215,6 +216,7 @@ def main() -> None:
         add_bool_flag("FORCE_DOUBLE_BATTLES", flag_force_doubles.get())
         add_bool_flag("STEAL_TRAINER_TEAM", flag_steal_trainer_team.get())
         add_bool_flag("NO_EXP", flag_no_exp.get())
+        add_bool_flag("NEGATIVE_EXP", flag_negative_exp.get())
         add_bool_flag("NO_POKEBALLS", flag_no_pokeballs.get())
 
         osm = int(round(opponent_stat_stage_mod.get()))
@@ -531,12 +533,16 @@ def main() -> None:
     no_exp_cb.grid(row=3, column=0, sticky="w", pady=(6, 0))
     add_tooltip(no_exp_cb, "Compile-time: prevent Pokémon from gaining experience.")
 
+    negative_exp_cb = ttk.Checkbutton(rules_group, text="NEGATIVE_EXP", variable=flag_negative_exp)
+    negative_exp_cb.grid(row=4, column=0, sticky="w")
+    add_tooltip(negative_exp_cb, "Compile-time: subtract earned experience instead of adding it.")
+
     no_pokeballs_cb = ttk.Checkbutton(rules_group, text="NO_POKEBALLS", variable=flag_no_pokeballs)
-    no_pokeballs_cb.grid(row=4, column=0, sticky="w")
+    no_pokeballs_cb.grid(row=5, column=0, sticky="w")
     add_tooltip(no_pokeballs_cb, "Compile-time: prevent using Poké Balls.")
 
     opponent_stage_frame = ttk.Frame(rules_group)
-    opponent_stage_frame.grid(row=5, column=0, sticky="w", pady=(8, 0))
+    opponent_stage_frame.grid(row=6, column=0, sticky="w", pady=(8, 0))
 
     opponent_stage_label = ttk.Label(opponent_stage_frame, text="OPPONENT_STAT_STAGE_MOD")
     opponent_stage_label.pack(side="left")
@@ -576,7 +582,7 @@ def main() -> None:
     add_tooltip(opponent_stage_reset_btn, "Reset opponent initial stat stage modifier to 0.")
 
     player_stage_frame = ttk.Frame(rules_group)
-    player_stage_frame.grid(row=6, column=0, sticky="w", pady=(6, 0))
+    player_stage_frame.grid(row=7, column=0, sticky="w", pady=(6, 0))
 
     player_stage_label = ttk.Label(player_stage_frame, text="PLAYER_STAT_STAGE_MOD")
     player_stage_label.pack(side="left")
