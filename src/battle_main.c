@@ -3166,12 +3166,18 @@ static void BattleStartClearSetData(void)
     // Keep this to standard (non-link/non-recorded) battles; multi/partner/two-opponent
     // battles have different party routing.
     if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
-        && !(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_MULTI | BATTLE_TYPE_INGAME_PARTNER | BATTLE_TYPE_TWO_OPPONENTS)))
+        && !(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED | BATTLE_TYPE_MULTI | BATTLE_TYPE_INGAME_PARTNER)))
     {
         if (CountUsablePartyMons(gPlayerParty) < 2)
             gAbsentBattlerFlags |= gBitTable[B_BATTLER_2];
-        if (CountUsablePartyMons(gEnemyParty) < 2)
-            gAbsentBattlerFlags |= gBitTable[B_BATTLER_3];
+
+        // In two-opponent battles, the right opponent battler is the second trainer.
+        // Don't attempt to treat it as absent based on gEnemyParty layout.
+        if (!(gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS))
+        {
+            if (CountUsablePartyMons(gEnemyParty) < 2)
+                gAbsentBattlerFlags |= gBitTable[B_BATTLER_3];
+        }
     }
 #endif
 

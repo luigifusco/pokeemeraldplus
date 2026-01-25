@@ -213,8 +213,13 @@ bool8 CheckForTrainersWantingBattle(void)
 
         if (gNoOfApproachingTrainers > 1)
             break;
+        // If we only have one usable mon, normally we can't proceed to a 2-trainer double battle.
+        // When FORCE_DOUBLE_BATTLES is enabled we allow the battle to start and leave the missing
+        // player slot absent.
+    #ifndef FORCE_DOUBLE_BATTLES
         if (GetMonsStateToDoubles_2() != PLAYER_HAS_TWO_USABLE_MONS) // one trainer found and cant have a double battle
             break;
+    #endif
     }
 
     if (gNoOfApproachingTrainers == 1)
@@ -280,8 +285,10 @@ static u8 CheckTrainer(u8 objectEventId)
             || scriptPtr[1] == TRAINER_BATTLE_REMATCH_DOUBLE
             || scriptPtr[1] == TRAINER_BATTLE_CONTINUE_SCRIPT_DOUBLE)
         {
+#ifndef FORCE_DOUBLE_BATTLES
             if (GetMonsStateToDoubles_2() != PLAYER_HAS_TWO_USABLE_MONS)
                 return 0;
+#endif
 
             numTrainers = 2;
         }
