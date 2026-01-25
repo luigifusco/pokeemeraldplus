@@ -456,33 +456,47 @@ def main() -> None:
     actions_frame = ttk.Frame(build_group)
     actions_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(12, 0))
 
+    def enable_all_speed_skips() -> None:
+        flag_walk_fast.set(True)
+        flag_instant_text.set(True)
+        flag_skip_transition.set(True)
+        flag_skip_fade_anims.set(True)
+        flag_fast_stat_anims.set(True)
+        flag_manual_battle_text.set(True)
+        wait_time_divisor_pow.set(5.0)
+        wait_value_label.configure(text=str(1 << int(round(wait_time_divisor_pow.get()))))
+
     # Speed / Skips
+    speed_all_btn = ttk.Button(speed_group, text="Enable all Speed / Skips", command=enable_all_speed_skips)
+    speed_all_btn.grid(row=0, column=0, sticky="w", pady=(0, 6))
+    add_tooltip(speed_all_btn, "Convenience button: enables every option in this section and sets WAIT_TIME_DIVISOR to 32.")
+
     walk_fast_cb = ttk.Checkbutton(speed_group, text="WALK_FAST", variable=flag_walk_fast)
-    walk_fast_cb.grid(row=0, column=0, sticky="w")
+    walk_fast_cb.grid(row=1, column=0, sticky="w")
     add_tooltip(walk_fast_cb, "Increase player walking speed (build flag).")
 
     instant_text_cb = ttk.Checkbutton(speed_group, text="INSTANT_TEXT", variable=flag_instant_text)
-    instant_text_cb.grid(row=1, column=0, sticky="w")
+    instant_text_cb.grid(row=2, column=0, sticky="w")
     add_tooltip(instant_text_cb, "Make in-game text display instantly (build flag).")
 
     skip_transition_cb = ttk.Checkbutton(speed_group, text="SKIP_BATTLE_TRANSITION", variable=flag_skip_transition)
-    skip_transition_cb.grid(row=2, column=0, sticky="w")
+    skip_transition_cb.grid(row=3, column=0, sticky="w")
     add_tooltip(skip_transition_cb, "Skip the battle transition effect (build flag).")
 
     skip_fade_cb = ttk.Checkbutton(speed_group, text="SKIP_FADE_ANIMS", variable=flag_skip_fade_anims)
-    skip_fade_cb.grid(row=3, column=0, sticky="w")
+    skip_fade_cb.grid(row=4, column=0, sticky="w")
     add_tooltip(skip_fade_cb, "Compile-time: make fade-in/out screen transitions instant (doors, menus, bag, etc).")
 
     fast_stat_cb = ttk.Checkbutton(speed_group, text="FAST_STAT_ANIMS", variable=flag_fast_stat_anims)
-    fast_stat_cb.grid(row=4, column=0, sticky="w")
+    fast_stat_cb.grid(row=5, column=0, sticky="w")
     add_tooltip(fast_stat_cb, "Compile-time: speed up the stat-change (rose/fell) animation.")
 
     manual_battle_text_cb = ttk.Checkbutton(speed_group, text="MANUAL_BATTLE_TEXT", variable=flag_manual_battle_text)
-    manual_battle_text_cb.grid(row=5, column=0, sticky="w")
+    manual_battle_text_cb.grid(row=6, column=0, sticky="w")
     add_tooltip(manual_battle_text_cb, "Compile-time: require A-press to advance every battle message.")
 
     wait_frame = ttk.Frame(speed_group)
-    wait_frame.grid(row=6, column=0, sticky="w", pady=(8, 0))
+    wait_frame.grid(row=7, column=0, sticky="w", pady=(8, 0))
 
     wait_label = ttk.Label(wait_frame, text="WAIT_TIME_DIVISOR")
     wait_label.pack(side="left")
