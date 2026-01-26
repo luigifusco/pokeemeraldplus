@@ -137,6 +137,7 @@ def main() -> None:
     flag_no_exp = tk.BooleanVar(value=False)
     flag_negative_exp = tk.BooleanVar(value=False)
     flag_no_pokeballs = tk.BooleanVar(value=False)
+    flag_start_with_super_rare_candy = tk.BooleanVar(value=False)
     flag_remote_opponent = tk.BooleanVar(value=False)
 
     opponent_stat_stage_mod = tk.DoubleVar(value=0.0)  # -6..6
@@ -218,6 +219,7 @@ def main() -> None:
         add_bool_flag("NO_EXP", flag_no_exp.get())
         add_bool_flag("NEGATIVE_EXP", flag_negative_exp.get())
         add_bool_flag("NO_POKEBALLS", flag_no_pokeballs.get())
+        add_bool_flag("START_WITH_SUPER_RARE_CANDY", flag_start_with_super_rare_candy.get())
 
         osm = int(round(opponent_stat_stage_mod.get()))
         if int(round(opponent_stat_stage_mod.get())) != osm:
@@ -640,12 +642,23 @@ def main() -> None:
     wtw_cb.grid(row=0, column=0, sticky="w")
     add_tooltip(wtw_cb, "Allow the player to ignore impassable tiles (build flag).")
 
+    src_cb = ttk.Checkbutton(
+        util_group,
+        text="START_WITH_SUPER_RARE_CANDY",
+        variable=flag_start_with_super_rare_candy,
+    )
+    src_cb.grid(row=1, column=0, sticky="w", pady=(6, 0))
+    add_tooltip(
+        src_cb,
+        "Start a new game with the Super Rare Candy key item (infinite-use Rare Candy).",
+    )
+
     remote_opp_cb = ttk.Checkbutton(
         util_group,
         text="REMOTE_OPPONENT_CONTROL",
         variable=flag_remote_opponent,
     )
-    remote_opp_cb.grid(row=1, column=0, sticky="w", pady=(6, 0))
+    remote_opp_cb.grid(row=2, column=0, sticky="w", pady=(6, 0))
     add_tooltip(
         remote_opp_cb,
         "Build pokeemerald.gba with remote opponent control enabled, then also build follower.gba (transport-only ROM).",

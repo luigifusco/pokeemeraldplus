@@ -37,6 +37,7 @@
 #include "mirage_tower.h"
 #include "money.h"
 #include "new_game.h"
+#include "item.h"
 #include "palette.h"
 #include "play_time.h"
 #include "random.h"
@@ -1709,6 +1710,12 @@ void CB2_ContinueSavedGame(void)
     FieldClearVBlankHBlankCallbacks();
     StopMapMusic();
     ResetSafariZoneFlag_();
+
+#ifdef START_WITH_SUPER_RARE_CANDY
+    if (!CheckBagHasItem(ITEM_SUPER_RARE_CANDY, 1))
+        AddBagItem(ITEM_SUPER_RARE_CANDY, 1);
+#endif
+
     if (gSaveFileStatus == SAVE_STATUS_ERROR)
         ResetWinStreaks();
 

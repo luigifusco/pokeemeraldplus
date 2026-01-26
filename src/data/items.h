@@ -901,15 +901,16 @@ const struct Item gItems[] =
         .fieldUseFunc = ItemUseOutOfBattle_PPUp,
     },
 
-    [ITEM_048] =
+    [ITEM_SUPER_RARE_CANDY] =
     {
-        .name = _("????????"),
-        .itemId = ITEM_NONE,
+        .name = _("SUPER R CANDY"),
+        .itemId = ITEM_SUPER_RARE_CANDY,
         .price = 0,
-        .description = sDummyDesc,
-        .pocket = POCKET_ITEMS,
-        .type = ITEM_USE_BAG_MENU,
-        .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+        .description = sSuperRareCandyDesc,
+        .importance = 1,
+        .pocket = POCKET_KEY_ITEMS,
+        .type = ITEM_USE_PARTY_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_RareCandy,
     },
 
 // Battle items

@@ -227,6 +227,13 @@ ifeq ($(NO_EXP),1)
 	CPPFLAGS += -DNO_EXP
 endif
 
+# Compile-time toggle: start the game with the Super Rare Candy key item.
+# Usage: make START_WITH_SUPER_RARE_CANDY=1
+START_WITH_SUPER_RARE_CANDY ?= 0
+ifeq ($(START_WITH_SUPER_RARE_CANDY),1)
+	CPPFLAGS += -DSTART_WITH_SUPER_RARE_CANDY
+endif
+
 # Compile-time toggle: EXP is subtracted instead of added.
 # Usage: make NEGATIVE_EXP=1
 NEGATIVE_EXP ?= 0
