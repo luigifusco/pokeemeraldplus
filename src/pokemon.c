@@ -3486,7 +3486,7 @@ u8 GetGenderFromSpeciesAndPersonality(u16 species, u32 personality)
 
 void SetMultiuseSpriteTemplateToPokemon(u16 speciesTag, u8 battlerPosition)
 {
-    if (gMonSpritesGfxPtr != NULL)
+    if (gMain.inBattle && gMonSpritesGfxPtr != NULL)
         gMultiuseSpriteTemplate = gMonSpritesGfxPtr->templates[battlerPosition];
     else if (sMonSpritesGfxManagers[MON_SPR_GFX_MANAGER_A])
         gMultiuseSpriteTemplate = sMonSpritesGfxManagers[MON_SPR_GFX_MANAGER_A]->templates[battlerPosition];
