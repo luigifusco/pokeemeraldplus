@@ -37,6 +37,8 @@
 #include "constants/songs.h"
 #include "constants/species.h"
 #include "constants/weather.h"
+#include "constants/flags.h"
+#include "constants/opponents.h"
 
 /*
 NOTE: The data and functions in this file up until (but not including) sSoundMovesTable
@@ -57,6 +59,8 @@ u32 GetMoveMoneyCost(u8 battler, u8 moveIndex)
     u16 move = gBattleMons[battler].moves[moveIndex];
     u8 maxPp;
     u32 cost;
+    u16 beatenCount = 0;
+    u16 i;
 
     if (move == MOVE_NONE)
         return 0;
@@ -65,13 +69,20 @@ u32 GetMoveMoneyCost(u8 battler, u8 moveIndex)
     if (maxPp == 0)
         return 0;
 
-    cost = 925 / maxPp;
+    cost = 1000 / maxPp;
     if (cost > 5)
         cost -= 5;
     else
         cost = 0;
     if (cost < 15)
         cost = 15;
+    for (i = 0; i < MAX_TRAINERS_COUNT; i++)
+    {
+        if (FlagGet(TRAINER_FLAGS_START + i))
+            beatenCount++;
+    }
+    if (beatenCount != 0)
+        cost = (cost * (100 + beatenCount)) / 100;
     if (cost % 5 != 0)
         cost += 5 - (cost % 5);
 
