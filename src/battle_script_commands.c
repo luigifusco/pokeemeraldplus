@@ -39,6 +39,7 @@
 #include "pokenav.h"
 #include "menu_specialized.h"
 #include "data.h"
+#include "battle_util.h"
 #include "constants/abilities.h"
 #include "constants/battle_anim.h"
 #include "constants/battle_move_effects.h"
@@ -75,6 +76,7 @@ static void DrawLevelUpWindow2(void);
 static void PutMonIconOnLvlUpBanner(void);
 static void DrawLevelUpBannerText(void);
 static void SpriteCB_MonIconOnLvlUpBanner(struct Sprite *sprite);
+static s32 GetPpToDeduct(u8 attacker, u8 target, u16 move);
 
 static void Cmd_attackcanceler(void);
 static void Cmd_accuracycheck(void);
@@ -931,7 +933,27 @@ static void Cmd_attackcanceler(void)
         return;
     if (AbilityBattleEffects(ABILITYEFFECT_MOVES_BLOCK, gBattlerTarget, 0, 0, 0))
         return;
-    if (!gBattleMons[gBattlerAttacker].pp[gCurrMovePos] && gCurrentMove != MOVE_STRUGGLE && !(gHitMarker & (HITMARKER_ALLOW_NO_PP | HITMARKER_NO_ATTACKSTRING))
+#ifdef MONEY_FOR_MOVES
+    if (GetBattlerSide(gBattlerAttacker) == B_SIDE_PLAYER
+     && gCurrentMove != MOVE_STRUGGLE
+     && !(gHitMarker & (HITMARKER_ALLOW_NO_PP | HITMARKER_NO_ATTACKSTRING))
+     && !(gBattleMons[gBattlerAttacker].status2 & STATUS2_MULTIPLETURNS))
+    {
+        u32 moveCost = GetMoveMoneyCost(gBattlerAttacker, gCurrMovePos);
+        u32 costMultiplier = GetPpToDeduct(gBattlerAttacker, gBattlerTarget, gCurrentMove);
+        u32 totalCost = moveCost * costMultiplier;
+
+        if (!IsEnoughMoney(&gSaveBlock1Ptr->money, totalCost))
+        {
+            gBattlescriptCurrInstr = BattleScript_NoPPForMove;
+            gMoveResultFlags |= MOVE_RESULT_MISSED;
+            return;
+        }
+    }
+    else
+#endif
+    if (!gBattleMons[gBattlerAttacker].pp[gCurrMovePos] && gCurrentMove != MOVE_STRUGGLE
+     && !(gHitMarker & (HITMARKER_ALLOW_NO_PP | HITMARKER_NO_ATTACKSTRING))
      && !(gBattleMons[gBattlerAttacker].status2 & STATUS2_MULTIPLETURNS))
     {
         gBattlescriptCurrInstr = BattleScript_NoPPForMove;
@@ -1208,50 +1230,70 @@ static void Cmd_attackstring(void)
 
 static void Cmd_ppreduce(void)
 {
-    s32 ppToDeduct = 1;
+    s32 ppToDeduct;
 
     if (gBattleControllerExecFlags)
         return;
 
-    if (!gSpecialStatuses[gBattlerAttacker].ppNotAffectedByPressure)
-    {
-        switch (gBattleMoves[gCurrentMove].target)
-        {
-        case MOVE_TARGET_FOES_AND_ALLY:
-            ppToDeduct += AbilityBattleEffects(ABILITYEFFECT_COUNT_ON_FIELD, gBattlerAttacker, ABILITY_PRESSURE, 0, 0);
-            break;
-        case MOVE_TARGET_BOTH:
-        case MOVE_TARGET_OPPONENTS_FIELD:
-            ppToDeduct += AbilityBattleEffects(ABILITYEFFECT_COUNT_OTHER_SIDE, gBattlerAttacker, ABILITY_PRESSURE, 0, 0);
-            break;
-        default:
-            if (gBattlerAttacker != gBattlerTarget && gBattleMons[gBattlerTarget].ability == ABILITY_PRESSURE)
-                ppToDeduct++;
-            break;
-        }
-    }
+    ppToDeduct = GetPpToDeduct(gBattlerAttacker, gBattlerTarget, gCurrentMove);
 
-    if (!(gHitMarker & (HITMARKER_NO_PPDEDUCT | HITMARKER_NO_ATTACKSTRING)) && gBattleMons[gBattlerAttacker].pp[gCurrMovePos])
+    if (!(gHitMarker & (HITMARKER_NO_PPDEDUCT | HITMARKER_NO_ATTACKSTRING)))
     {
         gProtectStructs[gBattlerAttacker].notFirstStrike = 1;
-
-        if (gBattleMons[gBattlerAttacker].pp[gCurrMovePos] > ppToDeduct)
-            gBattleMons[gBattlerAttacker].pp[gCurrMovePos] -= ppToDeduct;
-        else
-            gBattleMons[gBattlerAttacker].pp[gCurrMovePos] = 0;
-
-        if (MOVE_IS_PERMANENT(gBattlerAttacker, gCurrMovePos))
+#ifdef MONEY_FOR_MOVES
+        if (GetBattlerSide(gBattlerAttacker) == B_SIDE_PLAYER && gCurrentMove != MOVE_STRUGGLE)
         {
-            gActiveBattler = gBattlerAttacker;
-            BtlController_EmitSetMonData(B_COMM_TO_CONTROLLER, REQUEST_PPMOVE1_BATTLE + gCurrMovePos, 0,
-                                         sizeof(gBattleMons[gBattlerAttacker].pp[gCurrMovePos]),
-                                         &gBattleMons[gBattlerAttacker].pp[gCurrMovePos]);
-            MarkBattlerForControllerExec(gBattlerAttacker);
+            u32 totalCost = GetMoveMoneyCost(gBattlerAttacker, gCurrMovePos) * ppToDeduct;
+            if (totalCost != 0)
+                RemoveMoney(&gSaveBlock1Ptr->money, totalCost);
+        }
+        else
+#endif
+        if (gBattleMons[gBattlerAttacker].pp[gCurrMovePos])
+        {
+            if (gBattleMons[gBattlerAttacker].pp[gCurrMovePos] > ppToDeduct)
+                gBattleMons[gBattlerAttacker].pp[gCurrMovePos] -= ppToDeduct;
+            else
+                gBattleMons[gBattlerAttacker].pp[gCurrMovePos] = 0;
+
+            if (MOVE_IS_PERMANENT(gBattlerAttacker, gCurrMovePos))
+            {
+                gActiveBattler = gBattlerAttacker;
+                BtlController_EmitSetMonData(B_COMM_TO_CONTROLLER, REQUEST_PPMOVE1_BATTLE + gCurrMovePos, 0,
+                                             sizeof(gBattleMons[gBattlerAttacker].pp[gCurrMovePos]),
+                                             &gBattleMons[gBattlerAttacker].pp[gCurrMovePos]);
+                MarkBattlerForControllerExec(gBattlerAttacker);
+            }
         }
     }
 
     gHitMarker &= ~HITMARKER_NO_PPDEDUCT;
     gBattlescriptCurrInstr++;
+}
+
+static s32 GetPpToDeduct(u8 attacker, u8 target, u16 move)
+{
+    s32 ppToDeduct = 1;
+
+    if (!gSpecialStatuses[attacker].ppNotAffectedByPressure)
+    {
+        switch (gBattleMoves[move].target)
+        {
+        case MOVE_TARGET_FOES_AND_ALLY:
+            ppToDeduct += AbilityBattleEffects(ABILITYEFFECT_COUNT_ON_FIELD, attacker, ABILITY_PRESSURE, 0, 0);
+            break;
+        case MOVE_TARGET_BOTH:
+        case MOVE_TARGET_OPPONENTS_FIELD:
+            ppToDeduct += AbilityBattleEffects(ABILITYEFFECT_COUNT_OTHER_SIDE, attacker, ABILITY_PRESSURE, 0, 0);
+            break;
+        default:
+            if (attacker != target && gBattleMons[target].ability == ABILITY_PRESSURE)
+                ppToDeduct++;
+            break;
+        }
+    }
+
+    return ppToDeduct;
 }
 
 static void Cmd_critcalc(void)

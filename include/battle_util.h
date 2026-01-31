@@ -96,4 +96,9 @@ void HandleAction_RunBattleScript(void);
 u8 GetMoveTarget(u16 move, u8 setTarget);
 u8 IsMonDisobedient(void);
 
+#ifdef MONEY_FOR_MOVES
+u32 GetMoveMoneyCost(u8 battler, u8 moveIndex);
+bool8 CanBattlerAffordMove(u8 battler, u8 moveIndex);
+#endif
+
 #endif // GUARD_BATTLE_UTIL_H

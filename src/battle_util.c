@@ -22,6 +22,7 @@
 #include "battle_ai_script_commands.h"
 #include "battle_controllers.h"
 #include "event_data.h"
+#include "money.h"
 #include "link.h"
 #include "field_weather.h"
 #include "nuzlocke_delete_fainted.h"
@@ -49,6 +50,42 @@ extern const u8 *const gBattlescriptsForBallThrow[];
 extern const u8 *const gBattlescriptsForRunningByItem[];
 extern const u8 *const gBattlescriptsForUsingItem[];
 extern const u8 *const gBattlescriptsForSafariActions[];
+
+#ifdef MONEY_FOR_MOVES
+u32 GetMoveMoneyCost(u8 battler, u8 moveIndex)
+{
+    u16 move = gBattleMons[battler].moves[moveIndex];
+    u8 maxPp;
+    u32 cost;
+
+    if (move == MOVE_NONE)
+        return 0;
+
+    maxPp = CalculatePPWithBonus(move, gBattleMons[battler].ppBonuses, moveIndex);
+    if (maxPp == 0)
+        return 0;
+
+    cost = 925 / maxPp;
+    if (cost > 5)
+        cost -= 5;
+    else
+        cost = 0;
+    if (cost < 15)
+        cost = 15;
+    if (cost % 5 != 0)
+        cost += 5 - (cost % 5);
+
+    return cost;
+}
+
+bool8 CanBattlerAffordMove(u8 battler, u8 moveIndex)
+{
+    if (GetBattlerSide(battler) != B_SIDE_PLAYER)
+        return TRUE;
+
+    return IsEnoughMoney(&gSaveBlock1Ptr->money, GetMoveMoneyCost(battler, moveIndex));
+}
+#endif
 
 static const u8 sPkblToEscapeFactor[][3] = {
     {
@@ -1206,8 +1243,23 @@ u8 CheckMoveLimitations(u8 battler, u8 unusableMoves, u8 check)
         if (gBattleMons[battler].moves[i] == MOVE_NONE && check & MOVE_LIMITATION_ZEROMOVE)
             unusableMoves |= gBitTable[i];
         // No PP
+#ifdef MONEY_FOR_MOVES
+        if (check & MOVE_LIMITATION_PP)
+        {
+            if (GetBattlerSide(battler) == B_SIDE_PLAYER)
+            {
+                if (!CanBattlerAffordMove(battler, i))
+                    unusableMoves |= gBitTable[i];
+            }
+            else if (gBattleMons[battler].pp[i] == 0)
+            {
+                unusableMoves |= gBitTable[i];
+            }
+        }
+#else
         if (gBattleMons[battler].pp[i] == 0 && check & MOVE_LIMITATION_PP)
             unusableMoves |= gBitTable[i];
+#endif
         // Disable
         if (gBattleMons[battler].moves[i] == gDisableStructs[battler].disabledMove && check & MOVE_LIMITATION_DISABLED)
             unusableMoves |= gBitTable[i];

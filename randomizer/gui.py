@@ -137,6 +137,7 @@ def main() -> None:
     flag_no_exp = tk.BooleanVar(value=False)
     flag_negative_exp = tk.BooleanVar(value=False)
     flag_no_pokeballs = tk.BooleanVar(value=False)
+    flag_money_for_moves = tk.BooleanVar(value=False)
     flag_start_with_super_rare_candy = tk.BooleanVar(value=False)
     flag_remote_opponent = tk.BooleanVar(value=False)
 
@@ -219,6 +220,7 @@ def main() -> None:
         add_bool_flag("NO_EXP", flag_no_exp.get())
         add_bool_flag("NEGATIVE_EXP", flag_negative_exp.get())
         add_bool_flag("NO_POKEBALLS", flag_no_pokeballs.get())
+        add_bool_flag("MONEY_FOR_MOVES", flag_money_for_moves.get())
         add_bool_flag("START_WITH_SUPER_RARE_CANDY", flag_start_with_super_rare_candy.get())
 
         osm = int(round(opponent_stat_stage_mod.get()))
@@ -557,8 +559,12 @@ def main() -> None:
     no_pokeballs_cb.grid(row=5, column=0, sticky="w")
     add_tooltip(no_pokeballs_cb, "Compile-time: prevent using Poké Balls.")
 
+    money_for_moves_cb = ttk.Checkbutton(rules_group, text="MONEY_FOR_MOVES", variable=flag_money_for_moves)
+    money_for_moves_cb.grid(row=6, column=0, sticky="w", pady=(6, 0))
+    add_tooltip(money_for_moves_cb, "Compile-time: moves cost money instead of PP.")
+
     opponent_stage_frame = ttk.Frame(rules_group)
-    opponent_stage_frame.grid(row=6, column=0, sticky="w", pady=(8, 0))
+    opponent_stage_frame.grid(row=7, column=0, sticky="w", pady=(8, 0))
 
     opponent_stage_label = ttk.Label(opponent_stage_frame, text="OPPONENT_STAT_STAGE_MOD")
     opponent_stage_label.pack(side="left")
@@ -598,7 +604,7 @@ def main() -> None:
     add_tooltip(opponent_stage_reset_btn, "Reset opponent initial stat stage modifier to 0.")
 
     player_stage_frame = ttk.Frame(rules_group)
-    player_stage_frame.grid(row=7, column=0, sticky="w", pady=(6, 0))
+    player_stage_frame.grid(row=8, column=0, sticky="w", pady=(6, 0))
 
     player_stage_label = ttk.Label(player_stage_frame, text="PLAYER_STAT_STAGE_MOD")
     player_stage_label.pack(side="left")

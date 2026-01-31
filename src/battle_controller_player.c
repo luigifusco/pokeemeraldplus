@@ -8,6 +8,7 @@
 #include "battle_message.h"
 #include "battle_setup.h"
 #include "battle_tv.h"
+#include "battle_util.h"
 #include "bg.h"
 #include "data.h"
 #include "item.h"
@@ -15,6 +16,7 @@
 #include "link.h"
 #include "main.h"
 #include "m4a.h"
+#include "money.h"
 #include "palette.h"
 #include "party_menu.h"
 #include "pokeball.h"
@@ -24,6 +26,7 @@
 #include "reshow_battle_screen.h"
 #include "sound.h"
 #include "string_util.h"
+#include "strings.h"
 #include "task.h"
 #include "text.h"
 #include "util.h"
@@ -510,17 +513,25 @@ static void HandleInputChooseMove(void)
         {
             if (!(moveTarget & (MOVE_TARGET_RANDOM | MOVE_TARGET_BOTH | MOVE_TARGET_DEPENDS | MOVE_TARGET_FOES_AND_ALLY | MOVE_TARGET_OPPONENTS_FIELD | MOVE_TARGET_USER)))
                 canSelectTarget++; // either selected or user
-
+#ifndef MONEY_FOR_MOVES
             if (moveInfo->currentPp[gMoveSelectionCursor[gActiveBattler]] == 0)
             {
                 canSelectTarget = FALSE;
             }
+#endif
             else if (!(moveTarget & (MOVE_TARGET_USER | MOVE_TARGET_USER_OR_SELECTED)) && CountAliveMonsInBattle(BATTLE_ALIVE_EXCEPT_ACTIVE) <= 1)
             {
                 gMultiUsePlayerCursor = GetDefaultMoveTarget(gActiveBattler);
                 canSelectTarget = FALSE;
             }
         }
+
+#ifdef MONEY_FOR_MOVES
+        if (canSelectTarget && !CanBattlerAffordMove(gActiveBattler, gMoveSelectionCursor[gActiveBattler]))
+        {
+            canSelectTarget = FALSE;
+        }
+#endif
 
         if (!canSelectTarget)
         {
@@ -1607,7 +1618,11 @@ static void MoveSelectionDisplayMoveNames(void)
 
 static void MoveSelectionDisplayPpString(void)
 {
+#ifdef MONEY_FOR_MOVES
+    StringCopy(gDisplayedStringBattle, gText_MoveInterfaceCost);
+#else
     StringCopy(gDisplayedStringBattle, gText_MoveInterfacePP);
+#endif
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
 }
 
@@ -1621,9 +1636,30 @@ static void MoveSelectionDisplayPpNumber(void)
 
     SetPpNumbersPaletteInMoveSelection();
     moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
+#ifdef MONEY_FOR_MOVES
+    {
+        u32 cost = GetMoveMoneyCost(gActiveBattler, gMoveSelectionCursor[gActiveBattler]);
+        u32 money = GetMoney(&gSaveBlock1Ptr->money);
+        txtPtr = StringCopy(gDisplayedStringBattle, gText_PokeDollar);
+        txtPtr = ConvertIntToDecimalStringN(txtPtr, cost, STR_CONV_MODE_RIGHT_ALIGN, 4);
+        *(txtPtr)++ = CHAR_NEWLINE;
+        txtPtr = StringCopy(txtPtr, gText_PokeDollar);
+        if (money >= 10000)
+        {
+            txtPtr = ConvertIntToDecimalStringN(txtPtr, money / 1000, STR_CONV_MODE_RIGHT_ALIGN, 3);
+            *(txtPtr)++ = CHAR_k;
+            *txtPtr = EOS;
+        }
+        else
+        {
+            ConvertIntToDecimalStringN(txtPtr, money, STR_CONV_MODE_RIGHT_ALIGN, 4);
+        }
+    }
+#else
     txtPtr = ConvertIntToDecimalStringN(gDisplayedStringBattle, moveInfo->currentPp[gMoveSelectionCursor[gActiveBattler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
     *(txtPtr)++ = CHAR_SLASH;
     ConvertIntToDecimalStringN(txtPtr, moveInfo->maxPp[gMoveSelectionCursor[gActiveBattler]], STR_CONV_MODE_RIGHT_ALIGN, 2);
+#endif
 
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP_REMAINING);
 }
@@ -1633,6 +1669,15 @@ static void MoveSelectionDisplayMoveType(void)
     u8 *txtPtr;
     struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
 
+#ifdef MONEY_FOR_MOVES
+    {
+        u32 money = GetMoney(&gSaveBlock1Ptr->money);
+        txtPtr = StringCopy(gDisplayedStringBattle, gText_PokeDollar);
+        ConvertIntToDecimalStringN(txtPtr, money, STR_CONV_MODE_RIGHT_ALIGN, 6);
+        BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_TYPE);
+        return;
+    }
+#endif
     txtPtr = StringCopy(gDisplayedStringBattle, gText_MoveInterfaceType);
     *(txtPtr)++ = EXT_CTRL_CODE_BEGIN;
     *(txtPtr)++ = EXT_CTRL_CODE_FONT;

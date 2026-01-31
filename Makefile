@@ -248,6 +248,13 @@ ifeq ($(NO_POKEBALLS),1)
 	CPPFLAGS += -DNO_POKEBALLS
 endif
 
+# Compile-time toggle: use money instead of PP for moves.
+# Usage: make MONEY_FOR_MOVES=1
+MONEY_FOR_MOVES ?= 0
+ifeq ($(MONEY_FOR_MOVES),1)
+	CPPFLAGS += -DMONEY_FOR_MOVES
+endif
+
 # Compile-time toggle: skip/instant-complete visual fade in/out animations.
 # Usage: make SKIP_FADE_ANIMS=1
 SKIP_FADE_ANIMS ?= 0
