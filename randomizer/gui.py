@@ -129,6 +129,7 @@ def main() -> None:
     flag_nuzlocke_delete_fainted = tk.BooleanVar(value=False)
     flag_instant_text = tk.BooleanVar(value=False)
     flag_skip_transition = tk.BooleanVar(value=False)
+    flag_skip_intro_cutscene = tk.BooleanVar(value=False)
     flag_skip_fade_anims = tk.BooleanVar(value=False)
     flag_fast_stat_anims = tk.BooleanVar(value=False)
     flag_manual_battle_text = tk.BooleanVar(value=False)
@@ -212,6 +213,7 @@ def main() -> None:
         add_bool_flag("NUZLOCKE_DELETE_FAINTED", flag_nuzlocke_delete_fainted.get())
         add_bool_flag("INSTANT_TEXT", flag_instant_text.get())
         add_bool_flag("SKIP_BATTLE_TRANSITION", flag_skip_transition.get())
+        add_bool_flag("SKIP_INTRO_CUTSCENE", flag_skip_intro_cutscene.get())
         add_bool_flag("SKIP_FADE_ANIMS", flag_skip_fade_anims.get())
         add_bool_flag("FAST_STAT_ANIMS", flag_fast_stat_anims.get())
         add_bool_flag("MANUAL_BATTLE_TEXT", flag_manual_battle_text.get())
@@ -464,6 +466,7 @@ def main() -> None:
         flag_walk_fast.set(True)
         flag_instant_text.set(True)
         flag_skip_transition.set(True)
+        flag_skip_intro_cutscene.set(True)
         flag_skip_fade_anims.set(True)
         flag_fast_stat_anims.set(True)
         flag_manual_battle_text.set(True)
@@ -487,20 +490,24 @@ def main() -> None:
     skip_transition_cb.grid(row=3, column=0, sticky="w")
     add_tooltip(skip_transition_cb, "Skip the battle transition effect (build flag).")
 
+    skip_intro_cb = ttk.Checkbutton(speed_group, text="SKIP_INTRO_CUTSCENE", variable=flag_skip_intro_cutscene)
+    skip_intro_cb.grid(row=4, column=0, sticky="w")
+    add_tooltip(skip_intro_cb, "Compile-time: skip intro/copyright and go straight to the Continue screen.")
+
     skip_fade_cb = ttk.Checkbutton(speed_group, text="SKIP_FADE_ANIMS", variable=flag_skip_fade_anims)
-    skip_fade_cb.grid(row=4, column=0, sticky="w")
+    skip_fade_cb.grid(row=5, column=0, sticky="w")
     add_tooltip(skip_fade_cb, "Compile-time: make fade-in/out screen transitions instant (doors, menus, bag, etc).")
 
     fast_stat_cb = ttk.Checkbutton(speed_group, text="FAST_STAT_ANIMS", variable=flag_fast_stat_anims)
-    fast_stat_cb.grid(row=5, column=0, sticky="w")
+    fast_stat_cb.grid(row=6, column=0, sticky="w")
     add_tooltip(fast_stat_cb, "Compile-time: speed up the stat-change (rose/fell) animation.")
 
     manual_battle_text_cb = ttk.Checkbutton(speed_group, text="MANUAL_BATTLE_TEXT", variable=flag_manual_battle_text)
-    manual_battle_text_cb.grid(row=6, column=0, sticky="w")
+    manual_battle_text_cb.grid(row=7, column=0, sticky="w")
     add_tooltip(manual_battle_text_cb, "Compile-time: require A-press to advance every battle message.")
 
     wait_frame = ttk.Frame(speed_group)
-    wait_frame.grid(row=7, column=0, sticky="w", pady=(8, 0))
+    wait_frame.grid(row=8, column=0, sticky="w", pady=(8, 0))
 
     wait_label = ttk.Label(wait_frame, text="WAIT_TIME_DIVISOR")
     wait_label.pack(side="left")

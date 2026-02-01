@@ -275,6 +275,12 @@ MANUAL_BATTLE_TEXT ?= 0
 ifeq ($(MANUAL_BATTLE_TEXT),1)
 	CPPFLAGS += -DMANUAL_BATTLE_TEXT
 endif
+# Compile-time toggle: skip the intro cutscene and go straight to title screen.
+# Usage: make SKIP_INTRO_CUTSCENE=1
+SKIP_INTRO_CUTSCENE ?= 0
+ifeq ($(SKIP_INTRO_CUTSCENE),1)
+	CPPFLAGS += -DSKIP_INTRO_CUTSCENE
+endif
 SKIP_BATTLE_TRANSITION ?= 0
 ifeq ($(SKIP_BATTLE_TRANSITION),1)
 	CPPFLAGS += -DSKIP_BATTLE_TRANSITION
