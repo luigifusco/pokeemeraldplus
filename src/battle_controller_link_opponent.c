@@ -29,6 +29,12 @@
 #include "constants/trainers.h"
 #include "recorded_battle.h"
 
+#ifdef SKIP_BATTLE_TRANSITION
+#define SHOULD_WAIT_FOR_CRY() FALSE
+#else
+#define SHOULD_WAIT_FOR_CRY() IsCryPlayingOrClearCrySongs()
+#endif
+
 static void LinkOpponentHandleGetMonData(void);
 static void LinkOpponentHandleGetRawMonData(void);
 static void LinkOpponentHandleSetMonData(void);
@@ -309,7 +315,7 @@ static void Intro_TryShinyAnimShowHealthbox(void)
     if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].waitForCry
         && gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].healthboxSlideInStarted
         && !gBattleSpritesDataPtr->healthBoxesData[BATTLE_PARTNER(gActiveBattler)].waitForCry
-        && !IsCryPlayingOrClearCrySongs())
+        && !SHOULD_WAIT_FOR_CRY())
     {
         if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].bgmRestored)
         {
@@ -450,7 +456,7 @@ static void SwitchIn_ShowSubstitute(void)
 
 static void SwitchIn_HandleSoundAndEnd(void)
 {
-    if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].specialAnimActive && !IsCryPlayingOrClearCrySongs())
+    if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].specialAnimActive && !SHOULD_WAIT_FOR_CRY())
     {
         if (gSprites[gBattlerSpriteIds[gActiveBattler]].callback == SpriteCallbackDummy
             || gSprites[gBattlerSpriteIds[gActiveBattler]].callback == SpriteCallbackDummy_2)

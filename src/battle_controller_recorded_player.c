@@ -25,6 +25,12 @@
 #include "constants/battle_anim.h"
 #include "constants/songs.h"
 
+#ifdef SKIP_BATTLE_TRANSITION
+#define SHOULD_WAIT_FOR_CRY() FALSE
+#else
+#define SHOULD_WAIT_FOR_CRY() IsCryPlayingOrClearCrySongs()
+#endif
+
 static void RecordedPlayerHandleGetMonData(void);
 static void RecordedPlayerHandleGetRawMonData(void);
 static void RecordedPlayerHandleSetMonData(void);
@@ -257,7 +263,7 @@ static void Intro_WaitForShinyAnimAndHealthbox(void)
             }
         }
 
-        if (IsCryPlayingOrClearCrySongs())
+        if (SHOULD_WAIT_FOR_CRY())
             healthboxAnimDone = FALSE;
 
         if (healthboxAnimDone)
@@ -304,7 +310,7 @@ static void Intro_TryShinyAnimShowHealthbox(void)
     if (gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].healthboxSlideInStarted
         && !gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].waitForCry
         && !gBattleSpritesDataPtr->healthBoxesData[BATTLE_PARTNER(gActiveBattler)].waitForCry
-        && !IsCryPlayingOrClearCrySongs())
+        && !SHOULD_WAIT_FOR_CRY())
     {
         if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].bgmRestored)
         {

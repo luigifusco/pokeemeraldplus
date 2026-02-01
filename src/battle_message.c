@@ -2311,6 +2311,30 @@ void BufferStringBattle(u16 stringID)
         }
     }
 #endif
+
+#if defined(SKIP_BATTLE_TRANSITION) && SKIP_BATTLE_TRANSITION
+#if !(defined(MANUAL_BATTLE_TEXT) && MANUAL_BATTLE_TEXT)
+    // When skipping battle transitions, remove prompt chars to auto-advance text.
+    {
+        u32 i;
+        u8 lastChar;
+
+        // Find EOS without overrunning the buffer.
+        for (i = 0; i < ARRAY_COUNT(gDisplayedStringBattle) - 1 && gDisplayedStringBattle[i] != EOS; i++)
+        {
+        }
+
+        if (i != 0 && gDisplayedStringBattle[i] == EOS)
+        {
+            lastChar = gDisplayedStringBattle[i - 1];
+            if (lastChar == CHAR_PROMPT_CLEAR || lastChar == CHAR_PROMPT_SCROLL)
+            {
+                gDisplayedStringBattle[i - 1] = EOS;
+            }
+        }
+    }
+#endif
+#endif
 }
 
 u32 BattleStringExpandPlaceholdersToDisplayedString(const u8 *src)

@@ -911,9 +911,9 @@ static void SpriteCB_BallThrow_CaptureMon(struct Sprite *sprite)
 static void SpriteCB_PlayerMonSendOut_1(struct Sprite *sprite)
 {
 #ifdef SKIP_BATTLE_TRANSITION
-#define SENDOUT_PLAYER_ARC_FRAMES 12
-#define SENDOUT_OPPONENT_WAIT_FRAMES 5
-#define SENDOUT_RELEASE_MON_2_DELAY 6
+#define SENDOUT_PLAYER_ARC_FRAMES 6
+#define SENDOUT_OPPONENT_WAIT_FRAMES 2
+#define SENDOUT_RELEASE_MON_2_DELAY 2
 #else
 #define SENDOUT_PLAYER_ARC_FRAMES 25
 #define SENDOUT_OPPONENT_WAIT_FRAMES 15
@@ -1256,7 +1256,11 @@ void StartHealthboxSlideIn(u8 battler)
 {
     struct Sprite *healthboxSprite = &gSprites[gHealthboxSpriteIds[battler]];
 
+#ifdef SKIP_BATTLE_TRANSITION
+    healthboxSprite->sSpeedX = 23;
+#else
     healthboxSprite->sSpeedX = 5;
+#endif
     healthboxSprite->sSpeedY = 0;
     healthboxSprite->x2 = 0x73;
     healthboxSprite->y2 = 0;
@@ -1276,7 +1280,11 @@ void StartHealthboxSlideIn(u8 battler)
 static void SpriteCB_HealthboxSlideInDelayed(struct Sprite *sprite)
 {
     sprite->sDelayTimer++;
+#ifdef SKIP_BATTLE_TRANSITION
+    if (sprite->sDelayTimer == 5)
+#else
     if (sprite->sDelayTimer == 20)
+#endif
     {
         sprite->sDelayTimer = 0;
         sprite->callback = SpriteCB_HealthboxSlideIn;

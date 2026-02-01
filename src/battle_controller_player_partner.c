@@ -27,6 +27,12 @@
 #include "constants/songs.h"
 #include "constants/trainers.h"
 
+#ifdef SKIP_BATTLE_TRANSITION
+#define SHOULD_WAIT_FOR_CRY() FALSE
+#else
+#define SHOULD_WAIT_FOR_CRY() IsCryPlayingOrClearCrySongs()
+#endif
+
 static void PlayerPartnerHandleGetMonData(void);
 static void PlayerPartnerHandleGetRawMonData(void);
 static void PlayerPartnerHandleSetMonData(void);
@@ -235,7 +241,7 @@ static void Intro_WaitForHealthbox(void)
         }
     }
 
-    if (IsCryPlayingOrClearCrySongs())
+    if (SHOULD_WAIT_FOR_CRY())
         finished = FALSE;
 
     if (finished)
@@ -1879,6 +1885,7 @@ static void PlayerPartnerHandleFaintingCry(void)
 static void PlayerPartnerHandleIntroSlide(void)
 {
     HandleIntroSlide(gBattleBufferA[gActiveBattler][1]);
+    gIntroSlideFlags |= 1;
     PlayerPartnerBufferExecCompleted();
 }
 

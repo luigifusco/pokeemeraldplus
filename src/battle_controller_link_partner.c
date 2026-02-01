@@ -29,6 +29,12 @@
 #include "constants/trainers.h"
 #include "recorded_battle.h"
 
+#ifdef SKIP_BATTLE_TRANSITION
+#define SHOULD_WAIT_FOR_CRY() FALSE
+#else
+#define SHOULD_WAIT_FOR_CRY() IsCryPlayingOrClearCrySongs()
+#endif
+
 static void LinkPartnerHandleGetMonData(void);
 static void LinkPartnerHandleGetRawMonData(void);
 static void LinkPartnerHandleSetMonData(void);
@@ -172,8 +178,8 @@ static void LinkPartnerBufferRunCommand(void)
 {
     if (gBattleControllerExecFlags & gBitTable[gActiveBattler])
     {
-        if (gBattleBufferA[gActiveBattler][0] < ARRAY_COUNT(sLinkPartnerBufferCommands))
-            sLinkPartnerBufferCommands[gBattleBufferA[gActiveBattler][0]]();
+            if (gBattleBufferA[gActiveBattler][0] < ARRAY_COUNT(sLinkPartnerBufferCommands))
+                sLinkPartnerBufferCommands[gBattleBufferA[gActiveBattler][0]]();
         else
             LinkPartnerBufferExecCompleted();
     }
@@ -223,12 +229,12 @@ static void Intro_WaitForHealthbox(void)
         }
     }
 
-    if (IsCryPlayingOrClearCrySongs())
+    if (SHOULD_WAIT_FOR_CRY())
         finished = FALSE;
 
     if (finished)
     {
-        gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].introEndDelay = 3;
+           gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].introEndDelay = 3;
         gBattlerControllerFuncs[gActiveBattler] = Intro_DelayAndEnd;
     }
 }

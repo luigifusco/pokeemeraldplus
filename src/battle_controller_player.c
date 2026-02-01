@@ -40,6 +40,12 @@
 #include "constants/trainers.h"
 #include "constants/rgb.h"
 
+#ifdef SKIP_BATTLE_TRANSITION
+#define SHOULD_WAIT_FOR_CRY() FALSE
+#else
+#define SHOULD_WAIT_FOR_CRY() IsCryPlayingOrClearCrySongs()
+#endif
+
 static void PlayerHandleGetMonData(void);
 static void PlayerHandleSetMonData(void);
 static void PlayerHandleSetRawMonData(void);
@@ -1041,7 +1047,7 @@ static void Intro_TryShinyAnimShowHealthbox(void)
     if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].waitForCry
         && gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].healthboxSlideInStarted
         && (!hasPartner || !gBattleSpritesDataPtr->healthBoxesData[BATTLE_PARTNER(gActiveBattler)].waitForCry)
-        && !IsCryPlayingOrClearCrySongs())
+        && !SHOULD_WAIT_FOR_CRY())
     {
         if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].bgmRestored)
         {
@@ -1114,7 +1120,7 @@ static void SwitchIn_CleanShinyAnimShowSubstitute(void)
 static void SwitchIn_HandleSoundAndEnd(void)
 {
     if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].specialAnimActive
-        && !IsCryPlayingOrClearCrySongs())
+        && !SHOULD_WAIT_FOR_CRY())
     {
         m4aMPlayVolumeControl(&gMPlayInfo_BGM, TRACKS_ALL, 0x100);
         HandleLowHpMusicChange(&gPlayerParty[gBattlerPartyIndexes[gActiveBattler]], gActiveBattler);
@@ -1144,7 +1150,7 @@ static void SwitchIn_TryShinyAnimShowHealthbox(void)
 
 void Task_PlayerController_RestoreBgmAfterCry(u8 taskId)
 {
-    if (!IsCryPlayingOrClearCrySongs())
+    if (!SHOULD_WAIT_FOR_CRY())
     {
         m4aMPlayVolumeControl(&gMPlayInfo_BGM, TRACKS_ALL, 0x100);
         DestroyTask(taskId);
@@ -1320,7 +1326,13 @@ static void Task_PrepareToGiveExpWithExpBar(u8 taskId)
 
 static void Task_GiveExpWithExpBar(u8 taskId)
 {
-    if (gTasks[taskId].tExpTask_frames < 13)
+    if (gTasks[taskId].tExpTask_frames <
+#ifdef SKIP_BATTLE_TRANSITION
+    3
+#else
+    13
+#endif
+    )
     {
         gTasks[taskId].tExpTask_frames++;
     }
