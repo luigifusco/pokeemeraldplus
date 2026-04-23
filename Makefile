@@ -185,6 +185,12 @@ HARDCODED_RANDOM_EVOLUTIONS ?= 0
 ifeq ($(HARDCODED_RANDOM_EVOLUTIONS),1)
   CPPFLAGS += -DHARDCODED_RANDOM_EVOLUTIONS
 endif
+# Compile-time toggle: run the evolution scene update loop N times per frame,
+# making the evolution animation/cutscene much faster. Usage: make FAST_EVOLUTION_ANIM=1
+FAST_EVOLUTION_ANIM ?= 0
+ifeq ($(FAST_EVOLUTION_ANIM),1)
+  CPPFLAGS += -DFAST_EVOLUTION_ANIM=4
+endif
 WALK_FAST ?= 0
 ifeq ($(WALK_FAST),1)
   CPPFLAGS += -DWALK_FAST

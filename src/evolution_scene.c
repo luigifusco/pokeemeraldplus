@@ -529,6 +529,16 @@ void TradeEvolutionScene(struct Pokemon *mon, u16 postEvoSpecies, u8 preEvoSprit
 
 static void CB2_EvolutionSceneUpdate(void)
 {
+#ifdef FAST_EVOLUTION_ANIM
+    u32 i;
+    for (i = 0; i < (FAST_EVOLUTION_ANIM) - 1; i++)
+    {
+        AnimateSprites();
+        RunTextPrinters();
+        UpdatePaletteFade();
+        RunTasks();
+    }
+#endif
     AnimateSprites();
     BuildOamBuffer();
     RunTextPrinters();
@@ -538,6 +548,16 @@ static void CB2_EvolutionSceneUpdate(void)
 
 static void CB2_TradeEvolutionSceneUpdate(void)
 {
+#ifdef FAST_EVOLUTION_ANIM
+    u32 i;
+    for (i = 0; i < (FAST_EVOLUTION_ANIM) - 1; i++)
+    {
+        AnimateSprites();
+        RunTextPrinters();
+        UpdatePaletteFade();
+        RunTasks();
+    }
+#endif
     AnimateSprites();
     BuildOamBuffer();
     RunTextPrinters();

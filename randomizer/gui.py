@@ -125,6 +125,7 @@ def main() -> None:
 
     flag_random_evos = tk.BooleanVar(value=False)
     flag_hardcoded_random_evos = tk.BooleanVar(value=False)
+    flag_fast_evolution_anim = tk.BooleanVar(value=False)
     flag_walk_fast = tk.BooleanVar(value=False)
     flag_walk_through_walls = tk.BooleanVar(value=False)
     flag_nuzlocke_delete_fainted = tk.BooleanVar(value=False)
@@ -212,6 +213,7 @@ def main() -> None:
 
         add_bool_flag("RANDOM_EVOLUTIONS", flag_random_evos.get())
         add_bool_flag("HARDCODED_RANDOM_EVOLUTIONS", flag_hardcoded_random_evos.get())
+        add_bool_flag("FAST_EVOLUTION_ANIM", flag_fast_evolution_anim.get())
         add_bool_flag("WALK_FAST", flag_walk_fast.get())
         add_bool_flag("WALK_THROUGH_WALLS", flag_walk_through_walls.get())
         add_bool_flag("NUZLOCKE_DELETE_FAINTED", flag_nuzlocke_delete_fainted.get())
@@ -486,6 +488,7 @@ def main() -> None:
         flag_skip_fade_anims.set(True)
         flag_fast_stat_anims.set(True)
         flag_manual_battle_text.set(True)
+        flag_fast_evolution_anim.set(True)
         wait_time_divisor_pow.set(5.0)
         wait_value_label.configure(text=str(1 << int(round(wait_time_divisor_pow.get()))))
 
@@ -522,8 +525,12 @@ def main() -> None:
     manual_battle_text_cb.grid(row=7, column=0, sticky="w")
     add_tooltip(manual_battle_text_cb, "Compile-time: require A-press to advance every battle message.")
 
+    fast_evo_anim_cb = ttk.Checkbutton(speed_group, text="FAST_EVOLUTION_ANIM", variable=flag_fast_evolution_anim)
+    fast_evo_anim_cb.grid(row=8, column=0, sticky="w")
+    add_tooltip(fast_evo_anim_cb, "Compile-time: run the evolution animation ~4x faster.")
+
     wait_frame = ttk.Frame(speed_group)
-    wait_frame.grid(row=8, column=0, sticky="w", pady=(8, 0))
+    wait_frame.grid(row=9, column=0, sticky="w", pady=(8, 0))
 
     wait_label = ttk.Label(wait_frame, text="WAIT_TIME_DIVISOR")
     wait_label.pack(side="left")
