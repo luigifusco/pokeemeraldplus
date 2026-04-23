@@ -168,66 +168,100 @@ def _find_cycles(mapping: dict[str, str]) -> list[list[str]]:
     return cycles
 
 
-def _build_initial_mapping(
-    all_species: list[str], max_indegree: int | None
-) -> dict[str, str]:
-    """Assign each species to a random target, respecting max_indegree."""
-    limit = max_indegree if max_indegree is not None else len(all_species)
-    if limit < 1:
-        raise RuntimeError("max_indegree must be >= 1")
+def _compute_indegree(mapping: dict[str, str]) -> dict[str, int]:
+    indeg: dict[str, int] = {s: 0 for s in mapping}
+    for t in mapping.values():
+        indeg[t] = indeg.get(t, 0) + 1
+    return indeg
+
+
+def _random_mapping(all_species: list[str]) -> dict[str, str]:
+    """Start from a completely random functional graph (no self-loops)."""
     mapping: dict[str, str] = {}
-    indeg: dict[str, int] = {s: 0 for s in all_species}
-    order = all_species[:]
-    random.shuffle(order)
-    # Hard to paint yourself into a corner with a greedy walk when
-    # average target in-degree == 1, but with a tight cap it can happen
-    # (e.g. last remaining species is the only one under the cap but it's
-    # the source itself). Retry a handful of times on failure.
-    for attempt in range(50):
-        mapping.clear()
-        for s in all_species:
-            indeg[s] = 0
-        random.shuffle(order)
-        ok = True
-        for src in order:
-            cands = [t for t in all_species if t != src and indeg[t] < limit]
-            if not cands:
-                ok = False
-                break
-            t = random.choice(cands)
-            mapping[src] = t
-            indeg[t] += 1
-        if ok:
-            return mapping
-    raise RuntimeError(
-        f"Could not build a mapping with max_indegree={max_indegree} "
-        f"over {len(all_species)} species."
-    )
+    for s in all_species:
+        t = random.choice(all_species)
+        while t == s and len(all_species) > 1:
+            t = random.choice(all_species)
+        mapping[s] = t
+    return mapping
 
 
-def _split_cycle(mapping: dict[str, str], cycle: list[str], target_max: int | None) -> bool:
-    """Swap two edges inside `cycle` to split it in two.
+# -- Local transformations -------------------------------------------------
+#
+# Every rule below preserves the "functional graph" shape (every node has
+# out-degree exactly 1) and never creates a self-loop.
 
-    In a functional graph, a cycle n0 -> n1 -> ... -> n(L-1) -> n0 can be
-    split by picking two edges n_i -> n_(i+1) and n_j -> n_(j+1) and
-    swapping their targets: n_i -> n_(j+1), n_j -> n_(i+1). The result is
-    two cycles of lengths k = j - i and L - k (mod L). This preserves
-    every node's in-degree (each new target is one cycle member's
-    successor by construction).
+def _rule_reduce_indegree(
+    mapping: dict[str, str], A: str, all_species: list[str], max_indegree: int
+) -> bool:
+    """Rule 1: reduce the in-degree of A by redirecting one predecessor B
+    (currently B -> A) to a tail (a node with in-degree 0, which has the
+    most room to accept a new edge). Falls back to any node still below
+    the cap if no tails exist."""
+    indeg = _compute_indegree(mapping)
+    preds = [s for s, t in mapping.items() if t == A]
+    if not preds:
+        return False
+    random.shuffle(preds)
+    tails = [n for n in all_species if indeg[n] == 0]
+    random.shuffle(tails)
+    for B in preds:
+        for T in tails:
+            if T != B:
+                mapping[B] = T
+                return True
+        # No tail available: accept any node whose in-degree is < cap - 1
+        # (so it stays <= cap - 1 + 1 = cap after the redirect).
+        room = [n for n in all_species if n != B and n != A and indeg[n] < max_indegree]
+        if room:
+            mapping[B] = random.choice(room)
+            return True
+    return False
 
-    Returns True if a split was performed. Disallows length-1 halves
-    (which would create a self-loop -> src == target is forbidden).
-    """
+
+def _rule_extend_cycle(
+    mapping: dict[str, str], cycle: list[str], all_species: list[str]
+) -> bool:
+    """Rule 2: lengthen a cycle by splicing a tail into it. Given cycle
+    edge X -> Y and a tail T (in-degree 0, not in the cycle), rewrite to
+    X -> T -> Y. T's previous target W loses one in-degree (it was a
+    tree/cycle node feeding wherever, now T simply re-routes). This
+    preserves max_indegree bounds because T gains 1 (goes from 0 to 1)
+    and no other in-degree grows."""
+    indeg = _compute_indegree(mapping)
+    cycset = set(cycle)
+    tails = [n for n in all_species if indeg[n] == 0 and n not in cycset]
+    if not tails:
+        return False
+    T = random.choice(tails)
+    L = len(cycle)
+    i = random.randrange(L)
+    X = cycle[i]
+    Y = cycle[(i + 1) % L]
+    if T == Y:
+        # T already equals the successor; can't self-loop.
+        return False
+    mapping[X] = T
+    mapping[T] = Y
+    return True
+
+
+def _rule_split_cycle(
+    mapping: dict[str, str], cycle: list[str], target_max: int | None
+) -> bool:
+    """Rule 3: swap two edges inside one cycle to split it in two.
+
+    Cycle n0 -> n1 -> ... -> n(L-1) -> n0. Picking edges n_i -> n_(i+1)
+    and n_j -> n_(j+1) and swapping their targets gives two cycles of
+    length k = j - i and L - k. Every node's in-degree is preserved.
+    Disallows length-1 halves (self-loops are forbidden)."""
     L = len(cycle)
     if L < 4:
-        return False  # Can't split into two halves of length >= 2.
+        return False
     if target_max is not None:
-        # Try to keep both halves <= target_max first.
         lo = max(2, L - target_max)
         hi = min(L - 2, target_max)
         if lo > hi:
-            # Impossible to make both halves <= target_max in one split;
-            # pick any valid split -- further splits will shorten further.
             lo, hi = 2, L - 2
     else:
         lo, hi = 2, L - 2
@@ -238,6 +272,8 @@ def _split_cycle(mapping: dict[str, str], cycle: list[str], target_max: int | No
     b = cycle[(i + 1) % L]
     c = cycle[j]
     d = cycle[(j + 1) % L]
+    if a == d or c == b:
+        return False
     mapping[a] = d
     mapping[c] = b
     return True
@@ -250,46 +286,82 @@ def _pick_constrained_mapping(
     max_cycle_length: int | None,
     min_cycles: int | None,
 ) -> dict[str, str]:
-    """Build a random species -> species mapping respecting optional constraints.
+    """Start from a random mapping and repair until constraints hold.
 
-    Strategy:
-      1. Build a random initial mapping that respects max_indegree by
-         choosing each source's target from species still under the cap.
-      2. Repeatedly split cycles longer than max_cycle_length with an
-         intra-cycle edge swap (which preserves all in-degrees).
-      3. If the total cycle count is below min_cycles, keep splitting
-         the longest splittable cycle (length >= 4) to create more
-         separate loops.
+    Repair rules (all local, all preserve the functional-graph shape):
+      1. _rule_reduce_indegree: if some node A exceeds max_indegree,
+         redirect one of its predecessors B to a tail.
+      2. _rule_extend_cycle: splice a tail into a cycle (grows cycle
+         length by 1). Used to lengthen a too-short cycle so it can
+         then be split into two cycles (helps when min_cycles is
+         high but every cycle is length <= 3).
+      3. _rule_split_cycle: intra-cycle edge swap; splits a cycle of
+         length L into lengths k and L-k, preserving every in-degree.
+         Used to shrink long cycles and to raise the cycle count.
     """
     if max_cycle_length is not None and max_cycle_length < 2:
         raise RuntimeError("max_cycle_length must be >= 2 (no self-loops allowed).")
 
-    mapping = _build_initial_mapping(all_species, max_indegree)
+    mapping = _random_mapping(all_species)
     N = len(all_species)
+    budget = N * 50
 
-    if max_cycle_length is not None:
-        for _ in range(N):
-            cycles = _find_cycles(mapping)
-            long_cycles = [c for c in cycles if len(c) > max_cycle_length]
-            if not long_cycles:
-                break
-            cyc = max(long_cycles, key=len)
-            if not _split_cycle(mapping, cyc, target_max=max_cycle_length):
-                break
+    for _ in range(budget):
+        indeg = _compute_indegree(mapping)
 
-    if min_cycles is not None:
-        for _ in range(N):
-            cycles = _find_cycles(mapping)
-            if len(cycles) >= min_cycles:
-                break
+        # Rule 1: squash any in-degree violation first.
+        if max_indegree is not None:
+            over = [n for n, d in indeg.items() if d > max_indegree]
+            if over:
+                A = random.choice(over)
+                _rule_reduce_indegree(mapping, A, all_species, max_indegree)
+                continue
+
+        cycles = _find_cycles(mapping)
+
+        # Rule 3: shrink any cycle longer than max_cycle_length.
+        if max_cycle_length is not None:
+            too_long = [c for c in cycles if len(c) > max_cycle_length]
+            if too_long:
+                cyc = max(too_long, key=len)
+                if _rule_split_cycle(mapping, cyc, target_max=max_cycle_length):
+                    continue
+                # Cycle length 2 or 3: pull a tail in first so a later
+                # split has room, then trim back on a future iteration.
+                if _rule_extend_cycle(mapping, cyc, all_species):
+                    continue
+                break  # truly stuck
+
+        # Rule 3 again: raise the cycle count by splitting cycles.
+        if min_cycles is not None and len(cycles) < min_cycles:
             splittable = [c for c in cycles if len(c) >= 4]
-            if not splittable:
-                break
-            cyc = max(splittable, key=len)
-            _split_cycle(mapping, cyc, target_max=max_cycle_length)
+            if splittable:
+                cyc = max(splittable, key=len)
+                if _rule_split_cycle(mapping, cyc, target_max=max_cycle_length):
+                    continue
+            # No cycle is long enough to split. Rule 2: absorb a tail
+            # into a short cycle to grow it to splittable length.
+            short = [c for c in cycles if len(c) < 4]
+            random.shuffle(short)
+            did = False
+            for cyc in short:
+                if _rule_extend_cycle(mapping, cyc, all_species):
+                    did = True
+                    break
+            if did:
+                continue
+            break  # no tails left and no splittable cycles
 
-    # Sanity-check constraints; report what went wrong if unsatisfiable.
+        return mapping
+
+    # Final validation: report any constraint we failed to satisfy.
+    indeg = _compute_indegree(mapping)
     cycles = _find_cycles(mapping)
+    if max_indegree is not None and max(indeg.values(), default=0) > max_indegree:
+        raise RuntimeError(
+            f"Could not enforce max_indegree={max_indegree} "
+            f"(worst in-degree = {max(indeg.values())})."
+        )
     if max_cycle_length is not None and any(len(c) > max_cycle_length for c in cycles):
         raise RuntimeError(
             f"Could not reduce max cycle length to {max_cycle_length} "
@@ -298,7 +370,7 @@ def _pick_constrained_mapping(
     if min_cycles is not None and len(cycles) < min_cycles:
         raise RuntimeError(
             f"Could not reach min_cycles={min_cycles} "
-            f"(achieved {len(cycles)}; all remaining cycles are too short to split)."
+            f"(achieved {len(cycles)})."
         )
     return mapping
 
