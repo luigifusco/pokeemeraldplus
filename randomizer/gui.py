@@ -127,6 +127,7 @@ def main() -> None:
     flag_hardcoded_random_evos = tk.BooleanVar(value=False)
     evo_max_indegree = tk.StringVar(value="")       # blank = no cap
     evo_max_cycle_length = tk.StringVar(value="")   # blank = no cap
+    evo_min_cycles = tk.StringVar(value="")         # blank = no minimum
     flag_fast_evolution_anim = tk.BooleanVar(value=False)
     flag_walk_fast = tk.BooleanVar(value=False)
     flag_walk_through_walls = tk.BooleanVar(value=False)
@@ -210,6 +211,14 @@ def main() -> None:
                     v = int(cyc_raw)
                     if v > 0:
                         rand_args.extend(["--evo-max-cycle-length", str(v)])
+                except ValueError:
+                    pass
+            mincyc_raw = evo_min_cycles.get().strip()
+            if mincyc_raw:
+                try:
+                    v = int(mincyc_raw)
+                    if v > 0:
+                        rand_args.extend(["--evo-min-cycles", str(v)])
                 except ValueError:
                     pass
 
@@ -400,6 +409,16 @@ def main() -> None:
     )
     cycle_entry = ttk.Entry(evo_constraints_frame, textvariable=evo_max_cycle_length, width=6)
     cycle_entry.grid(row=0, column=3, sticky="w", padx=(6, 0))
+
+    mincyc_label = ttk.Label(evo_constraints_frame, text="Min cycles")
+    mincyc_label.grid(row=1, column=0, sticky="w", pady=(4, 0))
+    add_tooltip(
+        mincyc_label,
+        "Minimum number of distinct cycles in the evolution graph. "
+        "Blank = no minimum. Higher values force more separate evolution loops.",
+    )
+    mincyc_entry = ttk.Entry(evo_constraints_frame, textvariable=evo_min_cycles, width=6)
+    mincyc_entry.grid(row=1, column=1, sticky="w", padx=(6, 12), pady=(4, 0))
 
     def sync_randomizer_mode_ui() -> None:
         if randomize_per_occurrence.get():

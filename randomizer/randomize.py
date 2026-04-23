@@ -146,65 +146,161 @@ def randomize_wild_encounters_per_map(text: str, all_species: list[str]) -> str:
     return json.dumps(data, indent=2, sort_keys=False) + "\n"
 
 
+def _find_cycles(mapping: dict[str, str]) -> list[list[str]]:
+    """Return list of cycles in the functional graph, each in traversal order."""
+    state: dict[str, int] = {}
+    cycles: list[list[str]] = []
+    for start in mapping:
+        if start in state:
+            continue
+        path: list[str] = []
+        pos: dict[str, int] = {}
+        node: str | None = start
+        while node is not None and node not in state:
+            state[node] = 1
+            pos[node] = len(path)
+            path.append(node)
+            node = mapping.get(node)
+        if node is not None and state.get(node) == 1:
+            cycles.append(path[pos[node]:])
+        for n in path:
+            state[n] = 2
+    return cycles
+
+
+def _build_initial_mapping(
+    all_species: list[str], max_indegree: int | None
+) -> dict[str, str]:
+    """Assign each species to a random target, respecting max_indegree."""
+    limit = max_indegree if max_indegree is not None else len(all_species)
+    if limit < 1:
+        raise RuntimeError("max_indegree must be >= 1")
+    mapping: dict[str, str] = {}
+    indeg: dict[str, int] = {s: 0 for s in all_species}
+    order = all_species[:]
+    random.shuffle(order)
+    # Hard to paint yourself into a corner with a greedy walk when
+    # average target in-degree == 1, but with a tight cap it can happen
+    # (e.g. last remaining species is the only one under the cap but it's
+    # the source itself). Retry a handful of times on failure.
+    for attempt in range(50):
+        mapping.clear()
+        for s in all_species:
+            indeg[s] = 0
+        random.shuffle(order)
+        ok = True
+        for src in order:
+            cands = [t for t in all_species if t != src and indeg[t] < limit]
+            if not cands:
+                ok = False
+                break
+            t = random.choice(cands)
+            mapping[src] = t
+            indeg[t] += 1
+        if ok:
+            return mapping
+    raise RuntimeError(
+        f"Could not build a mapping with max_indegree={max_indegree} "
+        f"over {len(all_species)} species."
+    )
+
+
+def _split_cycle(mapping: dict[str, str], cycle: list[str], target_max: int | None) -> bool:
+    """Swap two edges inside `cycle` to split it in two.
+
+    In a functional graph, a cycle n0 -> n1 -> ... -> n(L-1) -> n0 can be
+    split by picking two edges n_i -> n_(i+1) and n_j -> n_(j+1) and
+    swapping their targets: n_i -> n_(j+1), n_j -> n_(i+1). The result is
+    two cycles of lengths k = j - i and L - k (mod L). This preserves
+    every node's in-degree (each new target is one cycle member's
+    successor by construction).
+
+    Returns True if a split was performed. Disallows length-1 halves
+    (which would create a self-loop -> src == target is forbidden).
+    """
+    L = len(cycle)
+    if L < 4:
+        return False  # Can't split into two halves of length >= 2.
+    if target_max is not None:
+        # Try to keep both halves <= target_max first.
+        lo = max(2, L - target_max)
+        hi = min(L - 2, target_max)
+        if lo > hi:
+            # Impossible to make both halves <= target_max in one split;
+            # pick any valid split -- further splits will shorten further.
+            lo, hi = 2, L - 2
+    else:
+        lo, hi = 2, L - 2
+    k = random.randint(lo, hi)
+    i = random.randrange(L)
+    j = (i + k) % L
+    a = cycle[i]
+    b = cycle[(i + 1) % L]
+    c = cycle[j]
+    d = cycle[(j + 1) % L]
+    mapping[a] = d
+    mapping[c] = b
+    return True
+
+
 def _pick_constrained_mapping(
     all_species: list[str],
     *,
     max_indegree: int | None,
     max_cycle_length: int | None,
-    max_attempts: int = 500,
+    min_cycles: int | None,
 ) -> dict[str, str]:
     """Build a random species -> species mapping respecting optional constraints.
 
-    - max_indegree: cap on how many sources may point to the same target.
-    - max_cycle_length: cap on the length of any cycle in the resulting graph.
-
-    Uses a randomized greedy assignment with restart on dead-ends.
+    Strategy:
+      1. Build a random initial mapping that respects max_indegree by
+         choosing each source's target from species still under the cap.
+      2. Repeatedly split cycles longer than max_cycle_length with an
+         intra-cycle edge swap (which preserves all in-degrees).
+      3. If the total cycle count is below min_cycles, keep splitting
+         the longest splittable cycle (length >= 4) to create more
+         separate loops.
     """
-    for _ in range(max_attempts):
-        mapping: dict[str, str] = {}
-        indeg: dict[str, int] = {s: 0 for s in all_species}
-        order = all_species[:]
-        random.shuffle(order)
-        stuck = False
-        for src in order:
-            candidates = [
-                t for t in all_species
-                if t != src and (max_indegree is None or indeg[t] < max_indegree)
-            ]
-            random.shuffle(candidates)
-            chosen: str | None = None
-            for t in candidates:
-                if max_cycle_length is not None:
-                    # Walk forward from t through already-assigned edges.
-                    # If we return to src, the new edge src->t closes a cycle
-                    # whose length is the number of hops taken.
-                    cur: str | None = t
-                    length = 1
-                    visited: set[str] = set()
-                    forms_cycle = False
-                    while cur is not None and cur not in visited:
-                        if cur == src:
-                            forms_cycle = True
-                            break
-                        visited.add(cur)
-                        cur = mapping.get(cur)
-                        length += 1
-                    if forms_cycle and length > max_cycle_length:
-                        continue
-                chosen = t
+    if max_cycle_length is not None and max_cycle_length < 2:
+        raise RuntimeError("max_cycle_length must be >= 2 (no self-loops allowed).")
+
+    mapping = _build_initial_mapping(all_species, max_indegree)
+    N = len(all_species)
+
+    if max_cycle_length is not None:
+        for _ in range(N):
+            cycles = _find_cycles(mapping)
+            long_cycles = [c for c in cycles if len(c) > max_cycle_length]
+            if not long_cycles:
                 break
-            if chosen is None:
-                stuck = True
+            cyc = max(long_cycles, key=len)
+            if not _split_cycle(mapping, cyc, target_max=max_cycle_length):
                 break
-            mapping[src] = chosen
-            indeg[chosen] += 1
-        if not stuck:
-            return mapping
-    raise RuntimeError(
-        "Could not generate a random evolution mapping that satisfies the "
-        f"constraints (max_indegree={max_indegree}, "
-        f"max_cycle_length={max_cycle_length}) after {max_attempts} attempts."
-    )
+
+    if min_cycles is not None:
+        for _ in range(N):
+            cycles = _find_cycles(mapping)
+            if len(cycles) >= min_cycles:
+                break
+            splittable = [c for c in cycles if len(c) >= 4]
+            if not splittable:
+                break
+            cyc = max(splittable, key=len)
+            _split_cycle(mapping, cyc, target_max=max_cycle_length)
+
+    # Sanity-check constraints; report what went wrong if unsatisfiable.
+    cycles = _find_cycles(mapping)
+    if max_cycle_length is not None and any(len(c) > max_cycle_length for c in cycles):
+        raise RuntimeError(
+            f"Could not reduce max cycle length to {max_cycle_length} "
+            f"(longest remaining cycle = {max(len(c) for c in cycles)})."
+        )
+    if min_cycles is not None and len(cycles) < min_cycles:
+        raise RuntimeError(
+            f"Could not reach min_cycles={min_cycles} "
+            f"(achieved {len(cycles)}; all remaining cycles are too short to split)."
+        )
+    return mapping
 
 
 def generate_hardcoded_random_evolutions_header(
@@ -213,8 +309,9 @@ def generate_hardcoded_random_evolutions_header(
     *,
     max_indegree: int | None = None,
     max_cycle_length: int | None = None,
+    min_cycles: int | None = None,
 ) -> None:
-    if max_indegree is None and max_cycle_length is None:
+    if max_indegree is None and max_cycle_length is None and min_cycles is None:
         mapping: dict[str, str] = {}
         for s in all_species:
             target = random.choice(all_species)
@@ -226,6 +323,7 @@ def generate_hardcoded_random_evolutions_header(
             all_species,
             max_indegree=max_indegree,
             max_cycle_length=max_cycle_length,
+            min_cycles=min_cycles,
         )
 
     lines = [
@@ -375,6 +473,15 @@ def parse_args() -> argparse.Namespace:
             "a functional graph always has a cycle; 2 allows only A<->B pairs; etc.)."
         ),
     )
+    parser.add_argument(
+        "--evo-min-cycles",
+        type=int,
+        default=None,
+        help=(
+            "When generating hardcoded random evolutions, require at least this many "
+            "distinct cycles in the evolution graph."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -405,6 +512,7 @@ def main() -> None:
             random_evos_header,
             max_indegree=args.evo_max_indegree,
             max_cycle_length=args.evo_max_cycle_length,
+            min_cycles=args.evo_min_cycles,
         )
     elif not random_evos_header.exists():
         default_lines = [
