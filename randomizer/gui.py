@@ -170,6 +170,19 @@ def main() -> None:
             on_done=on_restore_done,
         )
 
+    def do_evolution_graph() -> None:
+        def on_done(code: int) -> None:
+            if code == 0:
+                log("[success] evolution graph generated in randomizer/evolution_paths.*\n")
+
+        run_command_stream(
+            window,
+            repo_root,
+            [sys.executable, "randomizer/evolution_graph.py", "--format", "png"],
+            log,
+            on_done=on_done,
+        )
+
     def do_build() -> None:
         build_btn.configure(state="disabled")
 
@@ -383,6 +396,14 @@ def main() -> None:
     restore_btn = ttk.Button(randomizer_group, text="Restore repo files", command=do_restore)
     restore_btn.grid(row=7, column=0, sticky="w", pady=(8, 0))
     add_tooltip(restore_btn, "Overwrite the repo's src/ files with the copies in randomizer/ (undo randomization).")
+
+    evo_graph_btn = ttk.Button(randomizer_group, text="Render evolution graph", command=do_evolution_graph)
+    evo_graph_btn.grid(row=8, column=0, sticky="w", pady=(4, 0))
+    add_tooltip(
+        evo_graph_btn,
+        "Render src/data/random_evolutions.h as a PNG in randomizer/evolution_paths.png "
+        "(requires graphviz 'dot' on PATH).",
+    )
 
     levels_group = ttk.Labelframe(top, text="Level modifiers", padding=10)
     levels_group.grid(row=1, column=0, sticky="nsew", pady=(10, 0))

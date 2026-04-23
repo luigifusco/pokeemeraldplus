@@ -44,3 +44,6 @@ prefabs.json
 # Python bytecode / cache
 __pycache__/
 *.pyc
+
+# Randomizer evolution graph output
+/randomizer/evolution_paths.*
