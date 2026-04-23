@@ -125,6 +125,8 @@ def main() -> None:
 
     flag_random_evos = tk.BooleanVar(value=False)
     flag_hardcoded_random_evos = tk.BooleanVar(value=False)
+    evo_max_indegree = tk.StringVar(value="")       # blank = no cap
+    evo_max_cycle_length = tk.StringVar(value="")   # blank = no cap
     flag_fast_evolution_anim = tk.BooleanVar(value=False)
     flag_walk_fast = tk.BooleanVar(value=False)
     flag_walk_through_walls = tk.BooleanVar(value=False)
@@ -194,6 +196,22 @@ def main() -> None:
             rand_args.append("--per-map-consistent")
         if flag_hardcoded_random_evos.get():
             rand_args.append("--hardcoded-random-evos")
+            indeg_raw = evo_max_indegree.get().strip()
+            if indeg_raw:
+                try:
+                    v = int(indeg_raw)
+                    if v > 0:
+                        rand_args.extend(["--evo-max-indegree", str(v)])
+                except ValueError:
+                    pass
+            cyc_raw = evo_max_cycle_length.get().strip()
+            if cyc_raw:
+                try:
+                    v = int(cyc_raw)
+                    if v > 0:
+                        rand_args.extend(["--evo-max-cycle-length", str(v)])
+                except ValueError:
+                    pass
 
         wild_pct = int(round(wild_level_percent.get()))
         if int(round(wild_level_percent.get())) != wild_pct:
@@ -360,6 +378,29 @@ def main() -> None:
         "Every level up evolves to the same mapped species. Takes precedence over RANDOM_EVOLUTIONS.",
     )
 
+    evo_constraints_frame = ttk.Frame(randomizer_group)
+    evo_constraints_frame.grid(row=5, column=0, sticky="w", padx=(20, 0))
+
+    indeg_label = ttk.Label(evo_constraints_frame, text="Max in-degree")
+    indeg_label.grid(row=0, column=0, sticky="w")
+    add_tooltip(
+        indeg_label,
+        "Cap on how many species may evolve into the same target. "
+        "Blank = no cap. Lower values spread evolutions across more targets.",
+    )
+    indeg_entry = ttk.Entry(evo_constraints_frame, textvariable=evo_max_indegree, width=6)
+    indeg_entry.grid(row=0, column=1, sticky="w", padx=(6, 12))
+
+    cycle_label = ttk.Label(evo_constraints_frame, text="Max cycle length")
+    cycle_label.grid(row=0, column=2, sticky="w")
+    add_tooltip(
+        cycle_label,
+        "Cap on the length of any cycle in the evolution graph. "
+        "Blank = no cap. 2 = only A<->B swaps are allowed; higher = longer loops allowed.",
+    )
+    cycle_entry = ttk.Entry(evo_constraints_frame, textvariable=evo_max_cycle_length, width=6)
+    cycle_entry.grid(row=0, column=3, sticky="w", padx=(6, 0))
+
     def sync_randomizer_mode_ui() -> None:
         if randomize_per_occurrence.get():
             randomize_per_map.set(False)
@@ -379,7 +420,7 @@ def main() -> None:
         variable=randomize_per_occurrence,
         command=sync_randomizer_mode_ui,
     )
-    per_occ_cb.grid(row=5, column=0, sticky="w", pady=(6, 0))
+    per_occ_cb.grid(row=6, column=0, sticky="w", pady=(6, 0))
     add_tooltip(per_occ_cb, "Replace every SPECIES_* occurrence independently (more chaotic).")
 
     per_map_cb = ttk.Checkbutton(
@@ -388,17 +429,17 @@ def main() -> None:
         variable=randomize_per_map,
         command=sync_randomizer_mode_ui,
     )
-    per_map_cb.grid(row=6, column=0, sticky="w")
+    per_map_cb.grid(row=7, column=0, sticky="w")
     add_tooltip(per_map_cb, "Wild encounters only: keep replacements consistent within each map.")
 
     sync_randomizer_mode_ui()
 
     restore_btn = ttk.Button(randomizer_group, text="Restore repo files", command=do_restore)
-    restore_btn.grid(row=7, column=0, sticky="w", pady=(8, 0))
+    restore_btn.grid(row=8, column=0, sticky="w", pady=(8, 0))
     add_tooltip(restore_btn, "Overwrite the repo's src/ files with the copies in randomizer/ (undo randomization).")
 
     evo_graph_btn = ttk.Button(randomizer_group, text="Render evolution graph", command=do_evolution_graph)
-    evo_graph_btn.grid(row=8, column=0, sticky="w", pady=(4, 0))
+    evo_graph_btn.grid(row=9, column=0, sticky="w", pady=(4, 0))
     add_tooltip(
         evo_graph_btn,
         "Render src/data/random_evolutions.h as a PNG in randomizer/evolution_paths.png "
