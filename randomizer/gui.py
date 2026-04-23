@@ -124,6 +124,7 @@ def main() -> None:
     randomize_per_map = tk.BooleanVar(value=False)
 
     flag_random_evos = tk.BooleanVar(value=False)
+    flag_hardcoded_random_evos = tk.BooleanVar(value=False)
     flag_walk_fast = tk.BooleanVar(value=False)
     flag_walk_through_walls = tk.BooleanVar(value=False)
     flag_nuzlocke_delete_fainted = tk.BooleanVar(value=False)
@@ -177,6 +178,8 @@ def main() -> None:
             rand_args.append("--per-occurrence")
         if randomize_per_map.get():
             rand_args.append("--per-map-consistent")
+        if flag_hardcoded_random_evos.get():
+            rand_args.append("--hardcoded-random-evos")
 
         wild_pct = int(round(wild_level_percent.get()))
         if int(round(wild_level_percent.get())) != wild_pct:
@@ -208,6 +211,7 @@ def main() -> None:
             make_args.append(f"{name}={'1' if enabled else '0'}")
 
         add_bool_flag("RANDOM_EVOLUTIONS", flag_random_evos.get())
+        add_bool_flag("HARDCODED_RANDOM_EVOLUTIONS", flag_hardcoded_random_evos.get())
         add_bool_flag("WALK_FAST", flag_walk_fast.get())
         add_bool_flag("WALK_THROUGH_WALLS", flag_walk_through_walls.get())
         add_bool_flag("NUZLOCKE_DELETE_FAINTED", flag_nuzlocke_delete_fainted.get())
@@ -327,7 +331,19 @@ def main() -> None:
 
     random_evos_cb = ttk.Checkbutton(randomizer_group, text="RANDOM_EVOLUTIONS", variable=flag_random_evos)
     random_evos_cb.grid(row=3, column=0, sticky="w", pady=(6, 0))
-    add_tooltip(random_evos_cb, "Randomize evolutions (build flag).")
+    add_tooltip(random_evos_cb, "Randomize evolutions: re-roll a random species on every level up (build flag).")
+
+    hardcoded_random_evos_cb = ttk.Checkbutton(
+        randomizer_group,
+        text="HARDCODED_RANDOM_EVOLUTIONS",
+        variable=flag_hardcoded_random_evos,
+    )
+    hardcoded_random_evos_cb.grid(row=4, column=0, sticky="w")
+    add_tooltip(
+        hardcoded_random_evos_cb,
+        "Hardcode a random evolution target per species (generated at build time). "
+        "Every level up evolves to the same mapped species. Takes precedence over RANDOM_EVOLUTIONS.",
+    )
 
     def sync_randomizer_mode_ui() -> None:
         if randomize_per_occurrence.get():
@@ -348,7 +364,7 @@ def main() -> None:
         variable=randomize_per_occurrence,
         command=sync_randomizer_mode_ui,
     )
-    per_occ_cb.grid(row=4, column=0, sticky="w", pady=(6, 0))
+    per_occ_cb.grid(row=5, column=0, sticky="w", pady=(6, 0))
     add_tooltip(per_occ_cb, "Replace every SPECIES_* occurrence independently (more chaotic).")
 
     per_map_cb = ttk.Checkbutton(
@@ -357,13 +373,13 @@ def main() -> None:
         variable=randomize_per_map,
         command=sync_randomizer_mode_ui,
     )
-    per_map_cb.grid(row=5, column=0, sticky="w")
+    per_map_cb.grid(row=6, column=0, sticky="w")
     add_tooltip(per_map_cb, "Wild encounters only: keep replacements consistent within each map.")
 
     sync_randomizer_mode_ui()
 
     restore_btn = ttk.Button(randomizer_group, text="Restore repo files", command=do_restore)
-    restore_btn.grid(row=6, column=0, sticky="w", pady=(8, 0))
+    restore_btn.grid(row=7, column=0, sticky="w", pady=(8, 0))
     add_tooltip(restore_btn, "Overwrite the repo's src/ files with the copies in randomizer/ (undo randomization).")
 
     levels_group = ttk.Labelframe(top, text="Level modifiers", padding=10)

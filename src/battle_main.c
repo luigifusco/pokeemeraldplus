@@ -570,6 +570,10 @@ const struct TrainerMoney gTrainerMoneyTable[] =
 
 #include "data/text/abilities.h"
 
+#ifdef HARDCODED_RANDOM_EVOLUTIONS
+#include "data/random_evolutions.h"
+#endif
+
 static void (*const sTurnActionsFuncsTable[])(void) =
 {
     [B_ACTION_USE_MOVE]               = HandleAction_UseMove,
@@ -5291,7 +5295,15 @@ static void TryEvolvePokemon(void)
                 levelUpBits &= ~(gBitTable[i]);
                 gLeveledUpInBattle = levelUpBits;
 
-                #ifdef RANDOM_EVOLUTIONS
+                #if defined(HARDCODED_RANDOM_EVOLUTIONS)
+                {
+                    u16 curSpecies = GetMonData(&gPlayerParty[i], MON_DATA_SPECIES);
+                    if (curSpecies < ARRAY_COUNT(sHardcodedRandomEvolutionTable))
+                        species = sHardcodedRandomEvolutionTable[curSpecies];
+                    else
+                        species = SPECIES_NONE;
+                }
+                #elif defined(RANDOM_EVOLUTIONS)
                 do {
                     species = Random() % (NUM_SPECIES - 1) + 1; // Select a random species for evolution.
                 } while (species >= SPECIES_OLD_UNOWN_B && species <= SPECIES_OLD_UNOWN_Z); // Exclude invalid species.
