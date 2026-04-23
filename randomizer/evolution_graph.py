@@ -39,6 +39,28 @@ def pretty_name(species: str) -> str:
     return name.title()
 
 
+def find_cycle_nodes(mapping: dict[str, str]) -> set[str]:
+    """Return the set of nodes that lie on a cycle in the functional graph."""
+    cycle_nodes: set[str] = set()
+    state: dict[str, int] = {}  # 0 unseen, 1 on current walk, 2 done
+    for start in mapping:
+        if start in state:
+            continue
+        path: list[str] = []
+        pos: dict[str, int] = {}
+        node: str | None = start
+        while node is not None and node not in state:
+            state[node] = 1
+            pos[node] = len(path)
+            path.append(node)
+            node = mapping.get(node)
+        if node is not None and state.get(node) == 1:
+            cycle_nodes.update(path[pos[node]:])
+        for n in path:
+            state[n] = 2
+    return cycle_nodes
+
+
 def build_dot(
     mapping: dict[str, str],
     *,
@@ -58,6 +80,8 @@ def build_dot(
                 stack.append(mapping[n])
         edges = {src: dst for src, dst in mapping.items() if src in seen}
 
+    cycle_nodes = find_cycle_nodes(mapping)
+
     lines: list[str] = []
     lines.append(f"digraph evolutions {{")
     lines.append(f"    layout={engine};")
@@ -72,10 +96,21 @@ def build_dot(
         nodes.add(dst)
 
     for n in sorted(nodes):
-        lines.append(f'    "{n}" [label="{pretty_name(n)}"];')
+        if n in cycle_nodes:
+            lines.append(
+                f'    "{n}" [label="{pretty_name(n)}", '
+                f'fillcolor="#ffd9d9", color="#c0392b", penwidth=2];'
+            )
+        else:
+            lines.append(f'    "{n}" [label="{pretty_name(n)}"];')
 
     for src, dst in sorted(edges.items()):
-        lines.append(f'    "{src}" -> "{dst}";')
+        # An edge belongs to a cycle iff its source is a cycle node
+        # (functional graph: cycle node's successor is also a cycle node).
+        if src in cycle_nodes and dst in cycle_nodes:
+            lines.append(f'    "{src}" -> "{dst}" [color="#c0392b", penwidth=2];')
+        else:
+            lines.append(f'    "{src}" -> "{dst}";')
 
     lines.append("}")
     lines.append("")
