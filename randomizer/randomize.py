@@ -863,7 +863,10 @@ def main() -> None:
             max_avg_indegree=args.evo_max_avg_indegree,
             max_tree_depth=args.evo_max_tree_depth,
         )
-    elif not random_evos_header.exists():
+    else:
+        # Always reset to the default zero mapping so a previous
+        # --hardcoded-random-evos run doesn't leak its random evolutions
+        # into subsequent vanilla builds.
         default_lines = [
             "// Auto-generated default. Regenerate with randomizer/randomize.py --hardcoded-random-evos.",
             "#ifndef GUARD_DATA_RANDOM_EVOLUTIONS_H",
