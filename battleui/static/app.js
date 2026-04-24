@@ -11,7 +11,34 @@ const state = {
     selectedTarget: null, // 'L' | 'R' | null
     isDoubles: false,
     activeTab: "fight",
+    names: { species: {}, moves: {} },
 };
+
+function loadNames() {
+    fetch("/names.json")
+        .then(r => r.json())
+        .then(n => {
+            state.names = n || { species: {}, moves: {} };
+            if (state.request) renderRequest();
+        })
+        .catch(() => { /* non-fatal: IDs stay numeric */ });
+}
+
+function speciesName(id) {
+    return (state.names.species && state.names.species[id]) || ("#" + id);
+}
+
+function spriteUrl(id) {
+    const name = state.names.species && state.names.species[id];
+    if (!name) return "";
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (!slug) return "";
+    return `https://play.pokemonshowdown.com/sprites/gen3/${slug}.png`;
+}
+
+function moveName(id) {
+    return (state.names.moves && state.names.moves[id]) || ("Move " + id);
+}
 
 // ---- connection ----------------------------------------------------
 function setStatus(cls, text) {
@@ -97,10 +124,19 @@ function monHTML(m) {
     const pct = Math.max(0, Math.min(100, (m.hp / m.maxHp) * 100));
     const nick = nicknameToString(m.nickname);
     const status = m.status1 ? '<span class="badge">STS</span>' : "";
+    const sprite = spriteUrl(m.species);
+    const spriteHTML = sprite
+        ? `<img class="mon-sprite" src="${sprite}" alt="" onerror="this.style.display='none'">`
+        : "";
     return `
-        <div class="mon-species">#${m.species} Lv${m.level}${status}</div>
-        <div class="mon-line"><span>${nick || "(no name)"}</span><span>${m.hp}/${m.maxHp}</span></div>
-        <div class="hp-bar"><div class="hp-fill ${hpClass(m.hp, m.maxHp)}" style="width:${pct}%"></div></div>
+        <div class="mon-with-sprite">
+            ${spriteHTML}
+            <div class="mon-body">
+                <div class="mon-species">${speciesName(m.species)} Lv${m.level}${status}</div>
+                <div class="mon-line"><span>${nick || "(no name)"}</span><span>${m.hp}/${m.maxHp}</span></div>
+                <div class="hp-bar"><div class="hp-fill ${hpClass(m.hp, m.maxHp)}" style="width:${pct}%"></div></div>
+            </div>
+        </div>
     `;
 }
 
@@ -176,7 +212,7 @@ function renderMoves() {
             const btn = document.createElement("button");
             btn.className = "move-btn";
             btn.disabled = !id || cur === 0;
-            btn.innerHTML = `<div class="move-name">Move ${id || "—"}</div>
+            btn.innerHTML = `<div class="move-name">${id ? moveName(id) : "—"}</div>
                              <div class="move-pp">PP ${cur}/${max}</div>
                              <div class="move-pp">slot ${i} <kbd>${i+1}</kbd></div>`;
             btn.onclick = () => selectMove(i);
@@ -225,13 +261,18 @@ function renderParty() {
         const nick = nicknameToString(mon.nickname);
         const status = mon.status1 ? '<span class="badge">STS</span>' : "";
         const pct = mon.maxHp ? Math.max(0, Math.min(100, (mon.hp/mon.maxHp)*100)) : 0;
+        const sprite = spriteUrl(mon.species);
+        const spriteHTML = sprite
+            ? `<img class="party-sprite" src="${sprite}" alt="" onerror="this.style.display='none'">`
+            : "";
         row.innerHTML = `
+            ${spriteHTML}
             <div class="info">
                 <div class="slot">slot ${i}${isCurrent ? " (active)" : ""}${fainted ? " (fainted)" : ""}</div>
-                <div class="mon-species">#${mon.species} Lv${mon.level}${status}</div>
+                <div class="mon-species">${speciesName(mon.species)} Lv${mon.level}${status}</div>
                 <div class="mon-line"><span>${nick || "(no name)"}</span><span>${mon.hp}/${mon.maxHp}</span></div>
+                <div class="hp-bar"><div class="hp-fill ${hpClass(mon.hp, mon.maxHp)}" style="width:${pct}%"></div></div>
             </div>
-            <div class="hp-bar"><div class="hp-fill ${hpClass(mon.hp, mon.maxHp)}" style="width:${pct}%"></div></div>
         `;
         row.onclick = () => { if (!disabled) submit(ACTION.SWITCH, i, 0); };
         list.appendChild(row);
@@ -308,4 +349,5 @@ document.addEventListener("keydown", (ev) => {
 });
 
 renderIdle();
+loadNames();
 connect();

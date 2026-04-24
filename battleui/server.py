@@ -11,6 +11,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from .names import get_names
 from .router import Router
 
 log = logging.getLogger("battleui.server")
@@ -79,6 +80,11 @@ def create_app(tcp_host: str = "127.0.0.1", tcp_port: int = 9877) -> FastAPI:
     @app.get("/")
     async def index() -> FileResponse:
         return FileResponse(str(STATIC_DIR / "index.html"))
+
+    @app.get("/names.json")
+    async def names() -> dict:
+        # Cached in names.get_names(); parsed on first call.
+        return get_names()
 
     @app.websocket("/ws")
     async def ws_endpoint(ws: WebSocket) -> None:

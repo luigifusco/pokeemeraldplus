@@ -254,3 +254,23 @@ html, body {
 .party-row .info { flex: 1; }
 .party-row .slot { color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
 .party-row .hp-bar { width: 120px; flex-shrink: 0; }
+
+/* sprites */
+.mon-with-sprite { display: flex; gap: 10px; align-items: flex-start; }
+.mon-with-sprite .mon-body { flex: 1; min-width: 0; }
+.mon-sprite {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.03);
+    border-radius: var(--radius-sm);
+}
+.party-sprite {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+}
