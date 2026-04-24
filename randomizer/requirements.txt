@@ -1,1 +1,3 @@
-PySide6>=6.5
+fastapi>=0.110
+uvicorn[standard]>=0.27
+sse-starlette>=2.0

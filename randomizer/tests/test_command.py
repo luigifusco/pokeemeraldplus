@@ -1,4 +1,4 @@
-"""Tests for randomizer.gui.backend.command.
+"""Tests for randomizer.webui.command.
 
 Run with: ``python3 -m unittest randomizer.tests.test_command``.
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import unittest
 
-from randomizer.gui.backend.command import (
+from randomizer.webui.command import (
     BuildConfig,
     EvoConstraints,
     EvoMode,
