@@ -34,7 +34,19 @@ The repository ships a randomizer plus a browser-based UI that wraps
 both the randomizer and `make`. To launch it:
 
 ```bash
+# Create a virtual environment (recommended on Debian/Ubuntu/WSL).
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r randomizer/requirements.txt
+python3 -m randomizer.webui
+```
+
+If you hit `error: externally-managed-environment`, that's PEP 668
+refusing to touch the system Python. Use the `venv` recipe above, or
+install per-user:
+
+```bash
+pip install --user -r randomizer/requirements.txt
 python3 -m randomizer.webui
 ```
 
