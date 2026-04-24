@@ -65,8 +65,15 @@ MAX_MON_MOVES=4, PARTY_SIZE=6, MAX_TRAINER_ITEMS=4.
     252 u16 trainerItems[4]                (ends 260)
 ]]--
 
-local HOST = "127.0.0.1"
-local PORT = 9877
+local function env(name, default)
+    local ok, v = pcall(function() return os.getenv(name) end)
+    if ok and v and v ~= "" then return v end
+    return default
+end
+
+local HOST = env("BATTLEUI_HOST", "127.0.0.1")
+local PORT = tonumber(env("BATTLEUI_PORT", "9877")) or 9877
+local TOKEN = env("BATTLEUI_TOKEN", "")
 local MAGIC = 0x4F495557
 local EWRAM_START = 0x02000000
 local EWRAM_END   = 0x02040000
@@ -461,6 +468,14 @@ local function socket_try_connect()
     sock = s
     rx_buffer = ""
     log(string.format("connected to %s:%d", HOST, PORT))
+    if TOKEN ~= "" then
+        local hello = json.encode({ type = "hello", token = TOKEN }) .. "\n"
+        local sok, serr = s:send(hello)
+        if (sok == nil or sok == false) and not err_is_transient(serr) then
+            log("hello send failed: " .. tostring(serr))
+            socket_close()
+        end
+    end
 end
 
 local function socket_send_line(tbl)

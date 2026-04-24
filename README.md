@@ -95,3 +95,42 @@ Load the ROM in mGBA (0.10+), open **Tools → Scripting…**, and load
 page will prompt you to pick the opponent's move / switch / item on every turn.
 
 Tests: `pytest battleui/tests/ -q`.
+
+### Playing remotely via a relay server
+
+Both the Lua bridge and the browser only need to reach the Python server over
+the network, so you can host the server on a public box (e.g. `luigifusco.dev`)
+and have you + a friend connect from different machines.
+
+On the server:
+
+```
+# behind nginx/caddy terminating TLS on 443 -> proxy to 9876
+export BATTLEUI_TOKEN="some-long-random-string"
+python -m battleui --http-host 0.0.0.0 --tcp-host 0.0.0.0 --token "$BATTLEUI_TOKEN"
+```
+
+When binding publicly **always** set `--token` (or `$BATTLEUI_TOKEN`):
+
+- TCP connections must send `{"type":"hello","token":"..."}` as their first
+  line or they are dropped.
+- WebSocket URLs must include `?token=...` or they are rejected.
+
+On your (emulator) machine, point the Lua bridge at the server:
+
+```
+BATTLEUI_HOST=luigifusco.dev \
+BATTLEUI_PORT=9877 \
+BATTLEUI_TOKEN=some-long-random-string \
+mgba pokeemerald.gba
+```
+
+(or edit the `HOST` / `PORT` / `TOKEN` defaults at the top of
+`tools/battleui/mgba_bridge.lua`). Load the script from **Tools → Scripting…**.
+
+Your friend opens:
+
+```
+https://luigifusco.dev/?token=some-long-random-string
+```
+

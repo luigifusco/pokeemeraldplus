@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 
 import uvicorn
 
@@ -17,16 +18,21 @@ def main() -> None:
                     help="(deprecated) sets both --http-host and --tcp-host")
     ap.add_argument("--http-host", default=None,
                     help="HTTP/WS bind address (default: same as --host). "
-                         "Use 0.0.0.0 to expose the UI to a tunnel or LAN.")
+                         "Use 0.0.0.0 to expose the UI publicly.")
     ap.add_argument("--tcp-host", default=None,
                     help="TCP bind address for the mGBA Lua bridge "
-                         "(default: 127.0.0.1 — keep it local).")
+                         "(default: 127.0.0.1 when --http-host is set, "
+                         "otherwise same as --host). Use 0.0.0.0 when you want "
+                         "the bridge to be reachable over the internet; "
+                         "pair with --token.")
+    ap.add_argument("--token", default=os.environ.get("BATTLEUI_TOKEN", ""),
+                    help="Shared secret. When set, the TCP bridge must send "
+                         "{'type':'hello','token':...} as its first line and "
+                         "the WebSocket must include ?token=... in its URL. "
+                         "Falls back to $BATTLEUI_TOKEN.")
     args = ap.parse_args()
 
     http_host = args.http_host or args.host
-    # The mGBA Lua bridge should stay loopback even when the HTTP UI is
-    # exposed publicly — the bridge speaks unauthenticated line-JSON and must
-    # not be reachable from outside.
     tcp_host = args.tcp_host or ("127.0.0.1" if args.http_host else args.host)
 
     logging.basicConfig(
@@ -34,7 +40,13 @@ def main() -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    app = create_app(tcp_host=tcp_host, tcp_port=args.tcp_port)
+    if not args.token and (http_host == "0.0.0.0" or tcp_host == "0.0.0.0"):
+        logging.getLogger("battleui").warning(
+            "binding publicly with no --token set; anyone who reaches these "
+            "ports can control the battle or impersonate the ROM."
+        )
+
+    app = create_app(tcp_host=tcp_host, tcp_port=args.tcp_port, token=args.token)
     uvicorn.run(app, host=http_host, port=args.http_port, log_level="info")
 
 

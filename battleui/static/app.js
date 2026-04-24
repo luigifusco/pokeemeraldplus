@@ -48,7 +48,10 @@ function setStatus(cls, text) {
 }
 
 function connect() {
-    const url = `ws://${location.host}/ws`;
+    const tok = new URLSearchParams(location.search).get("token") || "";
+    const qs = tok ? `?token=${encodeURIComponent(tok)}` : "";
+    const scheme = location.protocol === "https:" ? "wss" : "ws";
+    const url = `${scheme}://${location.host}/ws${qs}`;
     setStatus("status-waiting", "connecting…");
     const ws = new WebSocket(url);
     state.ws = ws;
