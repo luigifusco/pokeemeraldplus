@@ -588,11 +588,44 @@ local function on_frame()
 end
 
 -- ------------------------------------------------------------------
+-- REPL API (call from the mGBA Scripting console input)
+-- ------------------------------------------------------------------
+-- Examples:
+--   battleui.connect("luigifusco.dev", 9877, "shared-secret")
+--   battleui.connect("127.0.0.1")           -- port/token unchanged
+--   battleui.disconnect()
+--   battleui.status()
+battleui = {}
+
+function battleui.connect(host, port, token)
+    if host ~= nil then HOST = tostring(host) end
+    if port ~= nil then PORT = tonumber(port) or PORT end
+    if token ~= nil then TOKEN = tostring(token) end
+    socket_close()
+    last_connect_attempt = 0  -- bypass the cooldown so the next frame retries
+    log(string.format("battleui: target set to %s:%d (token %s)",
+        HOST, PORT, TOKEN ~= "" and "set" or "off"))
+end
+
+function battleui.disconnect()
+    socket_close()
+    log("battleui: disconnected by user")
+end
+
+function battleui.status()
+    log(string.format("battleui: host=%s port=%d token=%s connected=%s",
+        HOST, PORT, TOKEN ~= "" and "set" or "off",
+        sock and "yes" or "no"))
+end
+
+-- ------------------------------------------------------------------
 -- Registration
 -- ------------------------------------------------------------------
 if callbacks and callbacks.add then
     callbacks:add("frame", on_frame)
     log("bridge loaded; waiting for mailbox + server")
+    log(string.format("default target %s:%d (override with "
+        .. "battleui.connect(host, port, token))", HOST, PORT))
 else
     log("callbacks API unavailable — mGBA 0.10+ required")
 end

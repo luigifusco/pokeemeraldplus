@@ -128,6 +128,17 @@ mgba pokeemerald.gba
 (or edit the `HOST` / `PORT` / `TOKEN` defaults at the top of
 `tools/battleui/mgba_bridge.lua`). Load the script from **Tools → Scripting…**.
 
+You can also override the target at runtime from mGBA's Scripting console:
+
+```lua
+battleui.connect("luigifusco.dev", 9877, "shared-secret")
+battleui.status()
+battleui.disconnect()
+```
+
+Useful when you want to retarget without restarting mGBA, or when launching
+mGBA from a desktop shortcut without env vars.
+
 Your friend opens:
 
 ```
