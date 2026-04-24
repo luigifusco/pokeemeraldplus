@@ -62,9 +62,12 @@ def run(argv: list[str] | None = None) -> int:
 
 
 def _install_placeholder_tabs(tabs) -> None:
-    from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+    from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
-    for name in ("Randomizer", "Evolutions", "Gameplay", "Speed & Skips", "Build & Run"):
+    from .widgets.log_view import LogView
+    from .backend.runner import CommandRunner
+
+    for name in ("Randomizer", "Evolutions", "Gameplay", "Speed & Skips"):
         w = QWidget()
         layout = QVBoxLayout(w)
         lbl = QLabel(f"{name} — coming soon")
@@ -72,4 +75,37 @@ def _install_placeholder_tabs(tabs) -> None:
         layout.addWidget(lbl)
         layout.addStretch(1)
         tabs.addTab(w, name)
+
+    # Build & Run tab gets an early preview of the LogView + runner
+    # so phases 2-4 can be exercised before the full tab arrives.
+    build_tab = QWidget()
+    build_layout = QVBoxLayout(build_tab)
+
+    log = LogView()
+    runner = CommandRunner(build_tab)
+    runner.started.connect(lambda argv: log.info("$ " + " ".join(argv)))
+    runner.line.connect(log.append_line)
+    runner.finished.connect(
+        lambda code: (log.success if code == 0 else log.error)(f"exit {code}")
+    )
+    runner.failed.connect(log.error)
+
+    demo_btn = QPushButton("Run demo: echo + small make dry-run")
+    demo_btn.clicked.connect(
+        lambda: runner.run(
+            [
+                "/bin/sh",
+                "-c",
+                "echo '\\033[32mgreen demo line\\033[0m'; echo plain; sleep 0.2; echo done",
+            ]
+        )
+    )
+    build_layout.addWidget(demo_btn)
+    build_layout.addWidget(log, 1)
+
+    # Keep references alive on the window.
+    build_tab._runner = runner  # noqa: SLF001
+    build_tab._log = log  # noqa: SLF001
+
+    tabs.addTab(build_tab, "Build & Run")
     tabs.setCurrentIndex(tabs.count() - 1)
