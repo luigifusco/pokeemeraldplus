@@ -246,6 +246,34 @@ def _rule_extend_cycle(
     return True
 
 
+def _rule_merge_cycles(
+    mapping: dict[str, str], cycle_a: list[str], cycle_b: list[str]
+) -> bool:
+    """Rule 4: merge two cycles into one via an inter-cycle edge swap.
+
+    Inverse of rule 3. Given edges X -> Y in cycle A and P -> Q in cycle
+    B, swap targets: X -> Q, P -> Y. The result is a single cycle whose
+    length is len(A) + len(B). Every node's in-degree is preserved.
+
+    Used to grow cycle length (for min_cycle_length) when no tails are
+    available to splice in via rule 2.
+    """
+    if not cycle_a or not cycle_b:
+        return False
+    La, Lb = len(cycle_a), len(cycle_b)
+    i = random.randrange(La)
+    j = random.randrange(Lb)
+    X = cycle_a[i]
+    Y = cycle_a[(i + 1) % La]
+    P = cycle_b[j]
+    Q = cycle_b[(j + 1) % Lb]
+    if X == Q or P == Y:
+        return False
+    mapping[X] = Q
+    mapping[P] = Y
+    return True
+
+
 def _rule_split_cycle(
     mapping: dict[str, str], cycle: list[str], target_max: int | None
 ) -> bool:
@@ -285,26 +313,47 @@ def _pick_constrained_mapping(
     max_indegree: int | None,
     max_cycle_length: int | None,
     min_cycles: int | None,
+    min_cycle_length: int | None = None,
+    max_avg_indegree: float | None = None,
 ) -> dict[str, str]:
     """Start from a random mapping and repair until constraints hold.
 
-    Repair rules (all local, all preserve the functional-graph shape):
-      1. _rule_reduce_indegree: if some node A exceeds max_indegree,
-         redirect one of its predecessors B to a tail.
-      2. _rule_extend_cycle: splice a tail into a cycle (grows cycle
-         length by 1). Used to lengthen a too-short cycle so it can
-         then be split into two cycles (helps when min_cycles is
-         high but every cycle is length <= 3).
-      3. _rule_split_cycle: intra-cycle edge swap; splits a cycle of
-         length L into lengths k and L-k, preserving every in-degree.
-         Used to shrink long cycles and to raise the cycle count.
+    Repair rules (all local, all preserve the functional-graph shape;
+    none ever produces a self-loop):
+      1. _rule_reduce_indegree: if node A has too many predecessors,
+         redirect one predecessor B to a tail (a node with in-degree 0).
+         Also used to lower the *average* in-degree of non-tail nodes:
+         every application turns one tail into a target (+1 distinct
+         target), so N / num_distinct_targets strictly decreases.
+      2. _rule_extend_cycle: splice a tail into a cycle (cycle length
+         +1). Used to lengthen a short cycle for min_cycle_length or to
+         make a too-short cycle splittable for min_cycles.
+      3. _rule_split_cycle: intra-cycle edge swap; splits one cycle of
+         length L into lengths k and L-k, preserving in-degrees. Used
+         to shrink long cycles and raise the cycle count.
+      4. _rule_merge_cycles: inter-cycle edge swap; merges cycles A and
+         B into one of length len(A)+len(B), preserving in-degrees.
+         Used to grow cycle length when no tails remain for rule 2.
     """
     if max_cycle_length is not None and max_cycle_length < 2:
         raise RuntimeError("max_cycle_length must be >= 2 (no self-loops allowed).")
+    if min_cycle_length is not None and min_cycle_length < 2:
+        raise RuntimeError("min_cycle_length must be >= 2 (no self-loops allowed).")
+    if (
+        max_cycle_length is not None
+        and min_cycle_length is not None
+        and min_cycle_length > max_cycle_length
+    ):
+        raise RuntimeError("min_cycle_length must be <= max_cycle_length.")
 
     mapping = _random_mapping(all_species)
     N = len(all_species)
     budget = N * 50
+
+    def _avg_indeg(indeg: dict[str, int]) -> float:
+        # Average in-degree over non-tail nodes = N / num_distinct_targets.
+        distinct = sum(1 for d in indeg.values() if d > 0)
+        return (N / distinct) if distinct else 0.0
 
     for _ in range(budget):
         indeg = _compute_indegree(mapping)
@@ -317,6 +366,19 @@ def _pick_constrained_mapping(
                 _rule_reduce_indegree(mapping, A, all_species, max_indegree)
                 continue
 
+        # Rule 1 again: lower average in-degree if above the cap. Pick
+        # the node with the highest in-degree and bleed an edge off to
+        # a tail (turns a 0 into a 1, improving the ratio).
+        if max_avg_indegree is not None and _avg_indeg(indeg) > max_avg_indegree:
+            # Effective per-node cap used by rule 1's fallback path.
+            cap = max_indegree if max_indegree is not None else N
+            heaviest = max(indeg, key=lambda n: indeg[n])
+            if indeg[heaviest] >= 2:
+                _rule_reduce_indegree(mapping, heaviest, all_species, cap)
+                continue
+            # Everything is already at indeg 1; can't reduce further.
+            break
+
         cycles = _find_cycles(mapping)
 
         # Rule 3: shrink any cycle longer than max_cycle_length.
@@ -326,31 +388,50 @@ def _pick_constrained_mapping(
                 cyc = max(too_long, key=len)
                 if _rule_split_cycle(mapping, cyc, target_max=max_cycle_length):
                     continue
-                # Cycle length 2 or 3: pull a tail in first so a later
-                # split has room, then trim back on a future iteration.
                 if _rule_extend_cycle(mapping, cyc, all_species):
                     continue
-                break  # truly stuck
+                break
 
-        # Rule 3 again: raise the cycle count by splitting cycles.
+        # Rule 2/4: grow any cycle shorter than min_cycle_length.
+        if min_cycle_length is not None:
+            too_short = [c for c in cycles if len(c) < min_cycle_length]
+            if too_short:
+                cyc = random.choice(too_short)
+                if _rule_extend_cycle(mapping, cyc, all_species):
+                    continue
+                # No tails available: merge with another cycle.
+                others = [c for c in cycles if c is not cyc]
+                if others:
+                    other = random.choice(others)
+                    if _rule_merge_cycles(mapping, cyc, other):
+                        continue
+                break
+
+        # Rule 3/2: raise the cycle count by splitting cycles.
         if min_cycles is not None and len(cycles) < min_cycles:
-            splittable = [c for c in cycles if len(c) >= 4]
+            splittable = [
+                c for c in cycles
+                if len(c) >= 4
+                and (
+                    min_cycle_length is None
+                    or len(c) >= 2 * min_cycle_length
+                )
+            ]
             if splittable:
                 cyc = max(splittable, key=len)
                 if _rule_split_cycle(mapping, cyc, target_max=max_cycle_length):
                     continue
-            # No cycle is long enough to split. Rule 2: absorb a tail
-            # into a short cycle to grow it to splittable length.
-            short = [c for c in cycles if len(c) < 4]
-            random.shuffle(short)
+            # No cycle long enough to split: grow a short one first.
+            growable = [c for c in cycles if len(c) < 4]
+            random.shuffle(growable)
             did = False
-            for cyc in short:
+            for cyc in growable:
                 if _rule_extend_cycle(mapping, cyc, all_species):
                     did = True
                     break
             if did:
                 continue
-            break  # no tails left and no splittable cycles
+            break
 
         return mapping
 
@@ -362,10 +443,20 @@ def _pick_constrained_mapping(
             f"Could not enforce max_indegree={max_indegree} "
             f"(worst in-degree = {max(indeg.values())})."
         )
+    if max_avg_indegree is not None and _avg_indeg(indeg) > max_avg_indegree + 1e-9:
+        raise RuntimeError(
+            f"Could not enforce max_avg_indegree={max_avg_indegree} "
+            f"(achieved {_avg_indeg(indeg):.3f})."
+        )
     if max_cycle_length is not None and any(len(c) > max_cycle_length for c in cycles):
         raise RuntimeError(
             f"Could not reduce max cycle length to {max_cycle_length} "
             f"(longest remaining cycle = {max(len(c) for c in cycles)})."
+        )
+    if min_cycle_length is not None and any(len(c) < min_cycle_length for c in cycles):
+        raise RuntimeError(
+            f"Could not enforce min_cycle_length={min_cycle_length} "
+            f"(shortest remaining cycle = {min(len(c) for c in cycles)})."
         )
     if min_cycles is not None and len(cycles) < min_cycles:
         raise RuntimeError(
@@ -382,8 +473,16 @@ def generate_hardcoded_random_evolutions_header(
     max_indegree: int | None = None,
     max_cycle_length: int | None = None,
     min_cycles: int | None = None,
+    min_cycle_length: int | None = None,
+    max_avg_indegree: float | None = None,
 ) -> None:
-    if max_indegree is None and max_cycle_length is None and min_cycles is None:
+    if (
+        max_indegree is None
+        and max_cycle_length is None
+        and min_cycles is None
+        and min_cycle_length is None
+        and max_avg_indegree is None
+    ):
         mapping: dict[str, str] = {}
         for s in all_species:
             target = random.choice(all_species)
@@ -396,6 +495,8 @@ def generate_hardcoded_random_evolutions_header(
             max_indegree=max_indegree,
             max_cycle_length=max_cycle_length,
             min_cycles=min_cycles,
+            min_cycle_length=min_cycle_length,
+            max_avg_indegree=max_avg_indegree,
         )
 
     lines = [
@@ -554,6 +655,25 @@ def parse_args() -> argparse.Namespace:
             "distinct cycles in the evolution graph."
         ),
     )
+    parser.add_argument(
+        "--evo-min-cycle-length",
+        type=int,
+        default=None,
+        help=(
+            "When generating hardcoded random evolutions, require every cycle in the "
+            "evolution graph to be at least this long."
+        ),
+    )
+    parser.add_argument(
+        "--evo-max-avg-indegree",
+        type=float,
+        default=None,
+        help=(
+            "When generating hardcoded random evolutions, cap the average in-degree "
+            "computed over target species (nodes with in-degree > 0). Lower values "
+            "force edges to be spread across more distinct targets."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -585,6 +705,8 @@ def main() -> None:
             max_indegree=args.evo_max_indegree,
             max_cycle_length=args.evo_max_cycle_length,
             min_cycles=args.evo_min_cycles,
+            min_cycle_length=args.evo_min_cycle_length,
+            max_avg_indegree=args.evo_max_avg_indegree,
         )
     elif not random_evos_header.exists():
         default_lines = [

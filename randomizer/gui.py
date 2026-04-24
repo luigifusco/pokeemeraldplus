@@ -128,6 +128,8 @@ def main() -> None:
     evo_max_indegree = tk.StringVar(value="")       # blank = no cap
     evo_max_cycle_length = tk.StringVar(value="")   # blank = no cap
     evo_min_cycles = tk.StringVar(value="")         # blank = no minimum
+    evo_min_cycle_length = tk.StringVar(value="")   # blank = no minimum
+    evo_max_avg_indegree = tk.StringVar(value="")   # blank = no cap
     flag_fast_evolution_anim = tk.BooleanVar(value=False)
     flag_walk_fast = tk.BooleanVar(value=False)
     flag_walk_through_walls = tk.BooleanVar(value=False)
@@ -219,6 +221,22 @@ def main() -> None:
                     v = int(mincyc_raw)
                     if v > 0:
                         rand_args.extend(["--evo-min-cycles", str(v)])
+                except ValueError:
+                    pass
+            mincyclen_raw = evo_min_cycle_length.get().strip()
+            if mincyclen_raw:
+                try:
+                    v = int(mincyclen_raw)
+                    if v > 0:
+                        rand_args.extend(["--evo-min-cycle-length", str(v)])
+                except ValueError:
+                    pass
+            avgindeg_raw = evo_max_avg_indegree.get().strip()
+            if avgindeg_raw:
+                try:
+                    v = float(avgindeg_raw)
+                    if v > 0:
+                        rand_args.extend(["--evo-max-avg-indegree", str(v)])
                 except ValueError:
                     pass
 
@@ -419,6 +437,27 @@ def main() -> None:
     )
     mincyc_entry = ttk.Entry(evo_constraints_frame, textvariable=evo_min_cycles, width=6)
     mincyc_entry.grid(row=1, column=1, sticky="w", padx=(6, 12), pady=(4, 0))
+
+    mincyclen_label = ttk.Label(evo_constraints_frame, text="Min cycle length")
+    mincyclen_label.grid(row=1, column=2, sticky="w", pady=(4, 0))
+    add_tooltip(
+        mincyclen_label,
+        "Minimum length of every cycle in the evolution graph. "
+        "Blank = no minimum. Higher values forbid tight A<->B swaps.",
+    )
+    mincyclen_entry = ttk.Entry(evo_constraints_frame, textvariable=evo_min_cycle_length, width=6)
+    mincyclen_entry.grid(row=1, column=3, sticky="w", padx=(6, 0), pady=(4, 0))
+
+    avgindeg_label = ttk.Label(evo_constraints_frame, text="Max avg in-degree")
+    avgindeg_label.grid(row=2, column=0, sticky="w", pady=(4, 0))
+    add_tooltip(
+        avgindeg_label,
+        "Cap on the average in-degree over target species (non-tail nodes). "
+        "Blank = no cap. Lower values force evolutions to spread across more targets "
+        "(approaching 1.0 means nearly every species is some other species' target).",
+    )
+    avgindeg_entry = ttk.Entry(evo_constraints_frame, textvariable=evo_max_avg_indegree, width=6)
+    avgindeg_entry.grid(row=2, column=1, sticky="w", padx=(6, 12), pady=(4, 0))
 
     def sync_randomizer_mode_ui() -> None:
         if randomize_per_occurrence.get():
