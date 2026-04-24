@@ -47,3 +47,6 @@ __pycache__/
 
 # Randomizer evolution graph output
 /randomizer/evolution_paths.*
+
+# Web UI static assets (exempt from blanket *.js rule above)
+!randomizer/webui/static/*.js
