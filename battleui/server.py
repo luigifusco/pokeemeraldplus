@@ -30,8 +30,8 @@ async def handle_tcp_client(reader: asyncio.StreamReader,
             if not line:
                 break
             try:
-                msg = json.loads(line.decode("utf-8").strip())
-            except json.JSONDecodeError as exc:
+                msg = json.loads(line.decode("utf-8", errors="replace").strip())
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                 log.warning("bad json from tcp: %s", exc)
                 continue
             await router.on_tcp_message(msg)

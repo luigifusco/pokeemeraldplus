@@ -235,11 +235,13 @@ local function read_u16(addr) return emu:read16(addr) end
 local function read_u32(addr) return emu:read32(addr) end
 local function write_u8(addr, v) emu:write8(addr, v) end
 
--- Read `n` bytes starting at addr into a Lua string (for nicknames).
-local function read_bytes(addr, n)
+-- Read `n` bytes starting at addr into an array of integer byte values.
+-- We intentionally do NOT return a Lua string here: the mailbox stores GBA
+-- charmap bytes (not UTF-8), which would crash strict JSON consumers.
+local function read_byte_array(addr, n)
     local t = {}
-    for i = 0, n - 1 do t[i+1] = string.char(emu:read8(addr + i)) end
-    return table.concat(t)
+    for i = 0, n - 1 do t[i+1] = emu:read8(addr + i) end
+    return t
 end
 
 -- ------------------------------------------------------------------
@@ -252,7 +254,7 @@ local function read_mon(base)
         maxHp   = read_u16(base + 4),
         status1 = read_u32(base + 8),
         level   = read_u8 (base + 12),
-        nickname = read_bytes(base + 13, 11),
+        nickname = read_byte_array(base + 13, 11),
     }
 end
 
