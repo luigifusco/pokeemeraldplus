@@ -2,78 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>battleui — mGBA opponent</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f1013">
+    <title>battleui</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <header class="topbar">
-        <div class="brand">
-            <div class="brand-dot"></div>
-            <div class="brand-title">battleui</div>
-            <div class="brand-sub">mGBA web opponent</div>
-        </div>
-        <div id="status" class="status status-offline">server offline</div>
-    </header>
-
-    <main class="content">
-        <div id="idle" class="idle-card">Awaiting battle decision…</div>
-
-        <section id="request" class="hidden">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Your move, battler <span id="battlerId"></span></div>
-                    <div class="card-sub">seq <span id="seq"></span></div>
+    <div id="app">
+        <!-- LEFT: status & mons -->
+        <aside class="left">
+            <div id="status" class="status status-offline">offline</div>
+            <div class="mons">
+                <div class="mon-card" id="ctrlCard">
+                    <div class="mon-tag">YOU CONTROL</div>
+                    <div id="controlledMon"></div>
                 </div>
-
-                <div class="mons-row">
-                    <div class="mon-box">
-                        <div class="mon-label">Controlled</div>
-                        <div id="controlledMon"></div>
-                    </div>
-                    <div class="mon-box">
-                        <div class="mon-label">Target L</div>
-                        <div id="targetLeft"></div>
-                    </div>
-                    <div class="mon-box" id="targetRightBox">
-                        <div class="mon-label">Target R</div>
-                        <div id="targetRight"></div>
-                    </div>
+                <div class="mon-card" id="leftCard">
+                    <div class="mon-tag">TARGET L</div>
+                    <div id="targetLeft"></div>
                 </div>
-
-                <div class="tabs">
-                    <button data-tab="fight" class="tab active">Fight <kbd>F</kbd></button>
-                    <button data-tab="switch" class="tab">Switch <kbd>S</kbd></button>
-                    <button data-tab="item" class="tab">Item <kbd>I</kbd></button>
-                    <button data-tab="cancel" class="tab" id="cancelTab">Cancel Partner <kbd>C</kbd></button>
-                </div>
-
-                <div id="pane-fight" class="pane active">
-                    <div id="moveGrid" class="move-grid"></div>
-                    <div id="targetPicker" class="target-picker hidden">
-                        <div class="pane-label">Target:</div>
-                        <label><input type="radio" name="target" value="L"> Left (<span id="tpL"></span>)</label>
-                        <label><input type="radio" name="target" value="R"> Right (<span id="tpR"></span>)</label>
-                    </div>
-                    <div class="actions">
-                        <button id="submitFight" class="btn-primary" disabled>Submit <kbd>Enter</kbd></button>
-                    </div>
-                </div>
-
-                <div id="pane-switch" class="pane">
-                    <div id="partyList" class="party-list"></div>
-                </div>
-
-                <div id="pane-item" class="pane">
-                    <div id="itemList" class="item-list"></div>
-                </div>
-
-                <div id="pane-cancel" class="pane">
-                    <p>Cancel your partner's pending action?</p>
-                    <button id="submitCancel" class="btn-primary">Confirm</button>
+                <div class="mon-card" id="rightCard">
+                    <div class="mon-tag">TARGET R</div>
+                    <div id="targetRight"></div>
                 </div>
             </div>
-        </section>
-    </main>
+        </aside>
+
+        <!-- RIGHT: action panel -->
+        <main class="right">
+            <nav class="tabs">
+                <button data-tab="fight"  class="tab active">⚔ Fight</button>
+                <button data-tab="switch" class="tab">↻ Switch</button>
+                <button data-tab="item"   class="tab">★ Item</button>
+                <button data-tab="cancel" class="tab" id="cancelTab">✕ Cancel</button>
+            </nav>
+
+            <div id="idle" class="pane idle-pane">
+                <div class="idle-text">Awaiting battle decision…</div>
+            </div>
+
+            <div id="pane-fight" class="pane">
+                <div id="moveGrid" class="grid-2x2"></div>
+                <div id="targetPicker" class="target-picker hidden">
+                    <button class="target-btn" data-t="L">
+                        <div class="target-arrow">◀</div>
+                        <div class="target-label">LEFT</div>
+                        <div class="target-sub" id="tpL"></div>
+                    </button>
+                    <button class="target-btn" data-t="R">
+                        <div class="target-arrow">▶</div>
+                        <div class="target-label">RIGHT</div>
+                        <div class="target-sub" id="tpR"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div id="pane-switch" class="pane hidden">
+                <div id="partyList" class="grid-2x3"></div>
+            </div>
+
+            <div id="pane-item" class="pane hidden">
+                <div id="itemList" class="grid-2x3"></div>
+            </div>
+
+            <div id="pane-cancel" class="pane hidden cancel-pane">
+                <div class="cancel-text">Cancel your partner's pending action?</div>
+                <button id="submitCancel" class="big-btn">CONFIRM</button>
+            </div>
+        </main>
+    </div>
 
     <script src="/static/app.js"></script>
 </body>
