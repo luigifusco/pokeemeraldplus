@@ -104,6 +104,7 @@ class LogView(QWidget):
         layout.addWidget(self._toolbar)
 
         self._edit = QPlainTextEdit(self)
+        self._edit.setObjectName("logView")
         self._edit.setReadOnly(True)
         self._edit.setUndoRedoEnabled(False)
         self._edit.setLineWrapMode(QPlainTextEdit.NoWrap)

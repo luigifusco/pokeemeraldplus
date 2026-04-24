@@ -29,6 +29,7 @@ def _require_pyside() -> None:
 def run(argv: list[str] | None = None) -> int:
     _require_pyside()
 
+    from PySide6.QtGui import QColor, QPalette
     from PySide6.QtWidgets import (
         QApplication,
         QMainWindow,
@@ -40,10 +41,11 @@ def run(argv: list[str] | None = None) -> int:
     app.setApplicationName("pokeemeraldplus-randomizer")
     app.setOrganizationName("pokeemeraldplus")
     app.setStyle("Fusion")
+    _apply_theme(app)
 
     window = QMainWindow()
     window.setWindowTitle("pokeemeraldplus — Randomizer & Build")
-    window.resize(980, 720)
+    window.resize(1080, 760)
 
     tabs = QTabWidget(window)
     tabs.setDocumentMode(True)
@@ -59,6 +61,44 @@ def run(argv: list[str] | None = None) -> int:
 
     window.show()
     return app.exec()
+
+
+def _apply_theme(app) -> None:
+    """Apply a dark palette + QSS stylesheet for a modern look."""
+    from PySide6.QtGui import QColor, QPalette
+
+    pal = QPalette()
+    bg = QColor("#1e1f22")
+    base = QColor("#17181a")
+    alt = QColor("#26272b")
+    text = QColor("#e6e6e6")
+    dim = QColor("#9aa0a6")
+    accent = QColor("#7a5cff")
+
+    pal.setColor(QPalette.Window, bg)
+    pal.setColor(QPalette.WindowText, text)
+    pal.setColor(QPalette.Base, base)
+    pal.setColor(QPalette.AlternateBase, alt)
+    pal.setColor(QPalette.ToolTipBase, bg)
+    pal.setColor(QPalette.ToolTipText, text)
+    pal.setColor(QPalette.Text, text)
+    pal.setColor(QPalette.Button, QColor("#2d2f34"))
+    pal.setColor(QPalette.ButtonText, text)
+    pal.setColor(QPalette.BrightText, QColor("#ff5d5d"))
+    pal.setColor(QPalette.Highlight, accent)
+    pal.setColor(QPalette.HighlightedText, QColor("white"))
+    pal.setColor(QPalette.PlaceholderText, dim)
+    pal.setColor(QPalette.Link, accent)
+    pal.setColor(QPalette.Disabled, QPalette.Text, QColor("#6a6c70"))
+    pal.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#6a6c70"))
+    pal.setColor(QPalette.Disabled, QPalette.WindowText, QColor("#6a6c70"))
+    app.setPalette(pal)
+
+    qss_path = Path(__file__).resolve().parent / "theme.qss"
+    try:
+        app.setStyleSheet(qss_path.read_text(encoding="utf-8"))
+    except OSError:
+        pass
 
 
 def _install_placeholder_tabs(tabs) -> None:
