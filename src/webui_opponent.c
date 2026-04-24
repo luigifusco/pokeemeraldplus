@@ -4,7 +4,11 @@
 
 #include "webui_opponent.h"
 
-EWRAM_DATA struct WebuiOpponentMailbox gWebuiOpponentMailbox = {0};
+// Place the mailbox in a fixed, zero-initialized EWRAM slot so the magic
+// sentinel is set from boot (via the .bss init at RAM clear plus the explicit
+// initializer below), and so the Lua bridge can find it without needing a
+// battle to occur first.
+EWRAM_DATA struct WebuiOpponentMailbox gWebuiOpponentMailbox = { .magic = WEBUI_OPP_MAGIC };
 
 static void ZeroMailbox(void)
 {

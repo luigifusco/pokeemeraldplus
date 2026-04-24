@@ -335,6 +335,27 @@ local function try_read_addr_file()
 end
 
 local function scan_for_magic()
+    -- Use bulk readRange when available (one host call instead of 64K) and
+    -- search for the little-endian magic bytes at 4-aligned offsets.
+    local len = EWRAM_END - EWRAM_START
+    local mem = nil
+    if emu.readRange then
+        local ok, data = pcall(function() return emu:readRange(EWRAM_START, len) end)
+        if ok then mem = data end
+    end
+    if mem and type(mem) == "string" and #mem >= 4 then
+        local pat = "\x57\x55\x49\x4F" -- 0x4F495557 little-endian "WUIO"
+        local pos = 1
+        while true do
+            local s = mem:find(pat, pos, true)
+            if not s then return nil end
+            if ((s - 1) % 4) == 0 then
+                return EWRAM_START + (s - 1)
+            end
+            pos = s + 1
+        end
+    end
+    -- Fallback: per-word scan (slow — only used if readRange is missing).
     for a = EWRAM_START, EWRAM_END - 4, 4 do
         if read_u32(a) == MAGIC then return a end
     end
@@ -354,7 +375,7 @@ local function resolve_mailbox()
 end
 
 -- ------------------------------------------------------------------
--- TCP socket handling
+-- TCP socket handling (mGBA async sockets; tolerate AGAIN/timeout)
 -- ------------------------------------------------------------------
 local sock = nil
 local rx_buffer = ""
@@ -362,12 +383,54 @@ local last_connect_attempt = 0
 local CONNECT_COOLDOWN_FRAMES = 60 -- ~1s at 60fps
 local frame_counter = 0
 
+local function err_is_transient(err)
+    -- Anything that clearly means "no data right now / would block" is benign.
+    if err == nil or err == 0 then return true end
+    if type(err) == "number" then
+        if socket and socket.ERRORS then
+            if err == socket.ERRORS.OK or err == socket.ERRORS.AGAIN
+               or err == socket.ERRORS.TIMEOUT then return true end
+        end
+        return false
+    end
+    if type(err) == "string" then
+        local e = err:lower()
+        if e:find("again") or e:find("timeout") or e:find("would block")
+           or e:find("temporarily unavailable") or e:find("in progress") then
+            return true
+        end
+    end
+    return false
+end
+
 local function socket_close()
     if sock then
         pcall(function() sock:close() end)
         sock = nil
     end
     rx_buffer = ""
+end
+
+local function pump_receive()
+    if not sock then return end
+    while true do
+        local data, err = sock:receive(4096)
+        if data and type(data) == "string" and #data > 0 then
+            rx_buffer = rx_buffer .. data
+        else
+            if not err_is_transient(err) then
+                log("disconnected: " .. tostring(err))
+                socket_close()
+            end
+            return
+        end
+    end
+end
+
+local function on_socket_error(_, err)
+    if err_is_transient(err) then return end
+    log("socket error: " .. tostring(err))
+    socket_close()
 end
 
 local function socket_try_connect()
@@ -380,15 +443,17 @@ local function socket_try_connect()
     end
     local s = socket.tcp()
     if not s then return end
+    if s.add then
+        pcall(function() s:add("received", pump_receive) end)
+        pcall(function() s:add("error", on_socket_error) end)
+    end
     local ok, err = s:connect(HOST, PORT)
-    if ok == nil and err ~= nil and err ~= 0 then
-        -- mGBA's connect is typically non-blocking and may return an "in progress"
-        -- status; treat anything that isn't an outright failure as best-effort.
-        if type(err) == "string" then
-            pcall(function() s:close() end)
-            log("connect failed: " .. err)
-            return
-        end
+    -- mGBA's non-blocking connect returns various shapes. Only bail on a
+    -- clearly fatal (non-transient) error.
+    if (ok == nil or ok == false) and not err_is_transient(err) then
+        pcall(function() s:close() end)
+        log("connect failed: " .. tostring(err))
+        return
     end
     sock = s
     rx_buffer = ""
@@ -399,27 +464,12 @@ local function socket_send_line(tbl)
     if not sock then return false end
     local encoded = json.encode(tbl) .. "\n"
     local ok, err = sock:send(encoded)
-    if not ok then
+    if (ok == nil or ok == false) and not err_is_transient(err) then
         log("send failed: " .. tostring(err))
         socket_close()
         return false
     end
     return true
-end
-
-local function socket_drain()
-    if not sock then return end
-    while true do
-        local data, err = sock:receive(4096)
-        if data == nil or data == "" then
-            if err and err ~= "timeout" and err ~= 11 and err ~= 0 then
-                log("disconnected: " .. tostring(err))
-                socket_close()
-            end
-            return
-        end
-        rx_buffer = rx_buffer .. data
-    end
 end
 
 local function pop_line()
@@ -435,6 +485,8 @@ end
 -- ------------------------------------------------------------------
 local last_sent_seq = -1
 local pending_response = nil
+local next_scan_frame = 0
+local SCAN_INTERVAL_FRAMES = 60 -- throttle bulk EWRAM scans to 1/s
 
 local function validate_mailbox()
     if not mailbox_addr then return false end
@@ -477,13 +529,22 @@ local function on_frame()
     frame_counter = frame_counter + 1
 
     if not mailbox_addr then
+        if frame_counter < next_scan_frame then return end
         mailbox_addr = resolve_mailbox()
-        if not mailbox_addr then return end
+        if not mailbox_addr then
+            next_scan_frame = frame_counter + SCAN_INTERVAL_FRAMES
+            return
+        end
     end
-    if not validate_mailbox() then return end
+    if not validate_mailbox() then
+        next_scan_frame = frame_counter + SCAN_INTERVAL_FRAMES
+        return
+    end
 
     socket_try_connect()
-    socket_drain()
+    -- In case mGBA didn't deliver the "received" event (older builds), also
+    -- poll-drain once per frame. No-op if nothing is buffered.
+    pump_receive()
     handle_incoming()
 
     if pending_response then

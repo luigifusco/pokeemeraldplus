@@ -23,6 +23,9 @@
 #include "intro.h"
 #include "main.h"
 #include "trainer_hill.h"
+#ifdef WEBUI_OPPONENT
+#include "webui_opponent.h"
+#endif
 #include "constants/rgb.h"
 
 static void VBlankIntr(void);
@@ -181,6 +184,9 @@ static void InitMainCallbacks(void)
     gMain.vblankCounter2 = 0;
     gMain.callback1 = NULL;
 
+#ifdef WEBUI_OPPONENT
+    WebuiOpponent_Init();
+#endif
     SetMainCallback2(CB2_InitCopyrightScreenAfterBootup);
     gSaveBlock2Ptr = &gSaveblock2.block;
     gPokemonStoragePtr = &gPokemonStorage.block;
