@@ -69,6 +69,21 @@ function submit(action, param1, param2) {
 }
 
 // ---- rendering -----------------------------------------------------
+function nicknameToString(n) {
+    // The Lua bridge sends nickname as an array of GBA-charmap byte values.
+    // We don't ship a charmap, so just render ASCII-printable bytes and
+    // stop at the GBA string terminator (0xFF) or any NUL.
+    if (!n) return "";
+    if (typeof n === "string") return n.replace(/\0.*$/, "").trim();
+    if (!Array.isArray(n)) return "";
+    const out = [];
+    for (const b of n) {
+        if (b === 0xFF || b === 0) break;
+        if (b >= 0x20 && b <= 0x7E) out.push(String.fromCharCode(b));
+    }
+    return out.join("").trim();
+}
+
 function hpClass(hp, maxHp) {
     if (!maxHp) return "";
     const p = hp / maxHp;
@@ -80,7 +95,7 @@ function hpClass(hp, maxHp) {
 function monHTML(m) {
     if (!m || !m.maxHp) return '<div class="mon-species">—</div>';
     const pct = Math.max(0, Math.min(100, (m.hp / m.maxHp) * 100));
-    const nick = (m.nickname || "").replace(/\0.*$/, "").trim();
+    const nick = nicknameToString(m.nickname);
     const status = m.status1 ? '<span class="badge">STS</span>' : "";
     return `
         <div class="mon-species">#${m.species} Lv${m.level}${status}</div>
@@ -134,21 +149,39 @@ function typeChips(types) {
         .map((t) => `<span class="type-chip">type ${t}</span>`).join("");
 }
 
+function isActionStage(mi) {
+    if (!mi || !mi.moves) return true;
+    return mi.moves.every(m => !m);
+}
+
 function renderMoves() {
     const mi = state.request.moveInfo || { moves: [0,0,0,0], currentPp: [0,0,0,0], maxPp: [0,0,0,0] };
     const grid = $("moveGrid");
     grid.innerHTML = "";
-    for (let i = 0; i < 4; i++) {
-        const id = mi.moves[i];
-        const cur = mi.currentPp[i], max = mi.maxPp[i];
-        const btn = document.createElement("button");
-        btn.className = "move-btn";
-        btn.disabled = !id || cur === 0;
-        btn.innerHTML = `<div class="move-name">Move ${id || "—"}</div>
-                         <div class="move-pp">PP ${cur}/${max}</div>
-                         <div class="move-pp">slot ${i} <kbd>${i+1}</kbd></div>`;
-        btn.onclick = () => selectMove(i);
-        grid.appendChild(btn);
+    const actionStage = isActionStage(mi);
+
+    if (actionStage) {
+        // The ROM is at OpponentHandleChooseAction — it only wants to know
+        // FIGHT vs SWITCH vs ITEM. The real move list comes in a second
+        // request a moment later. Show a big FIGHT confirmation instead.
+        const hint = document.createElement("div");
+        hint.className = "idle-card";
+        hint.textContent = "Pick an action. Click Fight to let the opponent attack (you'll be prompted for the specific move next), or use the Switch / Item tabs.";
+        grid.appendChild(hint);
+        state.selectedMove = null;
+    } else {
+        for (let i = 0; i < 4; i++) {
+            const id = mi.moves[i];
+            const cur = mi.currentPp[i], max = mi.maxPp[i];
+            const btn = document.createElement("button");
+            btn.className = "move-btn";
+            btn.disabled = !id || cur === 0;
+            btn.innerHTML = `<div class="move-name">Move ${id || "—"}</div>
+                             <div class="move-pp">PP ${cur}/${max}</div>
+                             <div class="move-pp">slot ${i} <kbd>${i+1}</kbd></div>`;
+            btn.onclick = () => selectMove(i);
+            grid.appendChild(btn);
+        }
     }
     updateFightSubmit();
 }
@@ -164,6 +197,13 @@ function selectMove(i) {
 }
 
 function updateFightSubmit() {
+    const actionStage = isActionStage(state.request && state.request.moveInfo);
+    if (actionStage) {
+        // Fight at action-stage is a single "yes, fight" signal — no move slot
+        // or target needed yet.
+        $("submitFight").disabled = false;
+        return;
+    }
     const ok = state.selectedMove !== null &&
         (!state.isDoubles || state.selectedTarget !== null);
     $("submitFight").disabled = !ok;
@@ -182,7 +222,7 @@ function renderParty() {
         const row = document.createElement("button");
         row.className = "party-row" + (disabled ? " disabled" : "");
         row.disabled = disabled;
-        const nick = (mon.nickname || "").replace(/\0.*$/, "").trim();
+        const nick = nicknameToString(mon.nickname);
         const status = mon.status1 ? '<span class="badge">STS</span>' : "";
         const pct = mon.maxHp ? Math.max(0, Math.min(100, (mon.hp/mon.maxHp)*100)) : 0;
         row.innerHTML = `
@@ -234,8 +274,14 @@ document.addEventListener("click", (ev) => {
 });
 
 $("submitFight").addEventListener("click", () => {
-    if (state.selectedMove === null) return;
     const r = state.request;
+    if (!r) return;
+    if (isActionStage(r.moveInfo)) {
+        // First of the two-stage flow: the ROM just wants FIGHT vs SWITCH/ITEM.
+        submit(ACTION.FIGHT, 0, 0);
+        return;
+    }
+    if (state.selectedMove === null) return;
     let targetBattler = r.targetBattlerLeft;
     if (state.isDoubles && state.selectedTarget === "R") targetBattler = r.targetBattlerRight;
     submit(ACTION.FIGHT, state.selectedMove, targetBattler);
