@@ -37,6 +37,7 @@ class EvoConstraintsModel(BaseModel):
     min_cycles: Optional[int] = None
     min_cycle_length: Optional[int] = None
     max_avg_indegree: Optional[float] = None
+    max_tree_depth: Optional[int] = None
 
     def to_dc(self) -> EvoConstraints:
         return EvoConstraints(**self.model_dump())

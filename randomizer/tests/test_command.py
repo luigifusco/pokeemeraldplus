@@ -79,6 +79,7 @@ class RandomizeArgsTest(unittest.TestCase):
             "--evo-min-cycles",
             "--evo-min-cycle-length",
             "--evo-max-avg-indegree",
+            "--evo-max-tree-depth",
         ):
             self.assertNotIn(flag, args)
 
@@ -91,6 +92,7 @@ class RandomizeArgsTest(unittest.TestCase):
                 min_cycles=20,
                 min_cycle_length=3,
                 max_avg_indegree=1.5,
+                max_tree_depth=4,
             ),
         )
         args = to_randomize_args(cfg, python_executable="py")
@@ -100,6 +102,7 @@ class RandomizeArgsTest(unittest.TestCase):
         self.assertEqual(args[args.index("--evo-min-cycles") + 1], "20")
         self.assertEqual(args[args.index("--evo-min-cycle-length") + 1], "3")
         self.assertEqual(args[args.index("--evo-max-avg-indegree") + 1], "1.5")
+        self.assertEqual(args[args.index("--evo-max-tree-depth") + 1], "4")
 
     def test_vanilla_and_random_modes_skip_hardcoded_flag(self) -> None:
         for mode in (EvoMode.VANILLA, EvoMode.RANDOM):

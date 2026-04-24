@@ -175,6 +175,35 @@ def _compute_indegree(mapping: dict[str, str]) -> dict[str, int]:
     return indeg
 
 
+def _compute_depths(
+    mapping: dict[str, str], cycles: list[list[str]] | None = None
+) -> dict[str, int]:
+    """For every node, number of edges to the first cycle node it reaches.
+
+    Cycle nodes have depth 0. Off-cycle nodes inherit depth(target)+1.
+    Every node reaches a cycle in a finite functional graph, so this
+    terminates for all inputs.
+    """
+    if cycles is None:
+        cycles = _find_cycles(mapping)
+    on_cycle = {n for c in cycles for n in c}
+    depth: dict[str, int] = {n: 0 for n in on_cycle}
+    # Iterative resolution: walk from each node until we hit an already
+    # known depth, then back-fill the walked prefix.
+    for start in mapping:
+        if start in depth:
+            continue
+        path: list[str] = []
+        cur: str | None = start
+        while cur is not None and cur not in depth:
+            path.append(cur)
+            cur = mapping.get(cur)
+        base = depth[cur] if cur is not None else 0
+        for i, node in enumerate(reversed(path)):
+            depth[node] = base + i + 1
+    return depth
+
+
 def _random_mapping(all_species: list[str]) -> dict[str, str]:
     """Start from a completely random functional graph (no self-loops)."""
     mapping: dict[str, str] = {}
@@ -314,6 +343,63 @@ def _rule_split_cycle(
     return True
 
 
+def _rule_reduce_tree_depth(
+    mapping: dict[str, str],
+    all_species: list[str],
+    max_depth: int,
+    *,
+    max_indegree: int | None = None,
+) -> bool:
+    """Rule 5: compact trees hanging off cycles.
+
+    For a leaf L with depth K > D (where D = max_depth), walking D-1
+    hops along the path from L lands on a node u with depth K-D+1.
+    Redirect u to a cycle node: u's new depth becomes 1, so L's new
+    depth becomes D. Everything above u on the path gets shortened
+    accordingly; everything below u stays put because their paths no
+    longer go through u.
+
+    Picks the cycle target with the lowest in-degree (respecting
+    max_indegree) to avoid pushing the heaviest cycle nodes over the
+    cap. Returns False if we can't find a legal redirect; callers
+    (the outer loop) then move on to other rules and may try again.
+    """
+    cycles = _find_cycles(mapping)
+    if not cycles:
+        return False
+    depths = _compute_depths(mapping, cycles)
+    max_d = max(depths.values(), default=0)
+    if max_d <= max_depth:
+        return False
+    deepest = [n for n, d in depths.items() if d == max_d]
+    L = random.choice(deepest)
+
+    # Walk D-1 hops from L toward the cycle. The node we land on, u,
+    # has depth K - (D-1) = K - D + 1, which is >= 1 since K > D.
+    u = L
+    for _ in range(max(0, max_depth - 1)):
+        u = mapping[u]
+    if depths[u] == 0:
+        # Shouldn't happen: D-1 hops from a node at depth K can't reach
+        # a cycle node unless K < D, but we've already bailed for that.
+        return False
+
+    cycle_nodes = [n for c in cycles for n in c]
+    indeg = _compute_indegree(mapping)
+    cap = max_indegree if max_indegree is not None else len(all_species)
+    candidates = [n for n in cycle_nodes if n != u and indeg[n] < cap]
+    if not candidates:
+        candidates = [n for n in cycle_nodes if n != u]
+    if not candidates:
+        return False
+    # Lowest-indegree cycle node, break ties randomly.
+    min_indeg = min(indeg[n] for n in candidates)
+    best = [n for n in candidates if indeg[n] == min_indeg]
+    w = random.choice(best)
+    mapping[u] = w
+    return True
+
+
 def _pick_constrained_mapping(
     all_species: list[str],
     *,
@@ -322,6 +408,7 @@ def _pick_constrained_mapping(
     min_cycles: int | None,
     min_cycle_length: int | None = None,
     max_avg_indegree: float | None = None,
+    max_tree_depth: int | None = None,
 ) -> dict[str, str]:
     """Start from a random mapping and repair until constraints hold.
 
@@ -341,6 +428,9 @@ def _pick_constrained_mapping(
       4. _rule_merge_cycles: inter-cycle edge swap; merges cycles A and
          B into one of length len(A)+len(B), preserving in-degrees.
          Used to grow cycle length when no tails remain for rule 2.
+      5. _rule_reduce_tree_depth: redirect a mid-chain tail node to a
+         cycle node, compacting the chain above it. Used to enforce
+         max_tree_depth (the longest chain from any leaf into its cycle).
     """
     if max_cycle_length is not None and max_cycle_length < 2:
         raise RuntimeError("max_cycle_length must be >= 2 (no self-loops allowed).")
@@ -352,6 +442,10 @@ def _pick_constrained_mapping(
         and min_cycle_length > max_cycle_length
     ):
         raise RuntimeError("min_cycle_length must be <= max_cycle_length.")
+    if max_tree_depth is not None and max_tree_depth < 1:
+        raise RuntimeError(
+            "max_tree_depth must be >= 1 (0 requires every species to be on a cycle)."
+        )
 
     mapping = _random_mapping(all_species)
     N = len(all_species)
@@ -459,6 +553,19 @@ def _pick_constrained_mapping(
                     continue
             break
 
+        # Rule 5: compact any tail subtree that violates max_tree_depth.
+        # Applied after the cycle rules so we only touch off-cycle
+        # edges once the cycle structure is close to satisfied.
+        if max_tree_depth is not None:
+            depths = _compute_depths(mapping, cycles)
+            if max(depths.values(), default=0) > max_tree_depth:
+                if _rule_reduce_tree_depth(
+                    mapping, all_species, max_tree_depth,
+                    max_indegree=max_indegree,
+                ):
+                    continue
+                break
+
         return mapping
 
     # Final validation: report any constraint we failed to satisfy.
@@ -489,6 +596,14 @@ def _pick_constrained_mapping(
             f"Could not reach min_cycles={min_cycles} "
             f"(achieved {len(cycles)})."
         )
+    if max_tree_depth is not None:
+        depths = _compute_depths(mapping, cycles)
+        worst = max(depths.values(), default=0)
+        if worst > max_tree_depth:
+            raise RuntimeError(
+                f"Could not enforce max_tree_depth={max_tree_depth} "
+                f"(deepest remaining chain = {worst})."
+            )
     return mapping
 
 
@@ -501,6 +616,7 @@ def generate_hardcoded_random_evolutions_header(
     min_cycles: int | None = None,
     min_cycle_length: int | None = None,
     max_avg_indegree: float | None = None,
+    max_tree_depth: int | None = None,
 ) -> None:
     if (
         max_indegree is None
@@ -508,6 +624,7 @@ def generate_hardcoded_random_evolutions_header(
         and min_cycles is None
         and min_cycle_length is None
         and max_avg_indegree is None
+        and max_tree_depth is None
     ):
         mapping: dict[str, str] = {}
         for s in all_species:
@@ -523,6 +640,7 @@ def generate_hardcoded_random_evolutions_header(
             min_cycles=min_cycles,
             min_cycle_length=min_cycle_length,
             max_avg_indegree=max_avg_indegree,
+            max_tree_depth=max_tree_depth,
         )
 
     lines = [
@@ -700,6 +818,16 @@ def parse_args() -> argparse.Namespace:
             "force edges to be spread across more distinct targets."
         ),
     )
+    parser.add_argument(
+        "--evo-max-tree-depth",
+        type=int,
+        default=None,
+        help=(
+            "When generating hardcoded random evolutions, cap the longest chain "
+            "from any leaf (in-degree 0 node) into its cycle. Cycle nodes have "
+            "depth 0; a leaf that reaches a cycle in k hops has depth k."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -733,6 +861,7 @@ def main() -> None:
             min_cycles=args.evo_min_cycles,
             min_cycle_length=args.evo_min_cycle_length,
             max_avg_indegree=args.evo_max_avg_indegree,
+            max_tree_depth=args.evo_max_tree_depth,
         )
     elif not random_evos_header.exists():
         default_lines = [

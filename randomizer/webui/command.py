@@ -56,6 +56,7 @@ class EvoConstraints:
     min_cycles: int | None = None
     min_cycle_length: int | None = None
     max_avg_indegree: float | None = None
+    max_tree_depth: int | None = None
 
 
 @dataclass
@@ -194,6 +195,8 @@ def to_randomize_args(
             argv.extend(["--evo-min-cycle-length", str(ec.min_cycle_length)])
         if ec.max_avg_indegree is not None and ec.max_avg_indegree > 0:
             argv.extend(["--evo-max-avg-indegree", str(ec.max_avg_indegree)])
+        if ec.max_tree_depth is not None and ec.max_tree_depth > 0:
+            argv.extend(["--evo-max-tree-depth", str(ec.max_tree_depth)])
 
     return argv
 

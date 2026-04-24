@@ -24,6 +24,7 @@ const defaultConfig = () => ({
         min_cycle_length: null,
         min_cycles: null,
         max_avg_indegree: null,
+        max_tree_depth: null,
     },
     fast_evolution_anim: false,
     nuzlocke_delete_fainted: false,
