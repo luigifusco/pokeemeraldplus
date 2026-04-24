@@ -97,6 +97,7 @@ class BuildConfig:
     money_for_moves: bool = False
     start_with_super_rare_candy: bool = False
     walk_through_walls: bool = False
+    webui_opponent: bool = False            # WEBUI_OPPONENT=1 — control opponent via browser UI
     opponent_stat_stage_mod: int = 0        # -6..+6
     player_stat_stage_mod: int = 0          # -6..+6
 
@@ -221,6 +222,7 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("no_pokeballs", "NO_POKEBALLS"),
     ("money_for_moves", "MONEY_FOR_MOVES"),
     ("start_with_super_rare_candy", "START_WITH_SUPER_RARE_CANDY"),
+    ("webui_opponent", "WEBUI_OPPONENT"),
 )
 
 
