@@ -184,13 +184,15 @@ function renderMoves() {
     state.selectedMove = null;
     $("targetPicker").classList.add("hidden");
 
-    if (isActionStage(mi)) {
-        // Single huge FIGHT button covering the grid.
+    const noMoves = isActionStage(mi);
+    if (noMoves) {
+        // Move list unavailable (e.g. forced move not yet revealed). Fall
+        // back to a single FIGHT button — engine will pick move 0.
         const btn = document.createElement("button");
         btn.className = "move-btn action-fight";
         btn.innerHTML = `<div class="move-name">FIGHT</div>
-                         <div class="move-pp">tap to attack — move chosen next</div>`;
-        btn.onclick = () => submit(ACTION.FIGHT, 0, 0);
+                         <div class="move-pp">no move list — auto-pick</div>`;
+        btn.onclick = () => submit(ACTION.FIGHT, 0, state.request.targetBattlerLeft);
         grid.appendChild(btn);
         return;
     }

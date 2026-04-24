@@ -49,6 +49,12 @@
 // 0 = none, 1 = action pending, 2 = move pending
 static EWRAM_DATA u8 sWebuiPendingAction[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA struct ChooseMoveStruct sWebuiPendingMoveInfo[MAX_BATTLERS_COUNT] = {0};
+// One-shot cache populated when the user picks FIGHT+move+target from the
+// web UI at action stage. The next OpponentHandleChooseMove for that
+// battler will consume it instead of issuing a second round-trip.
+static EWRAM_DATA u8 sWebuiHasQueuedMove[MAX_BATTLERS_COUNT] = {0};
+static EWRAM_DATA u8 sWebuiQueuedMoveSlot[MAX_BATTLERS_COUNT] = {0};
+static EWRAM_DATA u8 sWebuiQueuedTarget[MAX_BATTLERS_COUNT] = {0};
 #endif
 
 static void OpponentHandleGetMonData(void);
@@ -1578,22 +1584,19 @@ static void OpponentHandleChooseAction(void)
     {
         struct WebuiOppMonInfo controlledMon, targetLeft, targetRight;
         struct WebuiOppPartyInfo partyInfo;
-        struct WebuiOppMoveInfo zeroMoves;
+        struct WebuiOppMoveInfo moves;
         u8 left  = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
         u8 right = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
-        u8 i;
-
-        u8 *zm = (u8 *)&zeroMoves;
-        for (i = 0; i < sizeof(zeroMoves); i++)
-            zm[i] = 0;
 
         WebuiBuildMonInfo(gActiveBattler, &controlledMon);
         WebuiBuildMonInfo(left,  &targetLeft);
         WebuiBuildMonInfo(right, &targetRight);
+        WebuiBuildMoveInfo(gActiveBattler, &moves);
         WebuiBuildPartyInfo(gActiveBattler, &partyInfo);
 
-        WebuiOpponent_PostRequest(gActiveBattler, &controlledMon, left, &targetLeft, right, &targetRight, &zeroMoves, &partyInfo);
+        WebuiOpponent_PostRequest(gActiveBattler, &controlledMon, left, &targetLeft, right, &targetRight, &moves, &partyInfo);
         sWebuiPendingAction[gActiveBattler] = 1;
+        sWebuiHasQueuedMove[gActiveBattler] = 0;
         gBattlerControllerFuncs[gActiveBattler] = OpponentHandleChooseAction_WebuiWait;
         return;
     }
@@ -1621,6 +1624,29 @@ static void OpponentHandleChooseMove(void)
         struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
 
 #ifdef WEBUI_OPPONENT
+        if (sWebuiHasQueuedMove[gActiveBattler])
+        {
+            u8 moveSlot = sWebuiQueuedMoveSlot[gActiveBattler];
+            u8 targetBattler = sWebuiQueuedTarget[gActiveBattler];
+            u16 move;
+
+            sWebuiHasQueuedMove[gActiveBattler] = 0;
+            if (moveSlot >= MAX_MON_MOVES)
+                moveSlot = 0;
+            move = moveInfo->moves[moveSlot];
+
+            if (gBattleMoves[move].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
+                targetBattler = gActiveBattler;
+            if (gBattleMoves[move].target & MOVE_TARGET_BOTH)
+            {
+                targetBattler = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+                if (gAbsentBattlerFlags & gBitTable[targetBattler])
+                    targetBattler = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+            }
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, moveSlot | (targetBattler << 8));
+            OpponentBufferExecCompleted();
+            return;
+        }
         {
             struct WebuiOppMonInfo controlledMon, targetLeft, targetRight;
             struct WebuiOppMoveInfo moves;
@@ -2147,16 +2173,22 @@ static void WebuiBuildMonInfo(u8 battler, struct WebuiOppMonInfo *out)
 
 static void WebuiBuildMoveInfo(u8 battler, struct WebuiOppMoveInfo *out)
 {
-    struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[battler][4]);
     u8 i;
+    if (battler >= MAX_BATTLERS_COUNT || battler >= gBattlersCount)
+    {
+        for (i = 0; i < MAX_MON_MOVES; i++) { out->moves[i] = 0; out->currentPp[i] = 0; out->maxPp[i] = 0; }
+        out->monTypes[0] = 0; out->monTypes[1] = 0;
+        return;
+    }
     for (i = 0; i < MAX_MON_MOVES; i++)
     {
-        out->moves[i] = moveInfo->moves[i];
-        out->currentPp[i] = moveInfo->currentPp[i];
-        out->maxPp[i] = moveInfo->maxPp[i];
+        u16 move = gBattleMons[battler].moves[i];
+        out->moves[i] = move;
+        out->currentPp[i] = gBattleMons[battler].pp[i];
+        out->maxPp[i] = move ? CalculatePPWithBonus(move, gBattleMons[battler].ppBonuses, i) : 0;
     }
-    out->monTypes[0] = moveInfo->monTypes[0];
-    out->monTypes[1] = moveInfo->monTypes[1];
+    out->monTypes[0] = gBattleMons[battler].types[0];
+    out->monTypes[1] = gBattleMons[battler].types[1];
 }
 
 static void WebuiBuildPartyInfo(u8 battler, struct WebuiOppPartyInfo *out)
@@ -2219,6 +2251,9 @@ static void OpponentHandleChooseAction_WebuiWait(void)
     {
     case WEBUI_OPP_ACTION_FIGHT:
         engineAction = B_ACTION_USE_MOVE;
+        sWebuiQueuedMoveSlot[gActiveBattler] = p1;
+        sWebuiQueuedTarget[gActiveBattler] = p2;
+        sWebuiHasQueuedMove[gActiveBattler] = 1;
         break;
     case WEBUI_OPP_ACTION_SWITCH:
         engineAction = B_ACTION_SWITCH;
