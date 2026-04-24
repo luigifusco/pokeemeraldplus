@@ -102,7 +102,10 @@ def create_app(tcp_host: str = "127.0.0.1", tcp_port: int = 9877,
 
     @app.get("/")
     async def index() -> FileResponse:
-        return FileResponse(str(STATIC_DIR / "index.html"))
+        return FileResponse(
+            str(STATIC_DIR / "index.html"),
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+        )
 
     @app.get("/names.json")
     async def names() -> dict:
