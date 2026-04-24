@@ -46,12 +46,11 @@ const defaultConfig = () => ({
     fast_stat_anims: false,
     manual_battle_text: false,
     wait_time_divisor_pow: 0,
-    remote_opponent: false,
 });
 
 const state = {
     config: defaultConfig(),
-    buildOpts: { run_randomize: true, run_make: true, build_follower: false, jobs: null },
+    buildOpts: { run_randomize: true, run_make: true, jobs: null },
     currentRun: null,
 };
 
@@ -274,7 +273,6 @@ async function refreshPreview() {
             config: state.config,
             run_randomize: state.buildOpts.run_randomize,
             run_make: state.buildOpts.run_make,
-            build_follower: state.buildOpts.build_follower,
             jobs: state.buildOpts.jobs,
         };
         const resp = await api.preview(body);
@@ -392,13 +390,11 @@ function wireCrossField() {
 // ---------- Build opts bindings ----------
 function wireBuildOpts() {
     const runR = $("#opt-run-randomize"), runM = $("#opt-run-make");
-    const jobs = $("#opt-jobs"), foll = $("#opt-build-follower");
+    const jobs = $("#opt-jobs");
     runR.checked = state.buildOpts.run_randomize;
     runM.checked = state.buildOpts.run_make;
-    foll.checked = state.buildOpts.build_follower;
     runR.addEventListener("change", () => { state.buildOpts.run_randomize = runR.checked; debouncedPreview(); });
     runM.addEventListener("change", () => { state.buildOpts.run_make = runM.checked; debouncedPreview(); });
-    foll.addEventListener("change", () => { state.buildOpts.build_follower = foll.checked; debouncedPreview(); });
     jobs.addEventListener("input", () => {
         const v = parseInt(jobs.value, 10);
         state.buildOpts.jobs = isNaN(v) ? null : v;
@@ -425,7 +421,6 @@ function wireBuild() {
                 config: state.config,
                 run_randomize: state.buildOpts.run_randomize,
                 run_make: state.buildOpts.run_make,
-                build_follower: state.buildOpts.build_follower,
                 jobs: state.buildOpts.jobs,
             };
             const { run_id } = await api.build(body);
@@ -550,7 +545,7 @@ function wirePresets() {
             li.querySelector(".preset-load").addEventListener("click", () => {
                 const p = presets[name];
                 state.config = Object.assign(defaultConfig(), p.config);
-                state.buildOpts = Object.assign({ run_randomize: true, run_make: true, build_follower: false, jobs: null }, p.buildOpts);
+                state.buildOpts = Object.assign({ run_randomize: true, run_make: true, jobs: null }, p.buildOpts);
                 applyStateToDom();
                 debouncedPreview();
                 modal.classList.add("hidden");
@@ -578,7 +573,6 @@ function applyStateToDom() {
     });
     $("#opt-run-randomize").checked = state.buildOpts.run_randomize;
     $("#opt-run-make").checked      = state.buildOpts.run_make;
-    $("#opt-build-follower").checked = state.buildOpts.build_follower;
     $("#opt-jobs").value = state.buildOpts.jobs == null ? "" : String(state.buildOpts.jobs);
     updateEvoConstraintsEnabled();
     updateWaitDivisorLabel();

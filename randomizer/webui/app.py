@@ -20,7 +20,6 @@ from .command import (
     LevelScale,
     RandomMode,
     any_target_selected,
-    to_follower_make_args,
     to_make_args,
     to_randomize_args,
 )
@@ -83,8 +82,6 @@ class BuildConfigModel(BaseModel):
     fast_stat_anims: bool = False
     manual_battle_text: bool = False
     wait_time_divisor_pow: int = 0
-    # Build
-    remote_opponent: bool = False
 
     def to_dc(self) -> BuildConfig:
         data = self.model_dump()
@@ -97,7 +94,6 @@ class BuildRequest(BaseModel):
     config: BuildConfigModel
     run_randomize: bool = True
     run_make: bool = True
-    build_follower: bool = False
     jobs: Optional[int] = None
 
 
@@ -129,10 +125,6 @@ def create_app() -> FastAPI:
             steps.append({"label": "randomize", "argv": to_randomize_args(cfg)})
         if req.run_make:
             steps.append({"label": "make", "argv": to_make_args(cfg, jobs=req.jobs)})
-            if req.build_follower and cfg.remote_opponent:
-                follower = to_follower_make_args(cfg, jobs=req.jobs)
-                if follower is not None:
-                    steps.append({"label": "make follower", "argv": follower})
         return JSONResponse({"steps": steps})
 
     @app.post("/api/build")
@@ -150,10 +142,6 @@ def create_app() -> FastAPI:
             steps.append(Step(argv=to_randomize_args(cfg), cwd=cwd, label="randomize"))
         if req.run_make:
             steps.append(Step(argv=to_make_args(cfg, jobs=req.jobs), cwd=cwd, label="make"))
-            if req.build_follower and cfg.remote_opponent:
-                follower = to_follower_make_args(cfg, jobs=req.jobs)
-                if follower is not None:
-                    steps.append(Step(argv=follower, cwd=cwd, label="make follower"))
         if not steps:
             raise HTTPException(400, "Nothing to do: no targets selected and run_make is false.")
         run = manager.start(steps)

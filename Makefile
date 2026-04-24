@@ -10,14 +10,6 @@ KEEP_TEMPS  ?= 0
 FILE_NAME := pokeemerald
 BUILD_DIR := build
 
-# Remote opponent (leader/follower) build flags (enable with e.g. `make REMOTE_OPPONENT_LEADER=1`)
-REMOTE_OPPONENT_LEADER ?= 0
-REMOTE_OPPONENT_FOLLOWER ?= 0
-
-ifeq ($(REMOTE_OPPONENT_LEADER)$(REMOTE_OPPONENT_FOLLOWER),11)
-	$(error REMOTE_OPPONENT_LEADER and REMOTE_OPPONENT_FOLLOWER cannot both be 1)
-endif
-
 # Builds the ROM using a modern compiler
 MODERN      ?= 0
 # Compares the ROM to a checksum of the original - only makes sense using when non-modern
@@ -78,47 +70,24 @@ endif
 # Output ROM name:
 # - Default: uses FILE_NAME (override with e.g. `make FILE_NAME=myhack`)
 # - Or override directly: `make ROM_NAME_OVERRIDE=myrom.gba`
-# - Follower build: defaults to follower.gba
-# - Leader remote-opponent build: uses the normal ROM name (pokeemerald.gba)
 ROM_NAME_OVERRIDE ?=
 MODERN_ROM_NAME_OVERRIDE ?=
 
-ifeq ($(REMOTE_OPPONENT_FOLLOWER),1)
-	ROM_NAME := follower.gba
-	MODERN_ROM_NAME := follower_modern.gba
-
-	ifneq ($(ROM_NAME_OVERRIDE),)
-		ROM_NAME := $(ROM_NAME_OVERRIDE)
-	endif
-	ifneq ($(MODERN_ROM_NAME_OVERRIDE),)
-		MODERN_ROM_NAME := $(MODERN_ROM_NAME_OVERRIDE)
-	endif
+ifneq ($(ROM_NAME_OVERRIDE),)
+	ROM_NAME := $(ROM_NAME_OVERRIDE)
 else
-	ifneq ($(ROM_NAME_OVERRIDE),)
-		ROM_NAME := $(ROM_NAME_OVERRIDE)
-	else
-		ROM_NAME := $(FILE_NAME).gba
-	endif
-
-	ifneq ($(MODERN_ROM_NAME_OVERRIDE),)
-		MODERN_ROM_NAME := $(MODERN_ROM_NAME_OVERRIDE)
-	else
-		MODERN_ROM_NAME := $(FILE_NAME)_modern.gba
-	endif
+	ROM_NAME := $(FILE_NAME).gba
 endif
 
-# Object directories. Remote-opponent variants use separate build dirs so changing flags
-# does not accidentally reuse stale objects.
-ifeq ($(REMOTE_OPPONENT_FOLLOWER),1)
-	OBJ_DIR_NAME := $(BUILD_DIR)/emerald_remote_follower
-	MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern_remote_follower
-else ifeq ($(REMOTE_OPPONENT_LEADER),1)
-	OBJ_DIR_NAME := $(BUILD_DIR)/emerald_remote_leader
-	MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern_remote_leader
+ifneq ($(MODERN_ROM_NAME_OVERRIDE),)
+	MODERN_ROM_NAME := $(MODERN_ROM_NAME_OVERRIDE)
 else
-	OBJ_DIR_NAME := $(BUILD_DIR)/emerald
-	MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern
+	MODERN_ROM_NAME := $(FILE_NAME)_modern.gba
 endif
+
+# Object directories.
+OBJ_DIR_NAME := $(BUILD_DIR)/emerald
+MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern
 
 ELF_NAME := $(ROM_NAME:.gba=.elf)
 MAP_NAME := $(ROM_NAME:.gba=.map)
@@ -162,19 +131,6 @@ INCLUDE_SCANINC_ARGS := $(INCLUDE_DIRS:%=-I %)
 
 O_LEVEL ?= 2
 CPPFLAGS := $(INCLUDE_CPP_ARGS) -Wno-trigraphs -DMODERN=$(MODERN)
-
-ifeq ($(REMOTE_OPPONENT_LEADER),1)
-	CPPFLAGS += -DREMOTE_OPPONENT_LEADER
-endif
-ifeq ($(REMOTE_OPPONENT_FOLLOWER),1)
-	CPPFLAGS += -DREMOTE_OPPONENT_FOLLOWER
-endif
-
-ifeq ($(REMOTE_OPPONENT_FOLLOWER),1)
-	ifeq ($(COMPARE),1)
-		$(error compare is not supported with REMOTE_OPPONENT_FOLLOWER=1)
-	endif
-endif
 
 # Optional feature flags (enable with e.g. `make RANDOM_EVOLUTIONS=1`)
 RANDOM_EVOLUTIONS ?= 0

@@ -22,7 +22,6 @@
 #include "text.h"
 #include "intro.h"
 #include "main.h"
-#include "remote_opponent.h"
 #include "trainer_hill.h"
 #include "constants/rgb.h"
 
@@ -171,11 +170,6 @@ void AgbMain(void)
 
 static void UpdateLinkAndCallCallbacks(void)
 {
-#ifdef REMOTE_OPPONENT_LEADER
-    // Bring up the link as early as possible so the follower can complete the
-    // player-data exchange at boot, instead of waiting until the first battle.
-    RemoteOpponent_OpenLinkIfNeeded();
-#endif
     if (!HandleLinkConnection())
         CallCallbacks();
 }
@@ -187,11 +181,7 @@ static void InitMainCallbacks(void)
     gMain.vblankCounter2 = 0;
     gMain.callback1 = NULL;
 
-#ifdef REMOTE_OPPONENT_FOLLOWER
-    SetMainCallback2(CB2_InitRemoteOpponentFollower);
-#else
     SetMainCallback2(CB2_InitCopyrightScreenAfterBootup);
-#endif
     gSaveBlock2Ptr = &gSaveblock2.block;
     gPokemonStoragePtr = &gPokemonStorage.block;
 }

@@ -9,9 +9,8 @@ This module replaces that with:
 
   * :class:`EvoConstraints`, :class:`LevelScale`, :class:`BuildConfig`
     — plain dataclasses holding all the state the GUI collects.
-  * :func:`to_randomize_args` / :func:`to_make_args` /
-    :func:`to_follower_make_args` — pure functions mapping a config
-    to argv lists.
+  * :func:`to_randomize_args` / :func:`to_make_args` — pure functions
+    mapping a config to argv lists.
 
 The Qt tabs populate a :class:`BuildConfig` via ``collect()`` methods
 and the Build tab calls the ``to_*_args`` functions; no Qt import
@@ -110,9 +109,6 @@ class BuildConfig:
     fast_stat_anims: bool = False
     manual_battle_text: bool = False
     wait_time_divisor_pow: int = 0          # 0..5 => divisor = 1..32
-
-    # --- Build & Run tab ---
-    remote_opponent: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -258,25 +254,4 @@ def to_make_args(
     pow_ = _clamp(cfg.wait_time_divisor_pow, 0, 5)
     argv.append(f"WAIT_TIME_DIVISOR={1 << pow_}")
 
-    if cfg.remote_opponent:
-        argv.append("REMOTE_OPPONENT_LEADER=1")
-
     return argv
-
-
-def to_follower_make_args(
-    cfg: BuildConfig,
-    jobs: int | None = None,
-) -> list[str] | None:
-    """Follower ROM build -- produced only when remote-opponent mode is on.
-
-    The follower is built with a minimal flag set (just
-    REMOTE_OPPONENT_FOLLOWER=1); it lives side-by-side with the leader
-    ROM so two players can connect without having to rebuild.
-    """
-
-    if not cfg.remote_opponent:
-        return None
-
-    jobs = jobs or (os.cpu_count() or 1)
-    return ["make", f"-j{jobs}", "REMOTE_OPPONENT_FOLLOWER=1"]
