@@ -275,24 +275,31 @@ def _rule_merge_cycles(
 
 
 def _rule_split_cycle(
-    mapping: dict[str, str], cycle: list[str], target_max: int | None
+    mapping: dict[str, str],
+    cycle: list[str],
+    target_max: int | None,
+    target_min: int | None = None,
 ) -> bool:
     """Rule 3: swap two edges inside one cycle to split it in two.
 
     Cycle n0 -> n1 -> ... -> n(L-1) -> n0. Picking edges n_i -> n_(i+1)
     and n_j -> n_(j+1) and swapping their targets gives two cycles of
     length k = j - i and L - k. Every node's in-degree is preserved.
-    Disallows length-1 halves (self-loops are forbidden)."""
+    Disallows length-1 halves (self-loops are forbidden) and, when
+    target_min is given, halves shorter than target_min.
+    """
     L = len(cycle)
-    if L < 4:
+    lo = max(2, target_min if target_min is not None else 2)
+    hi = L - lo
+    if hi < lo:
         return False
     if target_max is not None:
-        lo = max(2, L - target_max)
-        hi = min(L - 2, target_max)
-        if lo > hi:
-            lo, hi = 2, L - 2
-    else:
-        lo, hi = 2, L - 2
+        # Prefer splits keeping both halves within max_cycle_length.
+        lo_pref = max(lo, L - target_max)
+        hi_pref = min(hi, target_max)
+        if lo_pref <= hi_pref:
+            lo, hi = lo_pref, hi_pref
+        # else leave lo..hi unchanged: subsequent iterations will trim.
     k = random.randint(lo, hi)
     i = random.randrange(L)
     j = (i + k) % L
@@ -386,7 +393,11 @@ def _pick_constrained_mapping(
             too_long = [c for c in cycles if len(c) > max_cycle_length]
             if too_long:
                 cyc = max(too_long, key=len)
-                if _rule_split_cycle(mapping, cyc, target_max=max_cycle_length):
+                if _rule_split_cycle(
+                    mapping, cyc,
+                    target_max=max_cycle_length,
+                    target_min=min_cycle_length,
+                ):
                     continue
                 if _rule_extend_cycle(mapping, cyc, all_species):
                     continue
@@ -409,28 +420,43 @@ def _pick_constrained_mapping(
 
         # Rule 3/2: raise the cycle count by splitting cycles.
         if min_cycles is not None and len(cycles) < min_cycles:
-            splittable = [
-                c for c in cycles
-                if len(c) >= 4
-                and (
-                    min_cycle_length is None
-                    or len(c) >= 2 * min_cycle_length
-                )
-            ]
+            # A cycle is split-valid iff both halves can be at least
+            # max(2, min_cycle_length) long.
+            min_half = max(2, min_cycle_length or 2)
+            splittable = [c for c in cycles if len(c) >= 2 * min_half]
             if splittable:
-                cyc = max(splittable, key=len)
-                if _rule_split_cycle(mapping, cyc, target_max=max_cycle_length):
+                # Prefer the smallest splittable cycle: splitting
+                # short cycles first leaves the big ones intact as a
+                # reservoir for further splits.
+                cyc = min(splittable, key=len)
+                if _rule_split_cycle(
+                    mapping, cyc,
+                    target_max=max_cycle_length,
+                    target_min=min_cycle_length,
+                ):
                     continue
-            # No cycle long enough to split: grow a short one first.
-            growable = [c for c in cycles if len(c) < 4]
-            random.shuffle(growable)
+            # No splittable cycle: grow one (the shortest, cheapest)
+            # toward 2*min_half by splicing in a tail. The strategy
+            # "absorb tails into a cycle, then halve" is the most
+            # efficient way to raise the cycle count under a tight
+            # max_cycle_length.
+            growable = sorted(cycles, key=len)
             did = False
             for cyc in growable:
+                if len(cyc) >= 2 * min_half:
+                    continue  # already splittable; handled above
                 if _rule_extend_cycle(mapping, cyc, all_species):
                     did = True
                     break
             if did:
                 continue
+            # No tails left. Merge two cycles, after which the result
+            # may be splittable (and net cycle count stays the same,
+            # but a subsequent split will lift it).
+            if len(cycles) >= 2:
+                sample = random.sample(cycles, 2)
+                if _rule_merge_cycles(mapping, sample[0], sample[1]):
+                    continue
             break
 
         return mapping
