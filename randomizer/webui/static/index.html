@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pokeemeraldplus randomizer</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%237a5cff'/%3E%3Cpath d='M4 50h92' stroke='%23111' stroke-width='8'/%3E%3Ccircle cx='50' cy='50' r='14' fill='%23111'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23fff'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <div>
+                <div class="brand-title">pokeemeraldplus</div>
+                <div class="brand-sub">randomizer &amp; build</div>
+            </div>
+        </div>
+        <nav class="nav">
+            <button class="nav-item active" data-section="randomizer">
+                <span class="nav-icon">🎲</span> Randomizer
+            </button>
+            <button class="nav-item" data-section="evolutions">
+                <span class="nav-icon">🧬</span> Evolutions
+            </button>
+            <button class="nav-item" data-section="gameplay">
+                <span class="nav-icon">⚔️</span> Gameplay
+            </button>
+            <button class="nav-item" data-section="qol">
+                <span class="nav-icon">⚡</span> QoL &amp; Speed
+            </button>
+            <button class="nav-item" data-section="build">
+                <span class="nav-icon">🔨</span> Build &amp; Run
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="status-pill" id="health-pill">
+                <span class="dot"></span>
+                <span id="health-text">connecting…</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <h1 id="section-title">Randomizer</h1>
+            <div class="topbar-actions">
+                <button class="btn btn-ghost" id="log-toggle">
+                    <span>Log</span>
+                    <span class="chevron">▾</span>
+                </button>
+            </div>
+        </header>
+
+        <section class="panel" data-section="randomizer">
+            <p class="empty">Randomizer controls land in phase 6.</p>
+        </section>
+        <section class="panel hidden" data-section="evolutions">
+            <p class="empty">Evolution controls land in phase 7.</p>
+        </section>
+        <section class="panel hidden" data-section="gameplay">
+            <p class="empty">Gameplay controls land in phase 8.</p>
+        </section>
+        <section class="panel hidden" data-section="qol">
+            <p class="empty">QoL &amp; Speed controls land in phase 9.</p>
+        </section>
+        <section class="panel hidden" data-section="build">
+            <p class="empty">Build controls land in phase 10.</p>
+        </section>
+    </main>
+
+    <aside class="log-drawer" id="log-drawer">
+        <div class="log-header">
+            <div class="log-title">
+                <span class="led" id="log-led"></span>
+                <span id="log-status">idle</span>
+            </div>
+            <div class="log-actions">
+                <button class="btn btn-ghost" id="log-clear">Clear</button>
+                <button class="btn btn-ghost" id="log-copy">Copy</button>
+                <button class="btn btn-ghost" id="log-close">✕</button>
+            </div>
+        </div>
+        <pre class="log-body" id="log-body"></pre>
+    </aside>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
