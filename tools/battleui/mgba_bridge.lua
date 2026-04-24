@@ -396,7 +396,8 @@ local function err_is_transient(err)
     if type(err) == "string" then
         local e = err:lower()
         if e:find("again") or e:find("timeout") or e:find("would block")
-           or e:find("temporarily unavailable") or e:find("in progress") then
+           or e:find("temporarily unavailable") or e:find("temporary failure")
+           or e:find("in progress") then
             return true
         end
     end
