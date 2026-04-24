@@ -121,11 +121,17 @@ def create_app() -> FastAPI:
         steps: list[dict] = []
         if req.run_randomize and any_target_selected(cfg):
             steps.append({"label": "randomize", "argv": to_randomize_args(cfg)})
+        elif req.run_randomize and (cfg.level_scale.wild_percent
+                                    or cfg.level_scale.trainer_percent
+                                    or cfg.evo_mode != EvoMode.VANILLA):
+            # No targets but we still have scaling or evo work to do.
+            steps.append({"label": "randomize", "argv": to_randomize_args(cfg)})
         if req.run_make:
             steps.append({"label": "make", "argv": to_make_args(cfg, jobs=req.jobs)})
-            if req.build_follower:
-                steps.append({"label": "make follower",
-                              "argv": to_follower_make_args(cfg, jobs=req.jobs)})
+            if req.build_follower and cfg.remote_opponent:
+                follower = to_follower_make_args(cfg, jobs=req.jobs)
+                if follower is not None:
+                    steps.append({"label": "make follower", "argv": follower})
         return JSONResponse({"steps": steps})
 
     @app.post("/api/build")
@@ -133,13 +139,20 @@ def create_app() -> FastAPI:
         cfg = req.config.to_dc()
         cwd = str(REPO_ROOT)
         steps: list[Step] = []
-        if req.run_randomize and any_target_selected(cfg):
+        need_randomize = req.run_randomize and (
+            any_target_selected(cfg)
+            or cfg.level_scale.wild_percent
+            or cfg.level_scale.trainer_percent
+            or cfg.evo_mode != EvoMode.VANILLA
+        )
+        if need_randomize:
             steps.append(Step(argv=to_randomize_args(cfg), cwd=cwd, label="randomize"))
         if req.run_make:
             steps.append(Step(argv=to_make_args(cfg, jobs=req.jobs), cwd=cwd, label="make"))
-            if req.build_follower:
-                steps.append(Step(argv=to_follower_make_args(cfg, jobs=req.jobs),
-                                  cwd=cwd, label="make follower"))
+            if req.build_follower and cfg.remote_opponent:
+                follower = to_follower_make_args(cfg, jobs=req.jobs)
+                if follower is not None:
+                    steps.append(Step(argv=follower, cwd=cwd, label="make follower"))
         if not steps:
             raise HTTPException(400, "Nothing to do: no targets selected and run_make is false.")
         run = manager.start(steps)
@@ -151,6 +164,40 @@ def create_app() -> FastAPI:
         if not ok:
             raise HTTPException(404, "run not found")
         return JSONResponse({"ok": True})
+
+    @app.post("/api/evolution-graph")
+    async def evolution_graph() -> JSONResponse:
+        """Render the current random_evolutions.h as a PNG.
+
+        Returns a URL that resolves under /api/evolution-graph/image.
+        The output PNG lives under randomizer/ next to the script.
+        """
+        import sys
+        script = REPO_ROOT / "randomizer" / "evolution_graph.py"
+        if not script.exists():
+            raise HTTPException(404, "evolution_graph.py not found")
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, str(script),
+            cwd=str(REPO_ROOT),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        output, _ = await proc.communicate()
+        out_text = output.decode("utf-8", errors="replace")
+        if proc.returncode != 0:
+            raise HTTPException(500, f"renderer failed:\n{out_text}")
+        return JSONResponse({
+            "ok": True,
+            "image_url": "/api/evolution-graph/image",
+            "log": out_text,
+        })
+
+    @app.get("/api/evolution-graph/image")
+    def evolution_graph_image():
+        png = REPO_ROOT / "randomizer" / "evolution_paths.png"
+        if not png.exists():
+            raise HTTPException(404, "render first via POST /api/evolution-graph")
+        return FileResponse(png, media_type="image/png")
 
     @app.get("/api/runs/{run_id}/events")
     async def events(run_id: str, request: Request) -> EventSourceResponse:

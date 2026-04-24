@@ -17,21 +17,11 @@
             </div>
         </div>
         <nav class="nav">
-            <button class="nav-item active" data-section="randomizer">
-                <span class="nav-icon">🎲</span> Randomizer
-            </button>
-            <button class="nav-item" data-section="evolutions">
-                <span class="nav-icon">🧬</span> Evolutions
-            </button>
-            <button class="nav-item" data-section="gameplay">
-                <span class="nav-icon">⚔️</span> Gameplay
-            </button>
-            <button class="nav-item" data-section="qol">
-                <span class="nav-icon">⚡</span> QoL &amp; Speed
-            </button>
-            <button class="nav-item" data-section="build">
-                <span class="nav-icon">🔨</span> Build &amp; Run
-            </button>
+            <button class="nav-item active" data-section="randomizer"><span class="nav-icon">🎲</span> Randomizer</button>
+            <button class="nav-item" data-section="evolutions"><span class="nav-icon">🧬</span> Evolutions</button>
+            <button class="nav-item" data-section="gameplay"><span class="nav-icon">⚔️</span> Gameplay</button>
+            <button class="nav-item" data-section="qol"><span class="nav-icon">⚡</span> QoL &amp; Speed</button>
+            <button class="nav-item" data-section="build"><span class="nav-icon">🔨</span> Build &amp; Run</button>
         </nav>
         <div class="sidebar-footer">
             <div class="status-pill" id="health-pill">
@@ -45,27 +35,206 @@
         <header class="topbar">
             <h1 id="section-title">Randomizer</h1>
             <div class="topbar-actions">
-                <button class="btn btn-ghost" id="log-toggle">
-                    <span>Log</span>
-                    <span class="chevron">▾</span>
-                </button>
+                <button class="btn btn-ghost" id="preset-menu-btn" title="Presets">⊞ Presets</button>
+                <button class="btn btn-ghost" id="log-toggle"><span>Log</span><span class="chevron">▾</span></button>
             </div>
         </header>
 
+        <!-- ===================== RANDOMIZER ===================== -->
         <section class="panel" data-section="randomizer">
-            <p class="empty">Randomizer controls land in phase 6.</p>
+            <div class="group">
+                <div class="group-title">Targets</div>
+                <div class="group-desc">What should the randomizer touch? Leaving everything off still lets you apply level scaling / evolution work via the tabs below.</div>
+                <label class="check"><input type="checkbox" data-bind="randomize_wild" /><span class="box"></span> Wild Pokémon</label>
+                <label class="check"><input type="checkbox" data-bind="randomize_starters" /><span class="box"></span> Starters</label>
+                <label class="check"><input type="checkbox" data-bind="randomize_trainers" /><span class="box"></span> Trainer teams</label>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Distribution</div>
+                <div class="group-desc">How random picks are reused across the game.</div>
+                <label class="radio"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="global" /><span class="box"></span>
+                    <div class="row-label"><strong>Global</strong><small>One species picked once, substituted everywhere it appears.</small></div></label>
+                <label class="radio"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="per-occurrence" /><span class="box"></span>
+                    <div class="row-label"><strong>Per occurrence</strong><small>Every instance rolls independently (chaotic).</small></div></label>
+                <label class="radio"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="per-map" /><span class="box"></span>
+                    <div class="row-label"><strong>Per map, consistent</strong><small>One pick per map; the same species persists across routes/floors.</small></div></label>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Level scaling</div>
+                <div class="group-desc">Scale wild and trainer levels by a percentage. 0 = unchanged. Negative values weaken encounters.</div>
+                <div class="row">
+                    <div class="row-label"><strong>Wild %</strong><small>Applies to wild encounters.</small></div>
+                    <input type="range" min="-100" max="100" step="5" data-bind="level_scale.wild_percent" />
+                    <input type="number" class="num-mirror" min="-100" max="100" data-bind="level_scale.wild_percent" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Trainer %</strong><small>Applies to every trainer team slot.</small></div>
+                    <input type="range" min="-100" max="100" step="5" data-bind="level_scale.trainer_percent" />
+                    <input type="number" class="num-mirror" min="-100" max="100" data-bind="level_scale.trainer_percent" />
+                </div>
+                <div class="row">
+                    <label class="check"><input type="checkbox" id="level-link" /><span class="box"></span> Link sliders (wild + trainer move together)</label>
+                </div>
+            </div>
         </section>
+
+        <!-- ===================== EVOLUTIONS ===================== -->
         <section class="panel hidden" data-section="evolutions">
-            <p class="empty">Evolution controls land in phase 7.</p>
+            <div class="group">
+                <div class="group-title">Evolution mode</div>
+                <div class="group-desc">Vanilla keeps canonical evolutions. Random reshuffles every time a Pokémon would evolve. Hardcoded picks one random evolution per species up-front and writes it to a header so every playthrough on this build evolves the same way.</div>
+                <label class="radio"><input type="radio" name="evo_mode" data-bind-radio="evo_mode" value="vanilla" /><span class="box"></span>
+                    <div class="row-label"><strong>Vanilla</strong><small>Stock evolutions.</small></div></label>
+                <label class="radio"><input type="radio" name="evo_mode" data-bind-radio="evo_mode" value="random" /><span class="box"></span>
+                    <div class="row-label"><strong>Random each evolution</strong><small>Every evolution event rolls fresh. Wild.</small></div></label>
+                <label class="radio"><input type="radio" name="evo_mode" data-bind-radio="evo_mode" value="hardcoded" /><span class="box"></span>
+                    <div class="row-label"><strong>Hardcoded random</strong><small>Deterministic per-species evolution map, baked into the ROM.</small></div></label>
+            </div>
+
+            <div class="group" id="evo-constraints-group">
+                <div class="group-title">Hardcoded constraints</div>
+                <div class="group-desc">Shape of the evolution graph. Only used when the mode above is <em>Hardcoded random</em>. Leave empty for no constraint. The generator iteratively swaps/splices to meet every active target.</div>
+                <div class="row">
+                    <div class="row-label"><strong>Max in-degree</strong><small>Most Pokémon that can evolve INTO any single species.</small></div>
+                    <input type="number" min="0" data-bind="evo_constraints.max_indegree" placeholder="—" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Max cycle length</strong><small>Longest evolution cycle allowed.</small></div>
+                    <input type="number" min="0" data-bind="evo_constraints.max_cycle_length" placeholder="—" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Min cycle length</strong><small>Shortest allowed cycle (when cycles exist).</small></div>
+                    <input type="number" min="0" data-bind="evo_constraints.min_cycle_length" placeholder="—" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Min cycles</strong><small>Minimum number of evolution cycles in the graph.</small></div>
+                    <input type="number" min="0" data-bind="evo_constraints.min_cycles" placeholder="—" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Max average in-degree</strong><small>Caps branching factor (float).</small></div>
+                    <input type="number" min="0" step="0.05" data-bind="evo_constraints.max_avg_indegree" placeholder="—" />
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Animation</div>
+                <label class="check"><input type="checkbox" data-bind="fast_evolution_anim" /><span class="box"></span>
+                    <span><strong>Fast evolution animation</strong> — skip the long cross-fade.</span></label>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Evolution graph</div>
+                <div class="group-desc">Render the current <code>random_evolutions.h</code> to a PNG so you can see the structure (cycles highlighted). Requires <code>graphviz</code>.</div>
+                <div class="row" style="gap: 16px;">
+                    <button class="btn btn-accent" id="render-graph-btn">🎨 Render graph</button>
+                    <span id="render-graph-status" class="dim"></span>
+                </div>
+                <div id="render-graph-container" style="margin-top: 16px;"></div>
+            </div>
         </section>
+
+        <!-- ===================== GAMEPLAY ===================== -->
         <section class="panel hidden" data-section="gameplay">
-            <p class="empty">Gameplay controls land in phase 8.</p>
+            <div class="group">
+                <div class="group-title">EXP &amp; economy</div>
+                <label class="check"><input type="checkbox" data-bind="no_exp" /><span class="box"></span> <span><strong>No EXP</strong> — nobody levels up.</span></label>
+                <label class="check"><input type="checkbox" data-bind="negative_exp" /><span class="box"></span> <span><strong>Negative EXP</strong> — lose EXP on defeat.</span></label>
+                <label class="check"><input type="checkbox" data-bind="no_pokeballs" /><span class="box"></span> <span><strong>No Poké Balls</strong> — catching disabled.</span></label>
+                <label class="check"><input type="checkbox" data-bind="money_for_moves" /><span class="box"></span> <span><strong>Pay per move</strong> — each move costs $.</span></label>
+                <label class="check"><input type="checkbox" data-bind="start_with_super_rare_candy" /><span class="box"></span> <span><strong>Start with Super Rare Candy.</strong></span></label>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Battle rules</div>
+                <label class="check"><input type="checkbox" data-bind="force_doubles" /><span class="box"></span> <span><strong>Force double battles.</strong></span></label>
+                <label class="check"><input type="checkbox" data-bind="steal_trainer_team" /><span class="box"></span> <span><strong>Steal trainer team</strong> — defeat a trainer, take their Pokémon.</span></label>
+                <label class="check"><input type="checkbox" data-bind="nuzlocke_delete_fainted" /><span class="box"></span> <span><strong>Nuzlocke: delete fainted.</strong></span></label>
+                <label class="check"><input type="checkbox" data-bind="walk_through_walls" /><span class="box"></span> <span><strong>Walk through walls</strong> (debug).</span></label>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Stat stage modifiers</div>
+                <div class="group-desc">Permanent stat-stage bonus applied at the start of each battle (-6..+6).</div>
+                <div class="row">
+                    <div class="row-label"><strong>Player</strong><small>Applied to your active Pokémon.</small></div>
+                    <input type="range" min="-6" max="6" step="1" data-bind="player_stat_stage_mod" />
+                    <input type="number" class="num-mirror" min="-6" max="6" data-bind="player_stat_stage_mod" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Opponent</strong><small>Applied to every opposing Pokémon.</small></div>
+                    <input type="range" min="-6" max="6" step="1" data-bind="opponent_stat_stage_mod" />
+                    <input type="number" class="num-mirror" min="-6" max="6" data-bind="opponent_stat_stage_mod" />
+                </div>
+                <div class="row">
+                    <label class="check"><input type="checkbox" id="stat-mirror" /><span class="box"></span> Mirror (player = −opponent)</label>
+                </div>
+            </div>
         </section>
+
+        <!-- ===================== QoL ===================== -->
         <section class="panel hidden" data-section="qol">
-            <p class="empty">QoL &amp; Speed controls land in phase 9.</p>
+            <div class="group">
+                <div class="group-title">Speed &amp; skips</div>
+                <div class="group-desc">Speed up the game and skip the usual cutscenes / waits. All optional.</div>
+                <label class="check"><input type="checkbox" data-bind="walk_fast" /><span class="box"></span> Walk fast (running shoes everywhere)</label>
+                <label class="check"><input type="checkbox" data-bind="instant_text" /><span class="box"></span> Instant text</label>
+                <label class="check"><input type="checkbox" data-bind="skip_battle_transition" /><span class="box"></span> Skip battle transition</label>
+                <label class="check"><input type="checkbox" data-bind="skip_intro_cutscene" /><span class="box"></span> Skip intro cutscene</label>
+                <label class="check"><input type="checkbox" data-bind="skip_fade_anims" /><span class="box"></span> Skip fade animations</label>
+                <label class="check"><input type="checkbox" data-bind="fast_stat_anims" /><span class="box"></span> Fast stat animations</label>
+                <label class="check"><input type="checkbox" data-bind="manual_battle_text" /><span class="box"></span> Manual advance of battle text</label>
+                <div class="row" style="margin-top: 8px;">
+                    <button class="btn" id="qol-enable-all">Enable all</button>
+                    <button class="btn btn-ghost" id="qol-clear-all">Reset</button>
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Wait time divisor</div>
+                <div class="group-desc">Global in-game wait divisor. <code>2^pow</code>, so 0 = 1×, 1 = 2×, …, 5 = 32×.</div>
+                <div class="row">
+                    <div class="row-label"><strong>Divisor power</strong><small id="wait-divisor-label">1× (slowest)</small></div>
+                    <input type="range" min="0" max="5" step="1" data-bind="wait_time_divisor_pow" />
+                    <input type="number" class="num-mirror" min="0" max="5" data-bind="wait_time_divisor_pow" />
+                </div>
+            </div>
         </section>
+
+        <!-- ===================== BUILD ===================== -->
         <section class="panel hidden" data-section="build">
-            <p class="empty">Build controls land in phase 10.</p>
+            <div class="group">
+                <div class="group-title">Pipeline</div>
+                <div class="group-desc">The randomize step reshuffles data files; make builds the ROM. Both run by default. Toggle off if you want one without the other.</div>
+                <label class="check"><input type="checkbox" id="opt-run-randomize" checked /><span class="box"></span> Run randomizer</label>
+                <label class="check"><input type="checkbox" id="opt-run-make" checked /><span class="box"></span> Run <code>make</code></label>
+                <div class="row">
+                    <div class="row-label"><strong>Parallel jobs</strong><small>Defaults to all CPUs.</small></div>
+                    <input type="number" min="1" max="64" id="opt-jobs" placeholder="auto" style="width:100px;" />
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Remote opponent</div>
+                <label class="check"><input type="checkbox" data-bind="remote_opponent" /><span class="box"></span>
+                    <span><strong>REMOTE_OPPONENT_LEADER</strong> — enable the remote opponent system.</span></label>
+                <label class="check"><input type="checkbox" id="opt-build-follower" /><span class="box"></span>
+                    <span><strong>Also build the follower ROM</strong> (REMOTE_OPPONENT_FOLLOWER). Runs after the leader.</span></label>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Command preview</div>
+                <div class="group-desc">Exactly what will run. Updated live from your settings.</div>
+                <pre class="preview" id="preview-pane">Loading…</pre>
+            </div>
+
+            <div class="build-actions">
+                <button class="btn btn-accent" id="build-btn">▶ Build</button>
+                <button class="btn btn-danger" id="stop-btn" disabled>■ Stop</button>
+                <button class="btn btn-ghost" id="build-clear-btn">Clear log</button>
+                <div class="build-status" id="build-status"></div>
+            </div>
         </section>
     </main>
 
@@ -83,6 +252,23 @@
         </div>
         <pre class="log-body" id="log-body"></pre>
     </aside>
+
+    <!-- Preset modal -->
+    <div class="modal hidden" id="preset-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Presets</h2>
+                <button class="btn btn-ghost" id="preset-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <input type="text" id="preset-name" placeholder="Preset name" style="flex:1" />
+                    <button class="btn btn-accent" id="preset-save">Save current</button>
+                </div>
+                <ul class="preset-list" id="preset-list"></ul>
+            </div>
+        </div>
+    </div>
 
     <script src="/static/app.js"></script>
 </body>
