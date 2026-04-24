@@ -134,3 +134,6 @@ Your friend opens:
 https://luigifusco.dev/?token=some-long-random-string
 ```
 
+For a full public deployment walkthrough (systemd unit, nginx TLS config,
+firewall, troubleshooting) see [`docs/battleui-remote.md`](docs/battleui-remote.md).
+
