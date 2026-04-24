@@ -15,7 +15,6 @@ from randomizer.webui.command import (
     EvoMode,
     LevelScale,
     RandomMode,
-    to_follower_make_args,
     to_make_args,
     to_randomize_args,
 )
@@ -159,18 +158,11 @@ class MakeArgsTest(unittest.TestCase):
         self.assertIn("OPPONENT_STAT_STAGE_MOD=6", args)
         self.assertIn("PLAYER_STAT_STAGE_MOD=-6", args)
 
-    def test_remote_opponent_toggle(self) -> None:
-        on = to_make_args(BuildConfig(remote_opponent=True), jobs=1)
-        self.assertIn("REMOTE_OPPONENT_LEADER=1", on)
-        off = to_make_args(BuildConfig(remote_opponent=False), jobs=1)
-        self.assertNotIn("REMOTE_OPPONENT_LEADER=1", off)
-
-
-class FollowerArgsTest(unittest.TestCase):
-    def test_follower_only_when_remote_opponent_on(self) -> None:
-        self.assertIsNone(to_follower_make_args(BuildConfig()))
-        args = to_follower_make_args(BuildConfig(remote_opponent=True), jobs=2)
-        self.assertEqual(args, ["make", "-j2", "REMOTE_OPPONENT_FOLLOWER=1"])
+    def test_webui_opponent_toggle(self) -> None:
+        on = to_make_args(BuildConfig(webui_opponent=True), jobs=1)
+        self.assertIn("WEBUI_OPPONENT=1", on)
+        off = to_make_args(BuildConfig(webui_opponent=False), jobs=1)
+        self.assertIn("WEBUI_OPPONENT=0", off)
 
 
 if __name__ == "__main__":

@@ -19,7 +19,6 @@ from .command import (
     EvoMode,
     LevelScale,
     RandomMode,
-    any_target_selected,
     to_make_args,
     to_randomize_args,
 )
@@ -117,12 +116,11 @@ def create_app() -> FastAPI:
     def preview(req: BuildRequest) -> JSONResponse:
         cfg = req.config.to_dc()
         steps: list[dict] = []
-        if req.run_randomize and any_target_selected(cfg):
-            steps.append({"label": "randomize", "argv": to_randomize_args(cfg)})
-        elif req.run_randomize and (cfg.level_scale.wild_percent
-                                    or cfg.level_scale.trainer_percent
-                                    or cfg.evo_mode != EvoMode.VANILLA):
-            # No targets but we still have scaling or evo work to do.
+        # Always include the randomize step when the user asked for it: even
+        # when no targets / scaling / evo options are set, randomize.py is
+        # what restores src/data/* from the pristine templates in
+        # randomizer/, undoing any previous run's shuffling.
+        if req.run_randomize:
             steps.append({"label": "randomize", "argv": to_randomize_args(cfg)})
         if req.run_make:
             steps.append({"label": "make", "argv": to_make_args(cfg, jobs=req.jobs)})
@@ -133,18 +131,16 @@ def create_app() -> FastAPI:
         cfg = req.config.to_dc()
         cwd = str(REPO_ROOT)
         steps: list[Step] = []
-        need_randomize = req.run_randomize and (
-            any_target_selected(cfg)
-            or cfg.level_scale.wild_percent
-            or cfg.level_scale.trainer_percent
-            or cfg.evo_mode != EvoMode.VANILLA
-        )
-        if need_randomize:
+        # Same rationale as /api/preview: running randomize.py with no
+        # targets issues --restore, which is how we guarantee that
+        # un-checking a previous run's randomization actually reverts the
+        # source files.
+        if req.run_randomize:
             steps.append(Step(argv=to_randomize_args(cfg), cwd=cwd, label="randomize"))
         if req.run_make:
             steps.append(Step(argv=to_make_args(cfg, jobs=req.jobs), cwd=cwd, label="make"))
         if not steps:
-            raise HTTPException(400, "Nothing to do: no targets selected and run_make is false.")
+            raise HTTPException(400, "Nothing to do: run_randomize and run_make are both false.")
         run = manager.start(steps)
         return JSONResponse({"run_id": run.run_id, "steps": len(steps)})
 
