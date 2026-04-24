@@ -2124,7 +2124,7 @@ static void OpponentCmdEnd(void)
 static void WebuiBuildMonInfo(u8 battler, struct WebuiOppMonInfo *out)
 {
     u8 i;
-    if (battler >= MAX_BATTLERS_COUNT || (gAbsentBattlerFlags & gBitTable[battler]))
+    if (battler >= MAX_BATTLERS_COUNT || battler >= gBattlersCount || (gAbsentBattlerFlags & gBitTable[battler]))
     {
         out->species = SPECIES_NONE;
         out->hp = 0;
