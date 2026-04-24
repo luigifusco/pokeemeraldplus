@@ -55,7 +55,7 @@ async def start_tcp_listener(router: Router, host: str, port: int) -> asyncio.Ab
     return server
 
 
-def create_app(tcp_host: str = "127.0.0.1", tcp_port: int = 8765) -> FastAPI:
+def create_app(tcp_host: str = "127.0.0.1", tcp_port: int = 9877) -> FastAPI:
     app = FastAPI(title="battleui")
     router = Router()
     app.state.router = router

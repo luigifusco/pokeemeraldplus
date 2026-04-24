@@ -8,13 +8,13 @@ web-UI opponent" for the full usage flow.
 
 ```
 pip install -r battleui/requirements.txt
-python -m battleui --http-port 8000 --tcp-port 8765
+python -m battleui --http-port 9876 --tcp-port 9877
 ```
 
 ## Ports
 
-- `127.0.0.1:8000`  HTTP + WebSocket (browser)
-- `127.0.0.1:8765`  TCP, newline-delimited JSON (mGBA Lua bridge)
+- `127.0.0.1:9876`  HTTP + WebSocket (browser)
+- `127.0.0.1:9877`  TCP, newline-delimited JSON (mGBA Lua bridge)
 
 ## Flow
 

@@ -73,7 +73,7 @@ Build with the opt-in flag:
 make WEBUI_OPPONENT=1 -j$(nproc)
 ```
 
-Install deps + start the local broker (HTTP 8000, TCP 8765, both 127.0.0.1):
+Install deps + start the local broker (HTTP 9876, TCP 9877, both 127.0.0.1):
 
 ```
 pip install -r battleui/requirements.txt
@@ -91,7 +91,7 @@ awk '/gWebuiOpponentMailbox/ {print "0x"$1; exit}' pokeemerald.sym \
 
 Load the ROM in mGBA (0.10+), open **Tools → Scripting…**, and load
 `tools/battleui/mgba_bridge.lua`. Then open
-[http://127.0.0.1:8000](http://127.0.0.1:8000). Start a trainer battle — the
+[http://127.0.0.1:9876](http://127.0.0.1:9876). Start a trainer battle — the
 page will prompt you to pick the opponent's move / switch / item on every turn.
 
 Tests: `pytest battleui/tests/ -q`.

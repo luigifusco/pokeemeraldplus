@@ -11,8 +11,8 @@ from .server import create_app
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="battleui")
-    ap.add_argument("--http-port", type=int, default=8000)
-    ap.add_argument("--tcp-port", type=int, default=8765)
+    ap.add_argument("--http-port", type=int, default=9876)
+    ap.add_argument("--tcp-port", type=int, default=9877)
     ap.add_argument("--host", default="127.0.0.1")
     args = ap.parse_args()
 
