@@ -28,6 +28,9 @@
 #include "text.h"
 #include "util.h"
 #include "window.h"
+#ifdef WEBUI_OPPONENT
+#include "webui_opponent.h"
+#endif
 #include "constants/battle_anim.h"
 #include "constants/item_effects.h"
 #include "constants/items.h"
@@ -40,6 +43,12 @@
 #define SHOULD_WAIT_FOR_CRY() FALSE
 #else
 #define SHOULD_WAIT_FOR_CRY() IsCryPlayingOrClearCrySongs()
+#endif
+
+#ifdef WEBUI_OPPONENT
+// 0 = none, 1 = action pending, 2 = move pending
+static EWRAM_DATA u8 sWebuiPendingAction[MAX_BATTLERS_COUNT] = {0};
+static EWRAM_DATA struct ChooseMoveStruct sWebuiPendingMoveInfo[MAX_BATTLERS_COUNT] = {0};
 #endif
 
 static void OpponentHandleGetMonData(void);
@@ -63,6 +72,13 @@ static void OpponentHandlePrintSelectionString(void);
 static void OpponentHandleChooseAction(void);
 static void OpponentHandleYesNoBox(void);
 static void OpponentHandleChooseMove(void);
+#ifdef WEBUI_OPPONENT
+static void OpponentHandleChooseAction_WebuiWait(void);
+static void OpponentHandleChooseMove_WebuiWait(void);
+static void WebuiBuildMonInfo(u8 battler, struct WebuiOppMonInfo *out);
+static void WebuiBuildMoveInfo(u8 battler, struct WebuiOppMoveInfo *out);
+static void WebuiBuildPartyInfo(u8 battler, struct WebuiOppPartyInfo *out);
+#endif
 static void OpponentHandleChooseItem(void);
 static void OpponentHandleChoosePokemon(void);
 static void OpponentHandleCmd23(void);
@@ -1558,6 +1574,30 @@ static void OpponentHandlePrintSelectionString(void)
 
 static void OpponentHandleChooseAction(void)
 {
+#ifdef WEBUI_OPPONENT
+    {
+        struct WebuiOppMonInfo controlledMon, targetLeft, targetRight;
+        struct WebuiOppPartyInfo partyInfo;
+        struct WebuiOppMoveInfo zeroMoves;
+        u8 left  = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+        u8 right = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+        u8 i;
+
+        u8 *zm = (u8 *)&zeroMoves;
+        for (i = 0; i < sizeof(zeroMoves); i++)
+            zm[i] = 0;
+
+        WebuiBuildMonInfo(gActiveBattler, &controlledMon);
+        WebuiBuildMonInfo(left,  &targetLeft);
+        WebuiBuildMonInfo(right, &targetRight);
+        WebuiBuildPartyInfo(gActiveBattler, &partyInfo);
+
+        WebuiOpponent_PostRequest(gActiveBattler, &controlledMon, left, &targetLeft, right, &targetRight, &zeroMoves, &partyInfo);
+        sWebuiPendingAction[gActiveBattler] = 1;
+        gBattlerControllerFuncs[gActiveBattler] = OpponentHandleChooseAction_WebuiWait;
+        return;
+    }
+#endif
     AI_TrySwitchOrUseItem();
     OpponentBufferExecCompleted();
 }
@@ -1580,6 +1620,27 @@ static void OpponentHandleChooseMove(void)
         u8 chosenMoveId;
         struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
 
+#ifdef WEBUI_OPPONENT
+        {
+            struct WebuiOppMonInfo controlledMon, targetLeft, targetRight;
+            struct WebuiOppMoveInfo moves;
+            struct WebuiOppPartyInfo partyInfo;
+            u8 left  = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+            u8 right = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+
+            WebuiBuildMonInfo(gActiveBattler, &controlledMon);
+            WebuiBuildMonInfo(left,  &targetLeft);
+            WebuiBuildMonInfo(right, &targetRight);
+            WebuiBuildMoveInfo(gActiveBattler, &moves);
+            WebuiBuildPartyInfo(gActiveBattler, &partyInfo);
+
+            sWebuiPendingMoveInfo[gActiveBattler] = *moveInfo;
+            WebuiOpponent_PostRequest(gActiveBattler, &controlledMon, left, &targetLeft, right, &targetRight, &moves, &partyInfo);
+            sWebuiPendingAction[gActiveBattler] = 2;
+            gBattlerControllerFuncs[gActiveBattler] = OpponentHandleChooseMove_WebuiWait;
+            return;
+        }
+#endif
 
         if (gBattleTypeFlags & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_FIRST_BATTLE | BATTLE_TYPE_SAFARI | BATTLE_TYPE_ROAMER))
         {
@@ -2058,3 +2119,159 @@ static void OpponentHandleEndLinkBattle(void)
 static void OpponentCmdEnd(void)
 {
 }
+
+#ifdef WEBUI_OPPONENT
+static void WebuiBuildMonInfo(u8 battler, struct WebuiOppMonInfo *out)
+{
+    u8 i;
+    if (battler >= MAX_BATTLERS_COUNT || (gAbsentBattlerFlags & gBitTable[battler]))
+    {
+        out->species = SPECIES_NONE;
+        out->hp = 0;
+        out->maxHp = 0;
+        out->status1 = 0;
+        out->level = 0;
+        out->nickname[0] = EOS;
+        return;
+    }
+
+    out->species = gBattleMons[battler].species;
+    out->hp = gBattleMons[battler].hp;
+    out->maxHp = gBattleMons[battler].maxHP;
+    out->status1 = gBattleMons[battler].status1;
+    out->level = gBattleMons[battler].level;
+    for (i = 0; i < POKEMON_NAME_LENGTH; i++)
+        out->nickname[i] = gBattleMons[battler].nickname[i];
+    out->nickname[POKEMON_NAME_LENGTH] = EOS;
+}
+
+static void WebuiBuildMoveInfo(u8 battler, struct WebuiOppMoveInfo *out)
+{
+    struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[battler][4]);
+    u8 i;
+    for (i = 0; i < MAX_MON_MOVES; i++)
+    {
+        out->moves[i] = moveInfo->moves[i];
+        out->currentPp[i] = moveInfo->currentPp[i];
+        out->maxPp[i] = moveInfo->maxPp[i];
+    }
+    out->monTypes[0] = moveInfo->monTypes[0];
+    out->monTypes[1] = moveInfo->monTypes[1];
+}
+
+static void WebuiBuildPartyInfo(u8 battler, struct WebuiOppPartyInfo *out)
+{
+    s32 i;
+    s32 firstId = 0;
+    s32 lastId = PARTY_SIZE;
+    u8 battlerIdentity = GetBattlerPosition(battler);
+    u8 partnerBattler = battler;
+
+    if (gBattleTypeFlags & (BATTLE_TYPE_TWO_OPPONENTS | BATTLE_TYPE_TOWER_LINK_MULTI))
+    {
+        if ((battler & BIT_FLANK) == B_FLANK_LEFT)
+        {
+            firstId = 0;
+            lastId = PARTY_SIZE / 2;
+        }
+        else
+        {
+            firstId = PARTY_SIZE / 2;
+            lastId = PARTY_SIZE;
+        }
+    }
+
+    if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+        partnerBattler = GetBattlerAtPosition(BATTLE_PARTNER(battlerIdentity));
+
+    out->firstMonId = firstId;
+    out->lastMonId = lastId;
+    out->currentMonId = gBattlerPartyIndexes[battler];
+    if ((gAbsentBattlerFlags & gBitTable[partnerBattler])
+     || (gBattleStruct->absentBattlerFlags & gBitTable[partnerBattler]))
+        out->partnerMonId = PARTY_SIZE;
+    else
+        out->partnerMonId = gBattlerPartyIndexes[partnerBattler];
+
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        struct WebuiOppMonInfo *dst = &out->mons[i];
+        dst->species = GetMonData(&gEnemyParty[i], MON_DATA_SPECIES);
+        dst->hp = GetMonData(&gEnemyParty[i], MON_DATA_HP);
+        dst->maxHp = GetMonData(&gEnemyParty[i], MON_DATA_MAX_HP);
+        dst->status1 = GetMonData(&gEnemyParty[i], MON_DATA_STATUS);
+        dst->level = GetMonData(&gEnemyParty[i], MON_DATA_LEVEL);
+        GetMonData(&gEnemyParty[i], MON_DATA_NICKNAME, dst->nickname);
+        dst->nickname[POKEMON_NAME_LENGTH] = EOS;
+    }
+}
+
+static void OpponentHandleChooseAction_WebuiWait(void)
+{
+    u8 action, p1, p2;
+    u8 engineAction;
+    u8 engineData = 0;
+
+    if (!WebuiOpponent_TryGetResponse(&action, &p1, &p2))
+        return;
+
+    switch (action)
+    {
+    case WEBUI_OPP_ACTION_FIGHT:
+        engineAction = B_ACTION_USE_MOVE;
+        break;
+    case WEBUI_OPP_ACTION_SWITCH:
+        engineAction = B_ACTION_SWITCH;
+        engineData = p1;
+        break;
+    case WEBUI_OPP_ACTION_ITEM:
+        engineAction = B_ACTION_USE_ITEM;
+        engineData = p1;
+        break;
+    case WEBUI_OPP_ACTION_CANCEL_PARTNER:
+        engineAction = B_ACTION_CANCEL_PARTNER;
+        break;
+    default:
+        engineAction = B_ACTION_USE_MOVE;
+        break;
+    }
+
+    BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, engineAction, engineData);
+    sWebuiPendingAction[gActiveBattler] = 0;
+    OpponentBufferExecCompleted();
+}
+
+static void OpponentHandleChooseMove_WebuiWait(void)
+{
+    u8 action, moveSlot, targetBattler;
+    struct ChooseMoveStruct *moveInfo;
+    u16 move;
+
+    if (!WebuiOpponent_TryGetResponse(&action, &moveSlot, &targetBattler))
+        return;
+
+    if (action != WEBUI_OPP_ACTION_FIGHT)
+    {
+        moveSlot = 0;
+        targetBattler = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+    }
+
+    moveInfo = &sWebuiPendingMoveInfo[gActiveBattler];
+    if (moveSlot >= MAX_MON_MOVES)
+        moveSlot = 0;
+    move = moveInfo->moves[moveSlot];
+
+    if (gBattleMoves[move].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
+        targetBattler = gActiveBattler;
+    if (gBattleMoves[move].target & MOVE_TARGET_BOTH)
+    {
+        targetBattler = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+        if (gAbsentBattlerFlags & gBitTable[targetBattler])
+            targetBattler = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+    }
+
+    BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, moveSlot | (targetBattler << 8));
+    sWebuiPendingAction[gActiveBattler] = 0;
+    OpponentBufferExecCompleted();
+}
+#endif // WEBUI_OPPONENT

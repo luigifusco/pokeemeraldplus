@@ -50,3 +50,4 @@ __pycache__/
 
 # Web UI static assets (exempt from blanket *.js rule above)
 !randomizer/webui/static/*.js
+!battleui/static/*.js

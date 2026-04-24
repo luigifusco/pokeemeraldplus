@@ -10,6 +10,10 @@ KEEP_TEMPS  ?= 0
 FILE_NAME := pokeemerald
 BUILD_DIR := build
 
+# Web UI opponent build flag — lets an mGBA Lua driver + browser UI control
+# the AI opponent's decisions via an EWRAM mailbox. Usage: `make WEBUI_OPPONENT=1`.
+WEBUI_OPPONENT ?= 0
+
 # Builds the ROM using a modern compiler
 MODERN      ?= 0
 # Compares the ROM to a checksum of the original - only makes sense using when non-modern
@@ -86,8 +90,13 @@ else
 endif
 
 # Object directories.
+ifeq ($(WEBUI_OPPONENT),1)
+OBJ_DIR_NAME := $(BUILD_DIR)/emerald_webui
+MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern_webui
+else
 OBJ_DIR_NAME := $(BUILD_DIR)/emerald
 MODERN_OBJ_DIR_NAME := $(BUILD_DIR)/modern
+endif
 
 ELF_NAME := $(ROM_NAME:.gba=.elf)
 MAP_NAME := $(ROM_NAME:.gba=.map)
@@ -131,6 +140,13 @@ INCLUDE_SCANINC_ARGS := $(INCLUDE_DIRS:%=-I %)
 
 O_LEVEL ?= 2
 CPPFLAGS := $(INCLUDE_CPP_ARGS) -Wno-trigraphs -DMODERN=$(MODERN)
+
+ifeq ($(WEBUI_OPPONENT),1)
+  CPPFLAGS += -DWEBUI_OPPONENT
+  ifeq ($(COMPARE),1)
+    $(error compare is not supported with WEBUI_OPPONENT=1)
+  endif
+endif
 
 # Optional feature flags (enable with e.g. `make RANDOM_EVOLUTIONS=1`)
 RANDOM_EVOLUTIONS ?= 0

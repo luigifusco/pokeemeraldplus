@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>battleui — mGBA opponent</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-dot"></div>
+            <div class="brand-title">battleui</div>
+            <div class="brand-sub">mGBA web opponent</div>
+        </div>
+        <div id="status" class="status status-offline">server offline</div>
+    </header>
+
+    <main class="content">
+        <div id="idle" class="idle-card">Awaiting battle decision…</div>
+
+        <section id="request" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Your move, battler <span id="battlerId"></span></div>
+                    <div class="card-sub">seq <span id="seq"></span></div>
+                </div>
+
+                <div class="mons-row">
+                    <div class="mon-box">
+                        <div class="mon-label">Controlled</div>
+                        <div id="controlledMon"></div>
+                    </div>
+                    <div class="mon-box">
+                        <div class="mon-label">Target L</div>
+                        <div id="targetLeft"></div>
+                    </div>
+                    <div class="mon-box" id="targetRightBox">
+                        <div class="mon-label">Target R</div>
+                        <div id="targetRight"></div>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button data-tab="fight" class="tab active">Fight <kbd>F</kbd></button>
+                    <button data-tab="switch" class="tab">Switch <kbd>S</kbd></button>
+                    <button data-tab="item" class="tab">Item <kbd>I</kbd></button>
+                    <button data-tab="cancel" class="tab" id="cancelTab">Cancel Partner <kbd>C</kbd></button>
+                </div>
+
+                <div id="pane-fight" class="pane active">
+                    <div id="moveGrid" class="move-grid"></div>
+                    <div id="targetPicker" class="target-picker hidden">
+                        <div class="pane-label">Target:</div>
+                        <label><input type="radio" name="target" value="L"> Left (<span id="tpL"></span>)</label>
+                        <label><input type="radio" name="target" value="R"> Right (<span id="tpR"></span>)</label>
+                    </div>
+                    <div class="actions">
+                        <button id="submitFight" class="btn-primary" disabled>Submit <kbd>Enter</kbd></button>
+                    </div>
+                </div>
+
+                <div id="pane-switch" class="pane">
+                    <div id="partyList" class="party-list"></div>
+                </div>
+
+                <div id="pane-item" class="pane">
+                    <div id="itemList" class="item-list"></div>
+                </div>
+
+                <div id="pane-cancel" class="pane">
+                    <p>Cancel your partner's pending action?</p>
+                    <button id="submitCancel" class="btn-primary">Confirm</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
