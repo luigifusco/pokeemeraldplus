@@ -135,6 +135,29 @@ function monHTML(m, spriteCls) {
     `;
 }
 
+function controlledMonsHTML(r) {
+    const p = r.partyInfo || {};
+    const partnerSlot = p.partnerMonId;
+    const partnerMon = p.mons && partnerSlot < p.mons.length ? p.mons[partnerSlot] : null;
+    const hasPartner = partnerMon && partnerMon.maxHp > 0;
+
+    if (!hasPartner)
+        return monHTML(r.controlledMon);
+
+    return `
+        <div class="controlled-pair">
+            <div class="controlled-slot active">
+                <div class="slot-label">ACTING</div>
+                ${monHTML(r.controlledMon)}
+            </div>
+            <div class="controlled-slot">
+                <div class="slot-label">PARTNER</div>
+                ${monHTML(partnerMon)}
+            </div>
+        </div>
+    `;
+}
+
 // ---- rendering -----------------------------------------------------
 function renderIdle() {
     $("idle").classList.remove("hidden");
@@ -152,7 +175,7 @@ function renderRequest() {
     showActivePane();
 
     const r = state.request;
-    $("controlledMon").innerHTML = monHTML(r.controlledMon);
+    $("controlledMon").innerHTML = controlledMonsHTML(r);
     $("targetLeft").innerHTML = monHTML(r.targetMonLeft);
 
     const hasRight = r.targetMonRight && r.targetMonRight.maxHp > 0 && r.targetBattlerRight !== r.targetBattlerLeft;
