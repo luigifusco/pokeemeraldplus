@@ -13,6 +13,8 @@
     --warn: #fbbf24;
     --bad:  #f87171;
     --info: #60a5fa;
+    --screen-gap: 8px;
+    --touch-min: 48px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -31,6 +33,7 @@ html, body {
 }
 
 button { font-family: inherit; color: inherit; }
+button { touch-action: manipulation; }
 
 .hidden { display: none !important; }
 
@@ -40,8 +43,11 @@ button { font-family: inherit; color: inherit; }
     height: 100vh;
     height: 100dvh;
     width: 100vw;
-    gap: 8px;
-    padding: 8px;
+    gap: var(--screen-gap);
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-right: max(8px, env(safe-area-inset-right));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-left: max(8px, env(safe-area-inset-left));
 }
 
 /* ----- LEFT (status + mons) ----- */
@@ -55,7 +61,7 @@ button { font-family: inherit; color: inherit; }
     flex-shrink: 0;
     padding: 6px 10px;
     border-radius: 6px;
-    font-size: 11px;
+    font-size: clamp(11px, 1.6vw, 14px);
     font-weight: 700;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -98,8 +104,8 @@ button { font-family: inherit; color: inherit; }
     min-height: 0;
 }
 .mon-sprite {
-    width: 56px;
-    height: 56px;
+    width: clamp(56px, 9vw, 88px);
+    height: clamp(56px, 9vw, 88px);
     object-fit: contain;
     image-rendering: pixelated;
     flex-shrink: 0;
@@ -107,7 +113,7 @@ button { font-family: inherit; color: inherit; }
 .mon-body { flex: 1; min-width: 0; }
 .mon-species {
     font-weight: 700;
-    font-size: 13px;
+    font-size: clamp(13px, 1.7vw, 17px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -115,12 +121,12 @@ button { font-family: inherit; color: inherit; }
 .mon-line {
     display: flex;
     justify-content: space-between;
-    font-size: 11px;
+    font-size: clamp(11px, 1.4vw, 14px);
     color: var(--dim);
     margin-top: 2px;
 }
 .hp-bar {
-    height: 5px;
+    height: clamp(5px, 1vh, 9px);
     background: var(--border);
     border-radius: 3px;
     overflow: hidden;
@@ -162,10 +168,10 @@ button { font-family: inherit; color: inherit; }
     border-radius: 6px;
     padding: 8px 4px;
     color: var(--dim);
-    font-size: 13px;
+    font-size: clamp(13px, 1.6vw, 16px);
     font-weight: 600;
     cursor: pointer;
-    min-height: 38px;
+    min-height: var(--touch-min);
 }
 .tab.active {
     background: var(--accent);
@@ -220,13 +226,13 @@ button { font-family: inherit; color: inherit; }
 .move-btn:disabled { opacity: .35; cursor: not-allowed; }
 .move-name {
     font-weight: 700;
-    font-size: 18px;
+    font-size: clamp(18px, 2.4vw, 28px);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .move-pp {
-    font-size: 12px;
+    font-size: clamp(12px, 1.5vw, 16px);
     color: var(--dim);
     margin-top: 2px;
 }
@@ -241,8 +247,8 @@ button { font-family: inherit; color: inherit; }
     border-color: var(--accent);
     color: #fff;
 }
-.move-btn.action-fight .move-name { font-size: 32px; letter-spacing: 2px; }
-.move-btn.action-fight .move-pp { color: rgba(255,255,255,.8); font-size: 14px; }
+.move-btn.action-fight .move-name { font-size: clamp(32px, 5vw, 52px); letter-spacing: 2px; }
+.move-btn.action-fight .move-pp { color: rgba(255,255,255,.8); font-size: clamp(14px, 1.9vw, 20px); }
 
 /* ----- Target picker ----- */
 .target-picker {
@@ -250,7 +256,7 @@ button { font-family: inherit; color: inherit; }
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    height: 64px;
+    height: clamp(64px, 14vh, 104px);
 }
 .target-btn {
     background: var(--bg-surf);
@@ -265,9 +271,9 @@ button { font-family: inherit; color: inherit; }
     transition: transform .08s, background .15s;
 }
 .target-btn:active { transform: scale(.97); background: rgba(122,92,255,.25); }
-.target-arrow { font-size: 22px; color: var(--accent); }
-.target-label { font-weight: 800; font-size: 14px; letter-spacing: 1px; }
-.target-sub { font-size: 11px; color: var(--faint); }
+.target-arrow { font-size: clamp(22px, 3vw, 34px); color: var(--accent); }
+.target-label { font-weight: 800; font-size: clamp(14px, 1.8vw, 18px); letter-spacing: 1px; }
+.target-sub { font-size: clamp(11px, 1.4vw, 14px); color: var(--faint); }
 
 /* ----- Switch / Item grid (2x3 fill) ----- */
 .grid-2x3 {
@@ -298,55 +304,234 @@ button { font-family: inherit; color: inherit; }
 .party-row:active:not(.disabled), .item-btn:active { transform: scale(.97); }
 .party-row.disabled { opacity: .3; cursor: not-allowed; }
 .party-sprite {
-    width: 48px;
-    height: 48px;
+    width: clamp(48px, 8vw, 76px);
+    height: clamp(48px, 8vw, 76px);
     object-fit: contain;
     image-rendering: pixelated;
     flex-shrink: 0;
 }
-.party-row .mon-species, .item-btn .mon-species { font-size: 12px; }
+.party-row .mon-species, .item-btn .mon-species { font-size: clamp(12px, 1.5vw, 16px); }
 .party-row .mon-line, .item-btn .mon-line {
     width: 100%;
-    font-size: 10px;
+    font-size: clamp(10px, 1.3vw, 13px);
 }
 .party-row .hp-bar { width: 80%; }
 
 /* ----- Cancel pane ----- */
 .cancel-pane { align-items: center; justify-content: center; gap: 16px; }
-.cancel-text { font-size: 17px; color: var(--dim); }
+.cancel-text { font-size: clamp(17px, 2.4vw, 24px); color: var(--dim); }
 .big-btn {
     background: var(--accent);
     border: none;
     border-radius: 10px;
     color: #fff;
-    font-size: 18px;
+    font-size: clamp(18px, 2.4vw, 26px);
     font-weight: 800;
     letter-spacing: 1px;
     padding: 14px 36px;
     cursor: pointer;
-    min-height: 56px;
+    min-height: 64px;
 }
 .big-btn:active { transform: scale(.97); }
 
-/* ----- Portrait warning ----- */
+/* ----- Portrait / vertical mobile layout ----- */
 @media (orientation: portrait) {
-    #app::before {
-        content: "⟲ rotate to landscape";
-        position: fixed;
-        inset: 0;
-        background: var(--bg);
-        color: var(--dim);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        z-index: 100;
-        letter-spacing: 1px;
+    :root {
+        --screen-gap: 10px;
+        --touch-min: 56px;
+    }
+
+    #app {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 42%) minmax(0, 58%);
+    }
+
+    .left,
+    .right {
+        gap: 10px;
+    }
+
+    .status {
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+    }
+
+    .mons {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    #ctrlCard {
+        grid-column: 1 / -1;
+    }
+
+    .mon-card {
+        border-radius: 12px;
+        padding: 8px 10px;
+    }
+
+    .mon-tag {
+        font-size: 10px;
+        margin-bottom: 4px;
+    }
+
+    .mon-with-sprite {
+        gap: 10px;
+    }
+
+    .mon-sprite {
+        width: clamp(72px, 22vw, 112px);
+        height: clamp(72px, 22vw, 112px);
+    }
+
+    #targetLeft .mon-sprite,
+    #targetRight .mon-sprite {
+        width: clamp(64px, 18vw, 92px);
+        height: clamp(64px, 18vw, 92px);
+    }
+
+    .mon-species {
+        font-size: clamp(15px, 4vw, 20px);
+    }
+
+    .mon-line {
+        font-size: clamp(12px, 3.4vw, 16px);
+    }
+
+    .hp-bar {
+        height: 8px;
+        margin-top: 6px;
+    }
+
+    .tabs {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .tab {
+        border-radius: 12px;
+        padding: 12px 8px;
+        font-size: clamp(15px, 4vw, 20px);
+        min-height: 56px;
+    }
+
+    .pane {
+        gap: 10px;
+    }
+
+    .grid-2x2 {
+        gap: 10px;
+    }
+
+    .move-btn {
+        border-radius: 14px;
+        padding: 12px 14px;
+        min-height: 96px;
+    }
+
+    .move-name {
+        font-size: clamp(20px, 5.5vw, 30px);
+    }
+
+    .move-pp {
+        font-size: clamp(13px, 3.6vw, 18px);
+    }
+
+    .move-btn.action-fight .move-name {
+        font-size: clamp(38px, 11vw, 64px);
+    }
+
+    .target-picker {
+        height: clamp(84px, 13vh, 112px);
+        gap: 10px;
+    }
+
+    .target-btn {
+        border-radius: 14px;
+    }
+
+    .target-arrow {
+        font-size: clamp(28px, 8vw, 42px);
+    }
+
+    .target-label {
+        font-size: clamp(16px, 4.4vw, 22px);
+    }
+
+    .target-sub {
+        font-size: clamp(12px, 3.2vw, 16px);
+    }
+
+    .grid-2x3 {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .party-row,
+    .item-btn {
+        border-radius: 14px;
+        padding: 8px 10px;
+        gap: 4px;
+    }
+
+    .party-sprite {
+        width: clamp(56px, 15vw, 84px);
+        height: clamp(56px, 15vw, 84px);
+    }
+
+    .party-row .mon-species,
+    .item-btn .mon-species {
+        font-size: clamp(13px, 3.6vw, 18px);
+    }
+
+    .party-row .mon-line,
+    .item-btn .mon-line {
+        font-size: clamp(11px, 3vw, 15px);
+    }
+
+    .cancel-pane {
+        gap: 20px;
+        text-align: center;
+    }
+
+    .big-btn {
+        border-radius: 14px;
+        min-height: 72px;
+        width: min(100%, 420px);
+    }
+}
+
+@media (orientation: portrait) and (max-width: 380px) {
+    #app {
+        grid-template-rows: minmax(0, 39%) minmax(0, 61%);
+    }
+
+    .mon-sprite {
+        width: clamp(58px, 18vw, 76px);
+        height: clamp(58px, 18vw, 76px);
+    }
+
+    #targetLeft .mon-sprite,
+    #targetRight .mon-sprite {
+        width: clamp(48px, 15vw, 64px);
+        height: clamp(48px, 15vw, 64px);
+    }
+
+    .move-btn {
+        min-height: 78px;
+    }
+
+    .party-sprite {
+        width: clamp(44px, 13vw, 58px);
+        height: clamp(44px, 13vw, 58px);
     }
 }
 
 /* very small viewport tightening */
-@media (max-height: 380px) {
+@media (orientation: landscape) and (max-height: 380px) {
     .mon-sprite { width: 44px; height: 44px; }
     .move-name { font-size: 15px; }
     .tab { font-size: 11px; min-height: 32px; padding: 6px 2px; }
