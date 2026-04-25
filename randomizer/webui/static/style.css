@@ -498,6 +498,9 @@ input[type="range"]::-moz-range-thumb {
     gap: 10px;
     padding: 14px 0 0;
 }
+.build-graph-group {
+    margin-top: 16px;
+}
 .build-status {
     margin-left: auto;
     font-size: 13px;

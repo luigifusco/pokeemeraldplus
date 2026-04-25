@@ -654,6 +654,7 @@ static void Task_EvolutionScene(u8 taskId)
     u32 var;
     struct Pokemon *mon = &gPlayerParty[gTasks[taskId].tPartyId];
 
+#ifndef PREVENT_EVOLUTION_CANCEL
     // check if B Button was held, so the evolution gets stopped
     if (gMain.heldKeys == B_BUTTON
         && gTasks[taskId].tState == EVOSTATE_WAIT_CYCLE_MON_SPRITE
@@ -665,6 +666,7 @@ static void Task_EvolutionScene(u8 taskId)
         StopBgAnimation();
         return;
     }
+#endif
 
     switch (gTasks[taskId].tState)
     {

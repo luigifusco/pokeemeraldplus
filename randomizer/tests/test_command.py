@@ -161,6 +161,7 @@ class MakeArgsTest(unittest.TestCase):
         self.assertEqual(args[1], "-j4")
         for expected in (
             "FAST_EVOLUTION_ANIM=0",
+            "PREVENT_EVOLUTION_CANCEL=0",
             "WALK_FAST=0",
             "NUZLOCKE_DELETE_FAINTED=0",
             "INSTANT_TEXT=0",
@@ -202,6 +203,12 @@ class MakeArgsTest(unittest.TestCase):
         self.assertIn("WEBUI_OPPONENT=1", on)
         off = to_make_args(BuildConfig(webui_opponent=False), jobs=1)
         self.assertIn("WEBUI_OPPONENT=0", off)
+
+    def test_evolution_cancel_toggle(self) -> None:
+        on = to_make_args(BuildConfig(prevent_evolution_cancel=True), jobs=1)
+        self.assertIn("PREVENT_EVOLUTION_CANCEL=1", on)
+        off = to_make_args(BuildConfig(prevent_evolution_cancel=False), jobs=1)
+        self.assertIn("PREVENT_EVOLUTION_CANCEL=0", off)
 
 
 if __name__ == "__main__":

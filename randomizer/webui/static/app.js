@@ -37,6 +37,7 @@ const defaultConfig = () => ({
         max_tree_depth: null,
     },
     fast_evolution_anim: false,
+    prevent_evolution_cancel: false,
     nuzlocke_delete_fainted: false,
     force_doubles: false,
     steal_trainer_team: false,

@@ -153,12 +153,6 @@
                 </div>
             </div>
 
-            <div class="group">
-                <div class="group-title">Animation</div>
-                <label class="check"><input type="checkbox" data-bind="fast_evolution_anim" /><span class="box"></span>
-                    <span><strong>Fast evolution animation</strong> — skip the long cross-fade.</span></label>
-            </div>
-
         </section>
 
         <!-- ===================== GAMEPLAY ===================== -->
@@ -232,6 +226,15 @@
                     <input type="number" class="num-mirror" min="0" max="5" data-bind="wait_time_divisor_pow" />
                 </div>
             </div>
+
+            <div class="group">
+                <div class="group-title">Evolution</div>
+                <div class="group-desc">Speed and quality-of-life tweaks for evolution scenes.</div>
+                <label class="check"><input type="checkbox" data-bind="fast_evolution_anim" /><span class="box"></span>
+                    <span><strong>Fast evolution animation</strong> — skip the long cross-fade.</span></label>
+                <label class="check"><input type="checkbox" data-bind="prevent_evolution_cancel" /><span class="box"></span>
+                    <span><strong>Prevent evolution cancel</strong> — holding B will no longer stop evolutions.</span></label>
+            </div>
         </section>
 
         <!-- ===================== BUILD ===================== -->
@@ -260,7 +263,7 @@
                 <div class="build-status" id="build-status"></div>
             </div>
 
-            <div class="group">
+            <div class="group build-graph-group">
                 <div class="group-title">Evolution graph</div>
                 <div class="group-desc">After running the randomizer, render the current <code>random_evolutions.h</code> to a PNG so you can see the structure (cycles highlighted). Requires <code>graphviz</code>.</div>
                 <div class="row" style="gap: 16px;">

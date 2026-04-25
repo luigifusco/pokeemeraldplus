@@ -69,7 +69,6 @@ class BuildConfigModel(BaseModel):
     # Evolutions
     evo_mode: str = EvoMode.VANILLA
     evo_constraints: EvoConstraintsModel = Field(default_factory=EvoConstraintsModel)
-    fast_evolution_anim: bool = False
     # Gameplay
     nuzlocke_delete_fainted: bool = False
     force_doubles: bool = False
@@ -84,6 +83,8 @@ class BuildConfigModel(BaseModel):
     opponent_stat_stage_mod: int = 0
     player_stat_stage_mod: int = 0
     # Speed
+    fast_evolution_anim: bool = False
+    prevent_evolution_cancel: bool = False
     walk_fast: bool = False
     instant_text: bool = False
     skip_battle_transition: bool = False
