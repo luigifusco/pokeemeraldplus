@@ -84,6 +84,7 @@ static void OpponentHandleChooseMove_WebuiWait(void);
 static void WebuiBuildMonInfo(u8 battler, struct WebuiOppMonInfo *out);
 static void WebuiBuildMoveInfo(u8 battler, struct WebuiOppMoveInfo *out);
 static void WebuiBuildPartyInfo(u8 battler, struct WebuiOppPartyInfo *out);
+static void WebuiChooseMoveWithDefaultAI(struct ChooseMoveStruct *moveInfo);
 #endif
 static void OpponentHandleChooseItem(void);
 static void OpponentHandleChoosePokemon(void);
@@ -2238,6 +2239,60 @@ static void WebuiBuildPartyInfo(u8 battler, struct WebuiOppPartyInfo *out)
     }
 }
 
+static void WebuiChooseMoveWithDefaultAI(struct ChooseMoveStruct *moveInfo)
+{
+    u8 chosenMoveId;
+
+    if (gBattleTypeFlags & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_FIRST_BATTLE | BATTLE_TYPE_SAFARI | BATTLE_TYPE_ROAMER))
+    {
+        BattleAI_SetupAIData(ALL_MOVES_MASK);
+        chosenMoveId = BattleAI_ChooseMoveOrAction();
+
+        switch (chosenMoveId)
+        {
+        case AI_CHOICE_WATCH:
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, B_ACTION_SAFARI_WATCH_CAREFULLY, 0);
+            break;
+        case AI_CHOICE_FLEE:
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, B_ACTION_RUN, 0);
+            break;
+        case 6:
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 15, gBattlerTarget);
+            break;
+        default:
+            if (gBattleMoves[moveInfo->moves[chosenMoveId]].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
+                gBattlerTarget = gActiveBattler;
+            if (gBattleMoves[moveInfo->moves[chosenMoveId]].target & MOVE_TARGET_BOTH)
+            {
+                gBattlerTarget = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
+                if (gAbsentBattlerFlags & gBitTable[gBattlerTarget])
+                    gBattlerTarget = GetBattlerAtPosition(B_POSITION_PLAYER_RIGHT);
+            }
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, chosenMoveId | (gBattlerTarget << 8));
+            break;
+        }
+        OpponentBufferExecCompleted();
+    }
+    else
+    {
+        u16 move;
+        do
+        {
+            chosenMoveId = MOD(Random(), MAX_MON_MOVES);
+            move = moveInfo->moves[chosenMoveId];
+        } while (move == MOVE_NONE);
+
+        if (gBattleMoves[move].target & (MOVE_TARGET_USER_OR_SELECTED | MOVE_TARGET_USER))
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, chosenMoveId | (gActiveBattler << 8));
+        else if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, chosenMoveId | (GetBattlerAtPosition(Random() & 2) << 8));
+        else
+            BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, chosenMoveId | (GetBattlerAtPosition(B_POSITION_PLAYER_LEFT) << 8));
+
+        OpponentBufferExecCompleted();
+    }
+}
+
 static void OpponentHandleChooseAction_WebuiWait(void)
 {
     u8 action, p1, p2;
@@ -2249,6 +2304,12 @@ static void OpponentHandleChooseAction_WebuiWait(void)
 
     switch (action)
     {
+    case WEBUI_OPP_ACTION_AUTO:
+        AI_TrySwitchOrUseItem();
+        sWebuiPendingAction[gActiveBattler] = 0;
+        sWebuiHasQueuedMove[gActiveBattler] = 0;
+        OpponentBufferExecCompleted();
+        return;
     case WEBUI_OPP_ACTION_FIGHT:
         engineAction = B_ACTION_USE_MOVE;
         sWebuiQueuedMoveSlot[gActiveBattler] = p1;
@@ -2285,13 +2346,20 @@ static void OpponentHandleChooseMove_WebuiWait(void)
     if (!WebuiOpponent_TryGetResponse(&action, &moveSlot, &targetBattler))
         return;
 
+    moveInfo = &sWebuiPendingMoveInfo[gActiveBattler];
+    if (action == WEBUI_OPP_ACTION_AUTO)
+    {
+        WebuiChooseMoveWithDefaultAI(moveInfo);
+        sWebuiPendingAction[gActiveBattler] = 0;
+        return;
+    }
+
     if (action != WEBUI_OPP_ACTION_FIGHT)
     {
         moveSlot = 0;
         targetBattler = GetBattlerAtPosition(B_POSITION_PLAYER_LEFT);
     }
 
-    moveInfo = &sWebuiPendingMoveInfo[gActiveBattler];
     if (moveSlot >= MAX_MON_MOVES)
         moveSlot = 0;
     move = moveInfo->moves[moveSlot];

@@ -324,7 +324,7 @@ Lua → server:
 Server → Lua:
 
 ```json
-{"type":"response","seq":N,"action":0|1|2|3,"param1":…,"param2":…}
+{"type":"response","seq":N,"action":0|1|2|3|4,"param1":…,"param2":…}
 ```
 
 `action` enum (matches `include/webui_opponent.h`):
@@ -335,6 +335,7 @@ Server → Lua:
 | 1 | `WEBUI_OPP_ACTION_SWITCH` — param1 = party slot |
 | 2 | `WEBUI_OPP_ACTION_USE_ITEM` — param1 = item slot |
 | 3 | `WEBUI_OPP_ACTION_CANCEL_PARTNER` — doubles only |
+| 4 | `WEBUI_OPP_ACTION_AUTO` — use the default Emerald opponent AI for this decision |
 
 Notes:
 

@@ -57,8 +57,13 @@ button { touch-action: manipulation; }
     gap: 8px;
     min-height: 0;
 }
-.status {
+.topbar {
     flex-shrink: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+}
+.status {
     padding: 6px 10px;
     border-radius: 6px;
     font-size: clamp(11px, 1.6vw, 14px);
@@ -70,6 +75,27 @@ button { touch-action: manipulation; }
 .status-connected { background: rgba(74,222,128,.18); color: var(--good); }
 .status-waiting   { background: rgba(251,191,36,.18); color: var(--warn); }
 .status-offline   { background: rgba(248,113,113,.18); color: var(--bad); }
+.autoplay-btn {
+    min-width: 52px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-elev);
+    color: var(--dim);
+    font-size: clamp(11px, 1.5vw, 13px);
+    font-weight: 800;
+    letter-spacing: .5px;
+    padding: 6px 9px;
+    cursor: pointer;
+}
+.autoplay-btn.active {
+    background: rgba(96,165,250,.2);
+    border-color: var(--info);
+    color: var(--info);
+    box-shadow: 0 0 0 1px rgba(96,165,250,.35) inset;
+}
+.autoplay-btn:active {
+    transform: scale(.96);
+}
 
 .mons {
     flex: 1;
@@ -418,6 +444,17 @@ button { touch-action: manipulation; }
         padding: 8px 10px;
         border-radius: 8px;
         font-size: 12px;
+    }
+
+    .topbar {
+        gap: 8px;
+    }
+
+    .autoplay-btn {
+        min-width: 68px;
+        border-radius: 8px;
+        font-size: 13px;
+        padding: 8px 10px;
     }
 
     .mons {

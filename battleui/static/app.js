@@ -1,6 +1,6 @@
-// battleui client — landscape mobile, tap-to-fire.
+// battleui client — mobile-first, tap-to-fire.
 
-const ACTION = { FIGHT: 0, SWITCH: 1, ITEM: 2, CANCEL_PARTNER: 3 };
+const ACTION = { FIGHT: 0, SWITCH: 1, ITEM: 2, CANCEL_PARTNER: 3, AUTO: 4 };
 
 const $ = (id) => document.getElementById(id);
 
@@ -10,6 +10,7 @@ const state = {
     selectedMove: null,
     isDoubles: false,
     activeTab: "fight",
+    autoplay: localStorage.getItem("battleui.autoplay") === "1",
     names: { species: {}, moves: {} },
 };
 
@@ -70,6 +71,8 @@ function onMessage(msg) {
         setStatus("status-connected", "decide");
         state.request = msg;
         renderRequest();
+        if (state.autoplay)
+            submitAuto();
     } else if (msg.type === "heartbeat") {
         if (!state.request) setStatus("status-connected", "connected");
     } else if (msg.type === "hello") {
@@ -90,7 +93,26 @@ function submit(action, param1, param2) {
     state.request = null;
     state.selectedMove = null;
     renderIdle();
-    setStatus("status-connected", "connected");
+    setStatus("status-connected", action === ACTION.AUTO ? "autoplay" : "connected");
+}
+
+function submitAuto() {
+    submit(ACTION.AUTO, 0, 0);
+}
+
+function renderAutoplayToggle() {
+    const btn = $("autoplayToggle");
+    btn.classList.toggle("active", state.autoplay);
+    btn.setAttribute("aria-pressed", state.autoplay ? "true" : "false");
+    btn.textContent = state.autoplay ? "AI ON" : "AI";
+}
+
+function toggleAutoplay() {
+    state.autoplay = !state.autoplay;
+    localStorage.setItem("battleui.autoplay", state.autoplay ? "1" : "0");
+    renderAutoplayToggle();
+    if (state.autoplay && state.request)
+        submitAuto();
 }
 
 // ---- helpers -------------------------------------------------------
@@ -351,7 +373,9 @@ document.addEventListener("click", (ev) => {
 });
 
 $("submitCancel").addEventListener("click", () => submit(ACTION.CANCEL_PARTNER, 0, 0));
+$("autoplayToggle").addEventListener("click", toggleAutoplay);
 
 renderIdle();
+renderAutoplayToggle();
 loadNames();
 connect();
