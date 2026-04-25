@@ -295,7 +295,7 @@ button { touch-action: manipulation; }
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    height: clamp(64px, 14vh, 104px);
+    height: clamp(88px, 17vh, 128px);
 }
 .target-btn {
     background: var(--bg-surf);
@@ -305,14 +305,38 @@ button { touch-action: manipulation; }
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 8px 10px;
+    text-align: left;
     transition: transform .08s, background .15s;
 }
 .target-btn:active { transform: scale(.97); background: rgba(122,92,255,.25); }
 .target-arrow { font-size: clamp(22px, 3vw, 34px); color: var(--accent); }
 .target-label { font-weight: 800; font-size: clamp(14px, 1.8vw, 18px); letter-spacing: 1px; }
 .target-sub { font-size: clamp(11px, 1.4vw, 14px); color: var(--faint); }
+.target-mon {
+    flex: 1;
+    min-width: 0;
+}
+.target-mon .mon-with-sprite {
+    gap: 7px;
+}
+.target-mon .mon-species {
+    font-size: clamp(13px, 1.8vw, 17px);
+}
+.target-mon .mon-line {
+    font-size: clamp(11px, 1.4vw, 14px);
+}
+.target-sprite {
+    width: clamp(46px, 7vw, 70px);
+    height: clamp(46px, 7vw, 70px);
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+}
 
 /* ----- Switch / Item grid (2x3 fill) ----- */
 .grid-2x3 {
@@ -502,12 +526,14 @@ button { touch-action: manipulation; }
     }
 
     .target-picker {
-        height: clamp(84px, 13vh, 112px);
+        height: clamp(112px, 16vh, 148px);
         gap: 10px;
     }
 
     .target-btn {
         border-radius: 14px;
+        gap: 10px;
+        padding: 10px 12px;
     }
 
     .target-arrow {
@@ -520,6 +546,23 @@ button { touch-action: manipulation; }
 
     .target-sub {
         font-size: clamp(12px, 3.2vw, 16px);
+    }
+
+    .target-mon .mon-with-sprite {
+        gap: 9px;
+    }
+
+    .target-mon .mon-species {
+        font-size: clamp(14px, 3.8vw, 19px);
+    }
+
+    .target-mon .mon-line {
+        font-size: clamp(12px, 3.2vw, 16px);
+    }
+
+    .target-sprite {
+        width: clamp(54px, 15vw, 82px);
+        height: clamp(54px, 15vw, 82px);
     }
 
     .grid-2x3 {
@@ -593,6 +636,36 @@ button { touch-action: manipulation; }
     #targetRight .mon-sprite {
         width: clamp(48px, 15vw, 64px);
         height: clamp(48px, 15vw, 64px);
+    }
+
+    .target-picker {
+        height: 96px;
+    }
+
+    .target-btn {
+        gap: 6px;
+        padding: 8px;
+    }
+
+    .target-arrow {
+        font-size: 24px;
+    }
+
+    .target-mon .mon-with-sprite {
+        gap: 5px;
+    }
+
+    .target-mon .mon-species {
+        font-size: 12px;
+    }
+
+    .target-mon .mon-line {
+        font-size: 11px;
+    }
+
+    .target-sprite {
+        width: 42px;
+        height: 42px;
     }
 
     .move-btn {

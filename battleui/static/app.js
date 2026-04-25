@@ -158,6 +158,30 @@ function controlledMonsHTML(r) {
     `;
 }
 
+function targetButtonHTML(m, side, arrow) {
+    if (!m || !m.maxHp) {
+        return `
+            <div class="target-arrow">${arrow}</div>
+            <div class="target-mon">
+                <div class="target-label">TARGET ${side}</div>
+                <div class="dash">—</div>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="target-arrow">${arrow}</div>
+        <div class="target-mon">
+            <div class="target-label">TARGET ${side}</div>
+            ${monHTML(m, "target-sprite")}
+        </div>
+    `;
+}
+
+function targetAriaLabel(m, side) {
+    return "Target " + side.toLowerCase() + (m && m.species ? " " + speciesName(m.species) : "");
+}
+
 // ---- rendering -----------------------------------------------------
 function renderIdle() {
     $("idle").classList.remove("hidden");
@@ -183,6 +207,13 @@ function renderRequest() {
     $("rightCard").classList.toggle("dim", !hasRight);
     $("targetRight").innerHTML = hasRight ? monHTML(r.targetMonRight) : '<div class="dash">—</div>';
 
+    const leftTargetBtn = document.querySelector('.target-btn[data-t="L"]');
+    const rightTargetBtn = document.querySelector('.target-btn[data-t="R"]');
+    leftTargetBtn.innerHTML = targetButtonHTML(r.targetMonLeft, "LEFT", "◀");
+    rightTargetBtn.innerHTML = targetButtonHTML(r.targetMonRight, "RIGHT", "▶");
+    leftTargetBtn.setAttribute("aria-label", targetAriaLabel(r.targetMonLeft, "LEFT"));
+    rightTargetBtn.setAttribute("aria-label", targetAriaLabel(r.targetMonRight, "RIGHT"));
+
     $("cancelTab").style.display = hasRight ? "" : "none";
     if (!hasRight && state.activeTab === "cancel") switchTab("fight");
 
@@ -190,8 +221,6 @@ function renderRequest() {
     renderParty();
     renderItems();
 
-    $("tpL").textContent = "slot " + r.targetBattlerLeft;
-    $("tpR").textContent = "slot " + r.targetBattlerRight;
     $("targetPicker").classList.add("hidden");
 }
 
