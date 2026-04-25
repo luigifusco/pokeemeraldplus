@@ -159,15 +159,6 @@
                     <span><strong>Fast evolution animation</strong> — skip the long cross-fade.</span></label>
             </div>
 
-            <div class="group">
-                <div class="group-title">Evolution graph</div>
-                <div class="group-desc">Render the current <code>random_evolutions.h</code> to a PNG so you can see the structure (cycles highlighted). Requires <code>graphviz</code>.</div>
-                <div class="row" style="gap: 16px;">
-                    <button class="btn btn-accent" id="render-graph-btn">🎨 Render graph</button>
-                    <span id="render-graph-status" class="dim"></span>
-                </div>
-                <div id="render-graph-container" style="margin-top: 16px;"></div>
-            </div>
         </section>
 
         <!-- ===================== GAMEPLAY ===================== -->
@@ -267,6 +258,16 @@
                 <button class="btn btn-danger" id="stop-btn" disabled>■ Stop</button>
                 <button class="btn btn-ghost" id="build-clear-btn">Clear log</button>
                 <div class="build-status" id="build-status"></div>
+            </div>
+
+            <div class="group">
+                <div class="group-title">Evolution graph</div>
+                <div class="group-desc">After running the randomizer, render the current <code>random_evolutions.h</code> to a PNG so you can see the structure (cycles highlighted). Requires <code>graphviz</code>.</div>
+                <div class="row" style="gap: 16px;">
+                    <button class="btn btn-accent" id="render-graph-btn">🎨 Render graph</button>
+                    <span id="render-graph-status" class="dim"></span>
+                </div>
+                <div id="render-graph-container" style="margin-top: 16px;"></div>
             </div>
         </section>
     </main>
