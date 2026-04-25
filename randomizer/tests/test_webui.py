@@ -35,9 +35,10 @@ class ApiBasics(unittest.TestCase):
         )
         self.assertEqual(r.status_code, 200, r.text)
         steps = r.json()["steps"]
-        # No targets selected -> randomize is skipped, only make.
-        self.assertEqual([s["label"] for s in steps], ["make"])
-        self.assertIn("make", steps[0]["argv"][0])
+        # No targets selected -> randomize restores pristine templates before make.
+        self.assertEqual([s["label"] for s in steps], ["randomize", "make"])
+        self.assertIn("--restore", steps[0]["argv"])
+        self.assertIn("make", steps[1]["argv"][0])
 
     def test_preview_with_randomize(self) -> None:
         r = self.client.post(
@@ -58,7 +59,8 @@ class ApiBasics(unittest.TestCase):
             "/api/build",
             json={"config": {}, "run_randomize": True, "run_make": False},
         )
-        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["steps"], 1)
 
     def test_stop_unknown_run(self) -> None:
         r = self.client.post("/api/runs/deadbeef/stop")

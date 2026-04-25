@@ -81,6 +81,16 @@ class BuildConfig:
     randomize_trainers: bool = False
     random_mode: str = RandomMode.GLOBAL
     level_scale: LevelScale = field(default_factory=LevelScale)
+    randomize_level_up_moves: bool = False
+    randomize_egg_moves: bool = False
+    randomize_tm_moves: bool = False
+    randomize_tutor_moves: bool = False
+    randomize_tmhm_compat: bool = False
+    randomize_tutor_compat: bool = False
+    moves_prefer_same_type: bool = False
+    moves_good_damaging_percent: int = 0
+    moves_block_broken: bool = False
+    guaranteed_starting_moves: int = 0
 
     # --- Evolutions tab ---
     evo_mode: str = EvoMode.VANILLA
@@ -132,6 +142,12 @@ def any_target_selected(cfg: BuildConfig) -> bool:
         cfg.randomize_wild
         or cfg.randomize_starters
         or cfg.randomize_trainers
+        or cfg.randomize_level_up_moves
+        or cfg.randomize_egg_moves
+        or cfg.randomize_tm_moves
+        or cfg.randomize_tutor_moves
+        or cfg.randomize_tmhm_compat
+        or cfg.randomize_tutor_compat
     )
 
 
@@ -178,6 +194,33 @@ def to_randomize_args(
         argv.extend(["--wild-level-percent", str(_clamp(ls.wild_percent, -100, 100))])
     if ls.trainer_percent != 0:
         argv.extend(["--trainer-level-percent", str(_clamp(ls.trainer_percent, -100, 100))])
+
+    if cfg.randomize_level_up_moves:
+        argv.append("--randomize-level-up-moves")
+    if cfg.randomize_egg_moves:
+        argv.append("--randomize-egg-moves")
+    if cfg.randomize_tm_moves:
+        argv.append("--randomize-tm-moves")
+    if cfg.randomize_tutor_moves:
+        argv.append("--randomize-tutor-moves")
+    if cfg.randomize_tmhm_compat:
+        argv.append("--randomize-tmhm-compat")
+    if cfg.randomize_tutor_compat:
+        argv.append("--randomize-tutor-compat")
+    if cfg.moves_prefer_same_type:
+        argv.append("--moves-prefer-same-type")
+    if cfg.moves_good_damaging_percent != 0:
+        argv.extend([
+            "--moves-good-damaging-percent",
+            str(_clamp(cfg.moves_good_damaging_percent, 0, 100)),
+        ])
+    if cfg.moves_block_broken:
+        argv.append("--moves-block-broken")
+    if cfg.guaranteed_starting_moves > 0:
+        argv.extend([
+            "--guaranteed-starting-moves",
+            str(_clamp(cfg.guaranteed_starting_moves, 0, 4)),
+        ])
 
     if cfg.evo_mode == EvoMode.HARDCODED:
         argv.append("--hardcoded-random-evos")

@@ -68,6 +68,45 @@ class RandomizeArgsTest(unittest.TestCase):
         self.assertEqual(args[args.index("--wild-level-percent") + 1], "100")
         self.assertEqual(args[args.index("--trainer-level-percent") + 1], "-100")
 
+    def test_move_randomizer_flags(self) -> None:
+        cfg = BuildConfig(
+            randomize_level_up_moves=True,
+            randomize_egg_moves=True,
+            randomize_tm_moves=True,
+            randomize_tutor_moves=True,
+            randomize_tmhm_compat=True,
+            randomize_tutor_compat=True,
+            moves_prefer_same_type=True,
+            moves_good_damaging_percent=40,
+            moves_block_broken=True,
+            guaranteed_starting_moves=4,
+        )
+        args = to_randomize_args(cfg, python_executable="py")
+        for flag in (
+            "--randomize-level-up-moves",
+            "--randomize-egg-moves",
+            "--randomize-tm-moves",
+            "--randomize-tutor-moves",
+            "--randomize-tmhm-compat",
+            "--randomize-tutor-compat",
+            "--moves-prefer-same-type",
+            "--moves-block-broken",
+        ):
+            self.assertIn(flag, args)
+        self.assertEqual(args[args.index("--moves-good-damaging-percent") + 1], "40")
+        self.assertEqual(args[args.index("--guaranteed-starting-moves") + 1], "4")
+        self.assertNotIn("--restore", args)
+
+    def test_move_randomizer_numeric_options_are_clamped(self) -> None:
+        cfg = BuildConfig(
+            randomize_level_up_moves=True,
+            moves_good_damaging_percent=999,
+            guaranteed_starting_moves=999,
+        )
+        args = to_randomize_args(cfg, python_executable="py")
+        self.assertEqual(args[args.index("--moves-good-damaging-percent") + 1], "100")
+        self.assertEqual(args[args.index("--guaranteed-starting-moves") + 1], "4")
+
     def test_hardcoded_evos_no_constraints(self) -> None:
         cfg = BuildConfig(evo_mode=EvoMode.HARDCODED)
         args = to_randomize_args(cfg, python_executable="py")

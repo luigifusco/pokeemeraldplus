@@ -8,6 +8,57 @@ from pathlib import Path
 RANDOMIZE_SPECIES_PATTERN = re.compile(r"\bSPECIES_[A-Z0-9_]+\b")
 MOVES_FIELD_PATTERN = re.compile(r"(?m)^\s*\.moves\s*=\s*\{[^}]*\}\s*,?\s*$\n?")
 TRAINER_LVL_PATTERN = re.compile(r"(?m)(^\s*\.lvl\s*=\s*)(\d+)(\s*,)")
+MOVE_DEFINE_PATTERN = re.compile(r"^#define\s+(MOVE_[A-Z0-9_]+)\s+(\d+)\b", re.MULTILINE)
+MOVE_BLOCK_PATTERN = re.compile(r"\[(MOVE_[A-Z0-9_]+)\]\s*=\s*\{(.*?)\n\s*\},", re.DOTALL)
+SPECIES_INFO_BLOCK_PATTERN = re.compile(
+    r"^\s*\[(SPECIES_[A-Z0-9_]+)\]\s*=\s*(?:\{([^\n{}]*)\},|\{(.*?)^\s*\},)",
+    re.DOTALL | re.MULTILINE,
+)
+LEVEL_UP_BLOCK_PATTERN = re.compile(
+    r"static const u16 (s[A-Za-z0-9_]+LevelUpLearnset)\[\] = \{\n(.*?)\n\};",
+    re.DOTALL,
+)
+LEVEL_UP_ENTRY_PATTERN = re.compile(r"LEVEL_UP_MOVE\(\s*(\d+)\s*,\s*(MOVE_[A-Z0-9_]+)\s*\)")
+LEVEL_UP_POINTER_PATTERN = re.compile(
+    r"\[(SPECIES_[A-Z0-9_]+)\]\s*=\s*(s[A-Za-z0-9_]+LevelUpLearnset)"
+)
+EGG_MOVES_BLOCK_PATTERN = re.compile(r"    egg_moves\(([A-Z0-9_]+),\n(.*?)\)", re.DOTALL)
+TMHM_LEARNSET_BLOCK_PATTERN = re.compile(
+    r"    \[(SPECIES_[A-Z0-9_]+)\]\s*=\s*\{ \.learnset = \{\n(.*?)\n    \} \},",
+    re.DOTALL,
+)
+TUTOR_MOVE_ENTRY_PATTERN = re.compile(r"\[(TUTOR_MOVE_[A-Z0-9_]+)\]\s*=\s*(MOVE_[A-Z0-9_]+)")
+TUTOR_LEARNSET_BLOCK_PATTERN = re.compile(
+    r"    \[(SPECIES_[A-Z0-9_]+)\]\s*=\s*\((.*?)\),",
+    re.DOTALL,
+)
+
+SPECIAL_TYPES = {
+    "TYPE_FIRE",
+    "TYPE_WATER",
+    "TYPE_GRASS",
+    "TYPE_ELECTRIC",
+    "TYPE_PSYCHIC",
+    "TYPE_ICE",
+    "TYPE_DRAGON",
+    "TYPE_DARK",
+}
+ALWAYS_BANNED_MOVES = {
+    "MOVE_NONE",
+    "MOVE_STRUGGLE",
+}
+BROKEN_MOVE_EFFECTS = {
+    "EFFECT_OHKO",
+    "EFFECT_EXPLOSION",
+    "EFFECT_TELEPORT",
+    "EFFECT_MEMENTO",
+    "EFFECT_PERISH_SONG",
+}
+GOOD_DAMAGING_MIN_ACCURACY = 70
+
+
+def _clamp_percent(value: int) -> int:
+    return max(0, min(100, value))
 
 
 def _clamp_level(level: int) -> int:
@@ -78,6 +129,519 @@ def convert_trainers_to_default_moves(text: str) -> str:
     text = text.replace("NO_ITEM_CUSTOM_MOVES(", "NO_ITEM_DEFAULT_MOVES(")
     text = text.replace("ITEM_CUSTOM_MOVES(", "ITEM_DEFAULT_MOVES(")
     return text
+
+
+def _field_value(block: str, field: str) -> str | None:
+    match = re.search(rf"\.{field}\s*=\s*([^,\n}}]+)", block)
+    return match.group(1).strip() if match else None
+
+
+def _parse_int_field(block: str, field: str, default: int = 0) -> int:
+    value = _field_value(block, field)
+    if value is None:
+        return default
+    try:
+        return int(value, 0)
+    except ValueError:
+        return default
+
+
+def parse_move_constants(text: str) -> list[str]:
+    moves: list[tuple[int, str]] = []
+    for name, value in MOVE_DEFINE_PATTERN.findall(text):
+        if name in ("MOVE_UNAVAILABLE",):
+            continue
+        moves.append((int(value), name))
+    return [name for _, name in sorted(moves)]
+
+
+def parse_battle_moves(text: str) -> dict[str, dict[str, object]]:
+    moves: dict[str, dict[str, object]] = {}
+    for move, block in MOVE_BLOCK_PATTERN.findall(text):
+        moves[move] = {
+            "effect": _field_value(block, "effect") or "",
+            "power": _parse_int_field(block, "power"),
+            "type": _field_value(block, "type") or "TYPE_NORMAL",
+            "accuracy": _parse_int_field(block, "accuracy", 100),
+        }
+    return moves
+
+
+def parse_species_info(text: str) -> dict[str, dict[str, object]]:
+    species: dict[str, dict[str, object]] = {}
+    for species_token, one_line_block, multi_line_block in SPECIES_INFO_BLOCK_PATTERN.findall(text):
+        block = multi_line_block or one_line_block
+        types_match = re.search(r"\.types\s*=\s*\{\s*(TYPE_[A-Z_]+)\s*,\s*(TYPE_[A-Z_]+)\s*\}", block)
+        if not types_match:
+            continue
+        species[species_token] = {
+            "attack": _parse_int_field(block, "baseAttack", 50),
+            "sp_attack": _parse_int_field(block, "baseSpAttack", 50),
+            "types": (types_match.group(1), types_match.group(2)),
+        }
+    return species
+
+
+def _parse_foreach_items(text: str, macro_name: str, stop_macro: str) -> list[str]:
+    match = re.search(
+        rf"#define {macro_name}\(F\) \\\n(.*?)(?=\n#define {stop_macro})",
+        text,
+        re.DOTALL,
+    )
+    if not match:
+        return []
+    return re.findall(r"F\(([A-Z0-9_]+)\)", match.group(1))
+
+
+def parse_tmhm_ids(text: str) -> tuple[list[str], list[str]]:
+    return (
+        _parse_foreach_items(text, "FOREACH_TM", "FOREACH_HM"),
+        _parse_foreach_items(text, "FOREACH_HM", "FOREACH_TMHM"),
+    )
+
+
+def _format_foreach_tm(tm_ids: list[str]) -> str:
+    lines = ["#define FOREACH_TM(F) \\"]
+    for i, tm_id in enumerate(tm_ids):
+        suffix = " \\" if i != len(tm_ids) - 1 else ""
+        lines.append(f"    F({tm_id}){suffix}")
+    return "\n".join(lines)
+
+
+def replace_foreach_tm(text: str, tm_ids: list[str]) -> str:
+    return re.sub(
+        r"#define FOREACH_TM\(F\) \\\n.*?(?=\n#define FOREACH_HM)",
+        _format_foreach_tm(tm_ids),
+        text,
+        flags=re.DOTALL,
+    )
+
+
+def parse_tutor_moves(text: str) -> list[tuple[str, str]]:
+    return [(slot, move) for slot, move in TUTOR_MOVE_ENTRY_PATTERN.findall(text)]
+
+
+def _is_special_move(move: str, move_data: dict[str, dict[str, object]]) -> bool:
+    return move_data.get(move, {}).get("type") in SPECIAL_TYPES
+
+
+def _is_good_damaging(move: str, move_data: dict[str, dict[str, object]]) -> bool:
+    info = move_data.get(move)
+    if not info:
+        return False
+    return (
+        int(info.get("power", 0)) > 1
+        and int(info.get("accuracy", 0)) >= GOOD_DAMAGING_MIN_ACCURACY
+        and info.get("effect") not in BROKEN_MOVE_EFFECTS
+    )
+
+
+def _valid_moves(
+    all_moves: list[str],
+    move_data: dict[str, dict[str, object]],
+    *,
+    no_broken: bool,
+    excluded_moves: set[str] | None = None,
+) -> list[str]:
+    excluded = set(excluded_moves or set())
+    excluded.update(ALWAYS_BANNED_MOVES)
+    if no_broken:
+        excluded.update(
+            move for move, info in move_data.items()
+            if info.get("effect") in BROKEN_MOVE_EFFECTS
+        )
+    return [
+        move for move in all_moves
+        if move in move_data and move not in excluded
+    ]
+
+
+def _move_type(move: str, move_data: dict[str, dict[str, object]]) -> str | None:
+    value = move_data.get(move, {}).get("type")
+    return value if isinstance(value, str) else None
+
+
+def _unused(pool: list[str], learnt: set[str]) -> list[str]:
+    return [move for move in pool if move not in learnt]
+
+
+def _species_type_choice(species: dict[str, object] | None) -> str | None:
+    if not species:
+        return None
+    types = tuple(t for t in species.get("types", ()) if t != "TYPE_NONE")
+    if not types:
+        return None
+    primary = types[0]
+    secondary = types[1] if len(types) > 1 else primary
+    if secondary == primary:
+        secondary = None
+
+    roll = random.random()
+    if secondary is None:
+        return primary if roll < 0.4 else None
+    if primary == "TYPE_NORMAL" or secondary == "TYPE_NORMAL":
+        other = secondary if primary == "TYPE_NORMAL" else primary
+        if roll < 0.1:
+            return "TYPE_NORMAL"
+        if roll < 0.4:
+            return other
+        return None
+    if roll < 0.2:
+        return primary
+    if roll < 0.4:
+        return secondary
+    return None
+
+
+def _attack_bias_pick_category(species: dict[str, object] | None) -> str | None:
+    if not species:
+        return None
+    attack = max(1, int(species.get("attack", 50)))
+    sp_attack = max(1, int(species.get("sp_attack", 50)))
+    physical_chance = attack / (attack + sp_attack)
+    return "physical" if random.random() < physical_chance else "special"
+
+
+def _pick_random_move(
+    *,
+    valid_moves: list[str],
+    good_damaging_moves: list[str],
+    moves_by_type: dict[str, list[str]],
+    good_moves_by_type: dict[str, list[str]],
+    move_data: dict[str, dict[str, object]],
+    species: dict[str, object] | None,
+    learnt: set[str],
+    prefer_same_type: bool,
+    force_good_damaging: bool,
+) -> str:
+    pick_pool = valid_moves
+    preferred_type = _species_type_choice(species) if prefer_same_type else None
+
+    if force_good_damaging:
+        if preferred_type and _unused(good_moves_by_type.get(preferred_type, []), learnt):
+            pick_pool = good_moves_by_type[preferred_type]
+        elif _unused(good_damaging_moves, learnt):
+            pick_pool = good_damaging_moves
+
+        category = _attack_bias_pick_category(species)
+        if category:
+            wants_special = category == "special"
+            category_pool = [
+                move for move in pick_pool
+                if _is_special_move(move, move_data) == wants_special
+            ]
+            if _unused(category_pool, learnt):
+                pick_pool = category_pool
+    elif preferred_type and _unused(moves_by_type.get(preferred_type, []), learnt):
+        pick_pool = moves_by_type[preferred_type]
+
+    unused = _unused(pick_pool, learnt)
+    if not unused:
+        unused = _unused(valid_moves, learnt)
+    if not unused:
+        unused = valid_moves
+    return random.choice(unused)
+
+
+def _build_move_pools(
+    valid_moves: list[str],
+    move_data: dict[str, dict[str, object]],
+) -> tuple[list[str], dict[str, list[str]], dict[str, list[str]]]:
+    good_damaging_moves = [move for move in valid_moves if _is_good_damaging(move, move_data)]
+    moves_by_type: dict[str, list[str]] = {}
+    good_moves_by_type: dict[str, list[str]] = {}
+    for move in valid_moves:
+        move_type = _move_type(move, move_data)
+        if move_type:
+            moves_by_type.setdefault(move_type, []).append(move)
+            if move in good_damaging_moves:
+                good_moves_by_type.setdefault(move_type, []).append(move)
+    return good_damaging_moves, moves_by_type, good_moves_by_type
+
+
+def _randomized_move_list(
+    count: int,
+    species: dict[str, object] | None,
+    valid_moves: list[str],
+    move_data: dict[str, dict[str, object]],
+    *,
+    prefer_same_type: bool,
+    good_damaging_percent: int,
+    force_index_good: int | None = None,
+) -> list[str]:
+    good_damaging_moves, moves_by_type, good_moves_by_type = _build_move_pools(valid_moves, move_data)
+    learnt: set[str] = set()
+    picked: list[str] = []
+    good_left = int(round((_clamp_percent(good_damaging_percent) / 100.0) * count))
+
+    for i in range(count):
+        force_good = (force_index_good is not None and i == force_index_good) or good_left > 0
+        move = _pick_random_move(
+            valid_moves=valid_moves,
+            good_damaging_moves=good_damaging_moves,
+            moves_by_type=moves_by_type,
+            good_moves_by_type=good_moves_by_type,
+            move_data=move_data,
+            species=species,
+            learnt=learnt,
+            prefer_same_type=prefer_same_type,
+            force_good_damaging=force_good,
+        )
+        picked.append(move)
+        learnt.add(move)
+        if force_index_good is None or i != force_index_good:
+            good_left -= 1
+    return picked
+
+
+def randomize_level_up_learnsets(
+    text: str,
+    pointer_text: str,
+    species_info: dict[str, dict[str, object]],
+    valid_moves: list[str],
+    move_data: dict[str, dict[str, object]],
+    *,
+    prefer_same_type: bool,
+    good_damaging_percent: int,
+    guaranteed_starting_moves: int,
+) -> str:
+    learnset_species = {
+        learnset: species
+        for species, learnset in LEVEL_UP_POINTER_PATTERN.findall(pointer_text)
+        if species != "SPECIES_NONE"
+    }
+
+    def repl(match: re.Match[str]) -> str:
+        learnset_name = match.group(1)
+        body = match.group(2)
+        species = learnset_species.get(learnset_name)
+        entries = [(int(level), move) for level, move in LEVEL_UP_ENTRY_PATTERN.findall(body)]
+        if not species or not entries:
+            return match.group(0)
+
+        levels = [level for level, _ in entries]
+        if guaranteed_starting_moves > 0:
+            lv1_count = sum(1 for level in levels if level == 1)
+            insert_at = 0
+            while insert_at < len(levels) and levels[insert_at] <= 1:
+                insert_at += 1
+            for _ in range(max(0, guaranteed_starting_moves - lv1_count)):
+                levels.insert(insert_at, 1)
+                insert_at += 1
+
+        lv1_indices = [i for i, level in enumerate(levels) if level == 1]
+        force_index = lv1_indices[-1] if lv1_indices else 0
+        picked = _randomized_move_list(
+            len(levels),
+            species_info.get(species),
+            valid_moves,
+            move_data,
+            prefer_same_type=prefer_same_type,
+            good_damaging_percent=good_damaging_percent,
+            force_index_good=force_index,
+        )
+        random.shuffle(picked)
+        forced_move = picked[force_index]
+        for i, move in enumerate(picked):
+            if _is_good_damaging(move, move_data):
+                forced_move = move
+                break
+        if picked[force_index] != forced_move:
+            swap_index = picked.index(forced_move)
+            picked[swap_index], picked[force_index] = picked[force_index], picked[swap_index]
+
+        lines = [f"static const u16 {learnset_name}[] = {{"]
+        for level, move in zip(levels, picked):
+            lines.append(f"    LEVEL_UP_MOVE({level:2d}, {move}),")
+        lines.append("    LEVEL_UP_END")
+        lines.append("};")
+        return "\n".join(lines)
+
+    return LEVEL_UP_BLOCK_PATTERN.sub(repl, text)
+
+
+def randomize_egg_moves(
+    text: str,
+    species_info: dict[str, dict[str, object]],
+    valid_moves: list[str],
+    move_data: dict[str, dict[str, object]],
+    *,
+    prefer_same_type: bool,
+    good_damaging_percent: int,
+) -> str:
+    def repl(match: re.Match[str]) -> str:
+        species_name = match.group(1)
+        species = f"SPECIES_{species_name}"
+        old_moves = re.findall(r"MOVE_[A-Z0-9_]+", match.group(2))
+        if not old_moves or species not in species_info:
+            return match.group(0)
+        picked = _randomized_move_list(
+            len(old_moves),
+            species_info.get(species),
+            valid_moves,
+            move_data,
+            prefer_same_type=prefer_same_type,
+            good_damaging_percent=good_damaging_percent,
+        )
+        random.shuffle(picked)
+        lines = [f"    egg_moves({species_name},"]
+        for i, move in enumerate(picked):
+            comma = "," if i != len(picked) - 1 else ""
+            lines.append(f"              {move}{comma}")
+        lines[-1] += ")"
+        return "\n".join(lines)
+
+    return EGG_MOVES_BLOCK_PATTERN.sub(repl, text)
+
+
+def randomize_tm_moves(
+    tms_hms_text: str,
+    all_moves: list[str],
+    move_data: dict[str, dict[str, object]],
+    *,
+    no_broken: bool,
+    good_damaging_percent: int,
+) -> str:
+    tm_ids, hm_ids = parse_tmhm_ids(tms_hms_text)
+    excluded = {f"MOVE_{hm_id}" for hm_id in hm_ids}
+    valid = _valid_moves(all_moves, move_data, no_broken=no_broken, excluded_moves=excluded)
+    good = [move for move in valid if _is_good_damaging(move, move_data)]
+    picked: list[str] = []
+    good_left = int(round((_clamp_percent(good_damaging_percent) / 100.0) * len(tm_ids)))
+    for _ in tm_ids:
+        pool = good if good_left > 0 and _unused(good, set(picked)) else valid
+        move = random.choice(_unused(pool, set(picked)))
+        picked.append(move)
+        good_left -= 1
+    random.shuffle(picked)
+    return replace_foreach_tm(tms_hms_text, [move.removeprefix("MOVE_") for move in picked])
+
+
+def randomize_tutor_moves(
+    text: str,
+    all_moves: list[str],
+    move_data: dict[str, dict[str, object]],
+    tms_hms_text: str,
+    *,
+    no_broken: bool,
+    good_damaging_percent: int,
+) -> str:
+    tutor_slots = parse_tutor_moves(text)
+    tm_ids, hm_ids = parse_tmhm_ids(tms_hms_text)
+    excluded = {f"MOVE_{move_id}" for move_id in tm_ids + hm_ids}
+    valid = _valid_moves(all_moves, move_data, no_broken=no_broken, excluded_moves=excluded)
+    good = [move for move in valid if _is_good_damaging(move, move_data)]
+    picked: list[str] = []
+    good_left = int(round((_clamp_percent(good_damaging_percent) / 100.0) * len(tutor_slots)))
+    for _ in tutor_slots:
+        pool = good if good_left > 0 and _unused(good, set(picked)) else valid
+        move = random.choice(_unused(pool, set(picked)))
+        picked.append(move)
+        good_left -= 1
+
+    iterator = iter(picked)
+
+    def repl(match: re.Match[str]) -> str:
+        return f"[{match.group(1)}] = {next(iterator)}"
+
+    return TUTOR_MOVE_ENTRY_PATTERN.sub(repl, text)
+
+
+def _compat_probability(
+    species: dict[str, object] | None,
+    move: str,
+    move_data: dict[str, dict[str, object]],
+    prefer_same_type: bool,
+) -> float:
+    if not prefer_same_type or not species:
+        return 0.5
+    move_type = _move_type(move, move_data)
+    types = set(species.get("types", ()))
+    if move_type in types:
+        return 0.9
+    if move_type == "TYPE_NORMAL":
+        return 0.5
+    return 0.25
+
+
+def randomize_tmhm_compatibility(
+    text: str,
+    tms_hms_text: str,
+    species_info: dict[str, dict[str, object]],
+    move_data: dict[str, dict[str, object]],
+    *,
+    prefer_same_type: bool,
+) -> str:
+    tm_ids, hm_ids = parse_tmhm_ids(tms_hms_text)
+    fields = tm_ids + hm_ids
+
+    def repl(match: re.Match[str]) -> str:
+        species = match.group(1)
+        if species == "SPECIES_NONE":
+            return match.group(0)
+        info = species_info.get(species, {"types": (), "attack": 50, "sp_attack": 50})
+        learned = []
+        for field in fields:
+            move = f"MOVE_{field}"
+            if random.random() < _compat_probability(info, move, move_data, prefer_same_type):
+                learned.append(field)
+        if not learned:
+            return f"    [{species}] = {{ .learnset = {{\n    }} }},"
+        lines = [f"    [{species}] = {{ .learnset = {{"]
+        for field in learned:
+            lines.append(f"        .{field} = TRUE,")
+        lines.append("    } },")
+        return "\n".join(lines)
+
+    return TMHM_LEARNSET_BLOCK_PATTERN.sub(repl, text)
+
+
+def remap_tmhm_compatibility_fields(
+    text: str,
+    old_tms_hms_text: str,
+    new_tms_hms_text: str,
+) -> str:
+    old_tm_ids, old_hm_ids = parse_tmhm_ids(old_tms_hms_text)
+    new_tm_ids, new_hm_ids = parse_tmhm_ids(new_tms_hms_text)
+    field_map = {
+        old: new
+        for old, new in zip(old_tm_ids + old_hm_ids, new_tm_ids + new_hm_ids)
+    }
+
+    def repl(match: re.Match[str]) -> str:
+        field = match.group(1)
+        return f".{field_map.get(field, field)} = TRUE"
+
+    return re.sub(r"\.([A-Z0-9_]+)\s*=\s*TRUE", repl, text)
+
+
+def randomize_tutor_compatibility(
+    text: str,
+    species_info: dict[str, dict[str, object]],
+    move_data: dict[str, dict[str, object]],
+    *,
+    prefer_same_type: bool,
+) -> str:
+    tutor_slots = parse_tutor_moves(text)
+
+    def repl(match: re.Match[str]) -> str:
+        species = match.group(1)
+        if species == "SPECIES_NONE":
+            return match.group(0)
+        info = species_info.get(species, {"types": (), "attack": 50, "sp_attack": 50})
+        learned: list[str] = []
+        for slot, actual_move in tutor_slots:
+            if random.random() < _compat_probability(info, actual_move, move_data, prefer_same_type):
+                learned.append(slot.removeprefix("TUTOR_"))
+        if not learned:
+            return f"    [{species:<24}] = (0),"
+        lines = [f"    [{species:<24}] = (TUTOR({learned[0]})"]
+        for slot in learned[1:]:
+            lines.append(f"                                | TUTOR({slot})")
+        lines[-1] += "),"
+        return "\n".join(lines)
+
+    return TUTOR_LEARNSET_BLOCK_PATTERN.sub(repl, text)
 
 
 def randomize_species_in_text(text: str, all_species: list[str], *, per_occurrence: bool) -> str:
@@ -669,14 +1233,25 @@ def restore_originals(randomizer_dir: Path, repo_root: Path) -> None:
         "src/starter_choose.c",
         "src/data/trainer_parties.h",
         "src/data/trainers.h",
+        "src/data/pokemon/level_up_learnsets.h",
+        "src/data/pokemon/egg_moves.h",
+        "src/data/pokemon/tmhm_learnsets.h",
+        "src/data/pokemon/tutor_learnsets.h",
+        "include/constants/tms_hms.h",
     )
 
     # Restore from templates in randomizer/.
+    move_templates = randomizer_dir / "move_templates"
     template_map = {
         "src/data/wild_encounters.json": randomizer_dir / "wild_encounters.json",
         "src/starter_choose.c": randomizer_dir / "starter_choose.c",
         "src/data/trainer_parties.h": randomizer_dir / "trainer_parties.h",
         "src/data/trainers.h": randomizer_dir / "trainers.h",
+        "src/data/pokemon/level_up_learnsets.h": move_templates / "level_up_learnsets.h",
+        "src/data/pokemon/egg_moves.h": move_templates / "egg_moves.h",
+        "src/data/pokemon/tmhm_learnsets.h": move_templates / "tmhm_learnsets.h",
+        "src/data/pokemon/tutor_learnsets.h": move_templates / "tutor_learnsets.h",
+        "include/constants/tms_hms.h": move_templates / "tms_hms.h",
     }
 
     for rel in targets:
@@ -764,6 +1339,61 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--randomize-level-up-moves",
+        action="store_true",
+        help="Randomize Pokémon level-up learnsets while preserving learn levels.",
+    )
+    parser.add_argument(
+        "--randomize-egg-moves",
+        action="store_true",
+        help="Randomize egg move lists while preserving list sizes.",
+    )
+    parser.add_argument(
+        "--randomize-tm-moves",
+        action="store_true",
+        help="Randomize TM move slots. HM move slots are preserved.",
+    )
+    parser.add_argument(
+        "--randomize-tutor-moves",
+        action="store_true",
+        help="Randomize move tutor move slots, excluding current TM/HM moves.",
+    )
+    parser.add_argument(
+        "--randomize-tmhm-compat",
+        action="store_true",
+        help="Randomize each species' TM/HM compatibility.",
+    )
+    parser.add_argument(
+        "--randomize-tutor-compat",
+        action="store_true",
+        help="Randomize each species' move tutor compatibility.",
+    )
+    parser.add_argument(
+        "--moves-prefer-same-type",
+        action="store_true",
+        help="Bias randomized moves and compatibility toward the Pokémon's type(s).",
+    )
+    parser.add_argument(
+        "--moves-good-damaging-percent",
+        type=int,
+        default=0,
+        help="Percent of randomized move slots that should prefer good damaging moves (0..100).",
+    )
+    parser.add_argument(
+        "--moves-block-broken",
+        action="store_true",
+        help="Exclude potentially game-breaking moves from randomized move pools.",
+    )
+    parser.add_argument(
+        "--guaranteed-starting-moves",
+        type=int,
+        default=0,
+        help=(
+            "For level-up learnsets, ensure at least this many level-1 slots before "
+            "randomizing moves. Existing learn levels are otherwise preserved."
+        ),
+    )
+    parser.add_argument(
         "--hardcoded-random-evos",
         action="store_true",
         help=(
@@ -836,7 +1466,15 @@ def main() -> None:
     randomizer_dir = Path(__file__).resolve().parent
     repo_root = randomizer_dir.parent
 
-    selected_any = args.all or args.wild or args.starters or args.trainers
+    move_selected = (
+        args.randomize_level_up_moves
+        or args.randomize_egg_moves
+        or args.randomize_tm_moves
+        or args.randomize_tutor_moves
+        or args.randomize_tmhm_compat
+        or args.randomize_tutor_compat
+    )
+    selected_any = args.all or args.wild or args.starters or args.trainers or move_selected
 
     wild_level_percent = args.level_percent if args.wild_level_percent is None else args.wild_level_percent
     trainer_level_percent = (
@@ -928,6 +1566,106 @@ def main() -> None:
         trainers = (randomizer_dir / "trainers.h").read_text()
         trainers = convert_trainers_to_default_moves(trainers)
         (repo_root / "src/data/trainers.h").write_text(trainers)
+
+    if move_selected:
+        move_constants = (repo_root / "include/constants/moves.h").read_text()
+        battle_moves_text = (repo_root / "src/data/battle_moves.h").read_text()
+        species_info_text = (repo_root / "src/data/pokemon/species_info.h").read_text()
+        all_moves = parse_move_constants(move_constants)
+        move_data = parse_battle_moves(battle_moves_text)
+        species_info = parse_species_info(species_info_text)
+
+        tms_hms_path = repo_root / "include/constants/tms_hms.h"
+        tms_hms_text = tms_hms_path.read_text()
+        original_tms_hms_text = tms_hms_text
+
+        hm_ids = parse_tmhm_ids(tms_hms_text)[1]
+        levelup_excluded = {f"MOVE_{hm_id}" for hm_id in hm_ids}
+        valid_levelup_moves = _valid_moves(
+            all_moves,
+            move_data,
+            no_broken=args.moves_block_broken,
+            excluded_moves=levelup_excluded,
+        )
+        good_damaging_percent = _clamp_percent(args.moves_good_damaging_percent)
+
+        if args.randomize_tm_moves:
+            tms_hms_text = randomize_tm_moves(
+                tms_hms_text,
+                all_moves,
+                move_data,
+                no_broken=args.moves_block_broken,
+                good_damaging_percent=good_damaging_percent,
+            )
+            tms_hms_path.write_text(tms_hms_text)
+
+        if args.randomize_level_up_moves:
+            levelup_path = repo_root / "src/data/pokemon/level_up_learnsets.h"
+            pointer_text = (repo_root / "src/data/pokemon/level_up_learnset_pointers.h").read_text()
+            levelup_text = randomize_level_up_learnsets(
+                levelup_path.read_text(),
+                pointer_text,
+                species_info,
+                valid_levelup_moves,
+                move_data,
+                prefer_same_type=args.moves_prefer_same_type,
+                good_damaging_percent=good_damaging_percent,
+                guaranteed_starting_moves=max(0, args.guaranteed_starting_moves),
+            )
+            levelup_path.write_text(levelup_text)
+
+        if args.randomize_egg_moves:
+            egg_path = repo_root / "src/data/pokemon/egg_moves.h"
+            egg_text = randomize_egg_moves(
+                egg_path.read_text(),
+                species_info,
+                valid_levelup_moves,
+                move_data,
+                prefer_same_type=args.moves_prefer_same_type,
+                good_damaging_percent=good_damaging_percent,
+            )
+            egg_path.write_text(egg_text)
+
+        tutor_path = repo_root / "src/data/pokemon/tutor_learnsets.h"
+        tutor_text = tutor_path.read_text()
+        if args.randomize_tutor_moves:
+            tutor_text = randomize_tutor_moves(
+                tutor_text,
+                all_moves,
+                move_data,
+                tms_hms_text,
+                no_broken=args.moves_block_broken,
+                good_damaging_percent=good_damaging_percent,
+            )
+            tutor_path.write_text(tutor_text)
+
+        if args.randomize_tmhm_compat:
+            tmhm_path = repo_root / "src/data/pokemon/tmhm_learnsets.h"
+            tmhm_text = randomize_tmhm_compatibility(
+                tmhm_path.read_text(),
+                tms_hms_text,
+                species_info,
+                move_data,
+                prefer_same_type=args.moves_prefer_same_type,
+            )
+            tmhm_path.write_text(tmhm_text)
+        elif args.randomize_tm_moves:
+            tmhm_path = repo_root / "src/data/pokemon/tmhm_learnsets.h"
+            tmhm_text = remap_tmhm_compatibility_fields(
+                tmhm_path.read_text(),
+                original_tms_hms_text,
+                tms_hms_text,
+            )
+            tmhm_path.write_text(tmhm_text)
+
+        if args.randomize_tutor_compat:
+            tutor_text = randomize_tutor_compatibility(
+                tutor_text,
+                species_info,
+                move_data,
+                prefer_same_type=args.moves_prefer_same_type,
+            )
+            tutor_path.write_text(tutor_text)
 
 
 if __name__ == "__main__":

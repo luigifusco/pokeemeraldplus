@@ -51,6 +51,37 @@
             </div>
 
             <div class="group">
+                <div class="group-title">Moves</div>
+                <div class="group-desc">UPR-style move randomization. Move power, type, accuracy, PP, and category are not changed.</div>
+                <label class="check"><input type="checkbox" data-bind="randomize_level_up_moves" /><span class="box"></span>
+                    <span><strong>Level-up moves</strong> — preserve learn levels/slots and replace move IDs.</span></label>
+                <label class="check"><input type="checkbox" data-bind="randomize_egg_moves" /><span class="box"></span>
+                    <span><strong>Egg moves</strong> — preserve list sizes and replace move IDs.</span></label>
+                <label class="check"><input type="checkbox" data-bind="randomize_tm_moves" /><span class="box"></span>
+                    <span><strong>TM moves</strong> — randomize TM identities; HMs stay field-safe.</span></label>
+                <label class="check"><input type="checkbox" data-bind="randomize_tutor_moves" /><span class="box"></span>
+                    <span><strong>Tutor moves</strong> — randomize tutor identities, avoiding TM/HM overlap.</span></label>
+                <label class="check"><input type="checkbox" data-bind="randomize_tmhm_compat" /><span class="box"></span>
+                    <span><strong>TM/HM compatibility</strong> — reroll learnability per species.</span></label>
+                <label class="check"><input type="checkbox" data-bind="randomize_tutor_compat" /><span class="box"></span>
+                    <span><strong>Tutor compatibility</strong> — reroll tutor learnability per species.</span></label>
+                <label class="check"><input type="checkbox" data-bind="moves_prefer_same_type" /><span class="box"></span>
+                    <span><strong>Prefer same type</strong> — bias move picks and compatibility toward the Pokémon's type(s).</span></label>
+                <label class="check"><input type="checkbox" data-bind="moves_block_broken" /><span class="box"></span>
+                    <span><strong>Block broken moves</strong> — exclude Sketch, Struggle, Chatter, and Shadow moves.</span></label>
+                <div class="row">
+                    <div class="row-label"><strong>Good damaging %</strong><small>Chance each randomized move slot prefers accurate damaging moves.</small></div>
+                    <input type="range" min="0" max="100" step="5" data-bind="moves_good_damaging_percent" />
+                    <input type="number" class="num-mirror" min="0" max="100" data-bind="moves_good_damaging_percent" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Starting moves</strong><small>Ensure this many level-1 move slots before randomizing level-up moves.</small></div>
+                    <input type="range" min="0" max="4" step="1" data-bind="guaranteed_starting_moves" />
+                    <input type="number" class="num-mirror" min="0" max="4" data-bind="guaranteed_starting_moves" />
+                </div>
+            </div>
+
+            <div class="group">
                 <div class="group-title">Distribution</div>
                 <div class="group-desc">How random picks are reused across the game.</div>
                 <label class="radio"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="global" /><span class="box"></span>

@@ -56,6 +56,16 @@ class BuildConfigModel(BaseModel):
     randomize_trainers: bool = False
     random_mode: str = RandomMode.GLOBAL
     level_scale: LevelScaleModel = Field(default_factory=LevelScaleModel)
+    randomize_level_up_moves: bool = False
+    randomize_egg_moves: bool = False
+    randomize_tm_moves: bool = False
+    randomize_tutor_moves: bool = False
+    randomize_tmhm_compat: bool = False
+    randomize_tutor_compat: bool = False
+    moves_prefer_same_type: bool = False
+    moves_good_damaging_percent: int = 0
+    moves_block_broken: bool = False
+    guaranteed_starting_moves: int = 0
     # Evolutions
     evo_mode: str = EvoMode.VANILLA
     evo_constraints: EvoConstraintsModel = Field(default_factory=EvoConstraintsModel)
