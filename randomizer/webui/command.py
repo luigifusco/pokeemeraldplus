@@ -76,6 +76,7 @@ class BuildConfig:
     """
 
     # --- Randomizer tab ---
+    seed: str | None = None
     randomize_wild: bool = False
     randomize_starters: bool = False
     randomize_trainers: bool = False
@@ -172,6 +173,9 @@ def to_randomize_args(
 
     argv: list[str] = [python_executable or sys.executable, script_path]
 
+    if cfg.seed:
+        argv.extend(["--seed", cfg.seed])
+
     has_targets = any_target_selected(cfg)
 
     if has_targets:
@@ -240,6 +244,20 @@ def to_randomize_args(
             argv.extend(["--evo-max-tree-depth", str(ec.max_tree_depth)])
 
     return argv
+
+
+def to_evolution_graph_args(
+    python_executable: str | None = None,
+    script_path: str = "randomizer/evolution_graph.py",
+) -> list[str]:
+    return [python_executable or sys.executable, script_path]
+
+
+def to_spoiler_report_args(
+    python_executable: str | None = None,
+    script_path: str = "randomizer/spoiler_report.py",
+) -> list[str]:
+    return [python_executable or sys.executable, script_path]
 
 
 # ---------------------------------------------------------------------------

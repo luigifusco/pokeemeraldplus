@@ -19,8 +19,10 @@ from .command import (
     EvoMode,
     LevelScale,
     RandomMode,
+    to_evolution_graph_args,
     to_make_args,
     to_randomize_args,
+    to_spoiler_report_args,
 )
 from .runner import Step, manager
 
@@ -51,6 +53,7 @@ class LevelScaleModel(BaseModel):
 
 class BuildConfigModel(BaseModel):
     # Randomizer
+    seed: Optional[str] = None
     randomize_wild: bool = False
     randomize_starters: bool = False
     randomize_trainers: bool = False
@@ -133,6 +136,8 @@ def create_app() -> FastAPI:
         # randomizer/, undoing any previous run's shuffling.
         if req.run_randomize:
             steps.append({"label": "randomize", "argv": to_randomize_args(cfg)})
+            steps.append({"label": "evolution graph", "argv": to_evolution_graph_args()})
+            steps.append({"label": "spoiler report", "argv": to_spoiler_report_args()})
         if req.run_make:
             steps.append({"label": "make", "argv": to_make_args(cfg, jobs=req.jobs)})
         return JSONResponse({"steps": steps})
@@ -148,6 +153,8 @@ def create_app() -> FastAPI:
         # source files.
         if req.run_randomize:
             steps.append(Step(argv=to_randomize_args(cfg), cwd=cwd, label="randomize"))
+            steps.append(Step(argv=to_evolution_graph_args(), cwd=cwd, label="evolution graph"))
+            steps.append(Step(argv=to_spoiler_report_args(), cwd=cwd, label="spoiler report"))
         if req.run_make:
             steps.append(Step(argv=to_make_args(cfg, jobs=req.jobs), cwd=cwd, label="make"))
         if not steps:
@@ -195,6 +202,20 @@ def create_app() -> FastAPI:
         if not png.exists():
             raise HTTPException(404, "render first via POST /api/evolution-graph")
         return FileResponse(png, media_type="image/png")
+
+    @app.get("/api/evolution-graph/dot")
+    def evolution_graph_dot():
+        dot = REPO_ROOT / "randomizer" / "evolution_paths.dot"
+        if not dot.exists():
+            raise HTTPException(404, "render first via POST /api/evolution-graph")
+        return FileResponse(dot, media_type="text/vnd.graphviz")
+
+    @app.get("/api/spoiler-report")
+    def spoiler_report():
+        report = REPO_ROOT / "randomizer" / "spoiler_report.html"
+        if not report.exists():
+            raise HTTPException(404, "run the randomizer first to generate spoiler_report.html")
+        return FileResponse(report, media_type="text/html")
 
     @app.get("/api/runs/{run_id}/events")
     async def events(run_id: str, request: Request) -> EventSourceResponse:

@@ -160,10 +160,19 @@ def main() -> int:
 
     mapping = parse_table(header_path)
     if not mapping:
-        print(f"[error] no [SPECIES_*] = SPECIES_* entries found in {header_path}.", file=sys.stderr)
-        return 1
-
-    dot_text, edge_count = build_dot(mapping, engine=args.engine, only_reachable_from=args.only_reachable)
+        dot_text = "\n".join([
+            "digraph evolutions {",
+            f"    layout={args.engine};",
+            "    graph [bgcolor=white, rankdir=LR];",
+            "    node [shape=box, style=\"rounded,filled\", fillcolor=\"#f7f7f7\", "
+            "fontname=\"Helvetica\", fontsize=12];",
+            "    empty [label=\"No hardcoded random evolutions generated\"];",
+            "}",
+            "",
+        ])
+        edge_count = 0
+    else:
+        dot_text, edge_count = build_dot(mapping, engine=args.engine, only_reachable_from=args.only_reachable)
     dot_path = randomizer_dir / "evolution_paths.dot"
     dot_path.write_text(dot_text)
     print(f"[ok] wrote {dot_path} ({edge_count} edges)")

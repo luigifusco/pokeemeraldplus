@@ -36,9 +36,11 @@ class ApiBasics(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         steps = r.json()["steps"]
         # No targets selected -> randomize restores pristine templates before make.
-        self.assertEqual([s["label"] for s in steps], ["randomize", "make"])
+        self.assertEqual([s["label"] for s in steps], ["randomize", "evolution graph", "spoiler report", "make"])
         self.assertIn("--restore", steps[0]["argv"])
-        self.assertIn("make", steps[1]["argv"][0])
+        self.assertIn("evolution_graph.py", steps[1]["argv"][1])
+        self.assertIn("spoiler_report.py", steps[2]["argv"][1])
+        self.assertIn("make", steps[3]["argv"][0])
 
     def test_preview_with_randomize(self) -> None:
         r = self.client.post(
@@ -51,7 +53,7 @@ class ApiBasics(unittest.TestCase):
         )
         self.assertEqual(r.status_code, 200, r.text)
         steps = r.json()["steps"]
-        self.assertEqual([s["label"] for s in steps], ["randomize"])
+        self.assertEqual([s["label"] for s in steps], ["randomize", "evolution graph", "spoiler report"])
         self.assertIn("--wild", steps[0]["argv"])
 
     def test_build_rejects_empty(self) -> None:
@@ -60,7 +62,7 @@ class ApiBasics(unittest.TestCase):
             json={"config": {}, "run_randomize": True, "run_make": False},
         )
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json()["steps"], 1)
+        self.assertEqual(r.json()["steps"], 3)
 
     def test_stop_unknown_run(self) -> None:
         r = self.client.post("/api/runs/deadbeef/stop")

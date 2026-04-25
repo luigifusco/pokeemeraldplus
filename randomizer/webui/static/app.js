@@ -12,6 +12,7 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
 // ---------- Default state (shape mirrors BuildConfigModel) ----------
 const defaultConfig = () => ({
+    seed: "",
     randomize_wild: false,
     randomize_starters: false,
     randomize_trainers: false,
@@ -252,6 +253,12 @@ function wireBindings() {
                 $$(`[data-bind="${path}"]`).forEach((sibling) => {
                     if (sibling !== el) sibling.value = el.value;
                 });
+                onConfigChanged();
+            });
+        } else if (el.type === "text") {
+            el.value = current ?? "";
+            el.addEventListener("input", () => {
+                setPath(state.config, path, el.value.trim());
                 onConfigChanged();
             });
         }
@@ -578,6 +585,8 @@ function applyStateToDom() {
         if (el.type === "checkbox") el.checked = !!v;
         else if (el.type === "range" || el.type === "number") {
             el.value = (v === null || v === undefined) ? "" : String(v);
+        } else if (el.type === "text") {
+            el.value = v ?? "";
         }
     });
     $$("[data-bind-radio]").forEach((el) => {

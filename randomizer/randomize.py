@@ -1,7 +1,9 @@
 import argparse
+from datetime import datetime, timezone
 import json
 import random
 import re
+import sys
 from pathlib import Path
 
 
@@ -1263,6 +1265,16 @@ def restore_originals(randomizer_dir: Path, repo_root: Path) -> None:
         dst.write_text(src.read_text())
 
 
+def write_run_metadata(randomizer_dir: Path, args: argparse.Namespace) -> None:
+    metadata = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "seed": args.seed,
+        "argv": sys.argv[1:],
+        "options": vars(args),
+    }
+    (randomizer_dir / "last_randomizer_run.json").write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Randomize species in selected pokeemerald source/data files using templates in randomizer/."
@@ -1294,6 +1306,11 @@ def parse_args() -> argparse.Namespace:
         "--restore",
         action="store_true",
         help="Restore original (unrandomized) files from randomizer/ templates.",
+    )
+    parser.add_argument(
+        "--seed",
+        default=None,
+        help="Seed for reproducible randomization. Same seed and options produce the same output.",
     )
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument(
@@ -1466,6 +1483,9 @@ def main() -> None:
     randomizer_dir = Path(__file__).resolve().parent
     repo_root = randomizer_dir.parent
 
+    if args.seed is not None and args.seed != "":
+        random.seed(args.seed)
+
     move_selected = (
         args.randomize_level_up_moves
         or args.randomize_egg_moves
@@ -1482,6 +1502,7 @@ def main() -> None:
     )
 
     restore_originals(randomizer_dir, repo_root)
+    write_run_metadata(randomizer_dir, args)
 
     # open species.txt and read all pokemon
     species_path = randomizer_dir / "species.txt"
@@ -1534,6 +1555,7 @@ def main() -> None:
                 parties = parties_path.read_text()
                 parties = scale_trainer_party_levels(parties, trainer_level_percent)
                 parties_path.write_text(parties)
+            write_run_metadata(randomizer_dir, args)
         return
 
     do_wild = args.all or (args.wild if selected_any else True)
@@ -1666,6 +1688,8 @@ def main() -> None:
                 prefer_same_type=args.moves_prefer_same_type,
             )
             tutor_path.write_text(tutor_text)
+
+    write_run_metadata(randomizer_dir, args)
 
 
 if __name__ == "__main__":

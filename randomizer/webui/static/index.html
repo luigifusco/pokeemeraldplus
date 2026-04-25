@@ -43,6 +43,15 @@
         <!-- ===================== RANDOMIZER ===================== -->
         <section class="panel" data-section="randomizer">
             <div class="group">
+                <div class="group-title">Run seed</div>
+                <div class="group-desc">Optional. Reusing the same seed with the same options produces the same randomized output and spoiler report.</div>
+                <div class="row">
+                    <div class="row-label"><strong>Seed</strong><small>Text or number; leave blank for a fresh random run.</small></div>
+                    <input type="text" data-bind="seed" placeholder="optional seed" />
+                </div>
+            </div>
+
+            <div class="group">
                 <div class="group-title">Targets</div>
                 <div class="group-desc">What should the randomizer touch? Leaving everything off still lets you apply level scaling / evolution work via the tabs below.</div>
                 <label class="check"><input type="checkbox" data-bind="randomize_wild" /><span class="box"></span> Wild Pokémon</label>
@@ -264,9 +273,10 @@
             </div>
 
             <div class="group build-graph-group">
-                <div class="group-title">Evolution graph</div>
-                <div class="group-desc">After running the randomizer, render the current <code>random_evolutions.h</code> to a PNG so you can see the structure (cycles highlighted). Requires <code>graphviz</code>.</div>
+                <div class="group-title">Spoiler report</div>
+                <div class="group-desc">Running the randomizer now also renders the evolution graph and writes <code>randomizer/spoiler_report.html</code> with generated starters, encounters, trainers, evolutions, moves, TMs, tutors, and compatibility details.</div>
                 <div class="row" style="gap: 16px;">
+                    <a class="btn btn-accent" href="/api/spoiler-report" target="_blank" rel="noreferrer">Open spoiler report</a>
                     <button class="btn btn-accent" id="render-graph-btn">🎨 Render graph</button>
                     <span id="render-graph-status" class="dim"></span>
                 </div>

@@ -15,8 +15,10 @@ from randomizer.webui.command import (
     EvoMode,
     LevelScale,
     RandomMode,
+    to_evolution_graph_args,
     to_make_args,
     to_randomize_args,
+    to_spoiler_report_args,
 )
 
 
@@ -30,6 +32,12 @@ class RandomizeArgsTest(unittest.TestCase):
         cfg = BuildConfig(randomize_wild=True)
         args = to_randomize_args(cfg, python_executable="py")
         self.assertEqual(args, ["py", "randomizer/randomize.py", "--wild"])
+
+    def test_seed_is_passed_before_targets(self) -> None:
+        cfg = BuildConfig(seed="abc123", randomize_wild=True)
+        args = to_randomize_args(cfg, python_executable="py")
+        self.assertEqual(args[:4], ["py", "randomizer/randomize.py", "--seed", "abc123"])
+        self.assertIn("--wild", args)
 
     def test_all_three_targets_global_mode(self) -> None:
         cfg = BuildConfig(
@@ -209,6 +217,18 @@ class MakeArgsTest(unittest.TestCase):
         self.assertIn("PREVENT_EVOLUTION_CANCEL=1", on)
         off = to_make_args(BuildConfig(prevent_evolution_cancel=False), jobs=1)
         self.assertIn("PREVENT_EVOLUTION_CANCEL=0", off)
+
+
+class ReportArgsTest(unittest.TestCase):
+    def test_report_steps_use_python(self) -> None:
+        self.assertEqual(
+            to_evolution_graph_args(python_executable="py"),
+            ["py", "randomizer/evolution_graph.py"],
+        )
+        self.assertEqual(
+            to_spoiler_report_args(python_executable="py"),
+            ["py", "randomizer/spoiler_report.py"],
+        )
 
 
 if __name__ == "__main__":
