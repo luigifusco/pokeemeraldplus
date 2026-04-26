@@ -45,6 +45,11 @@ prefabs.json
 __pycache__/
 *.pyc
 
+# Local Python virtual environments
+/.venv/
+/venv/
+/env/
+
 # Randomizer evolution graph output
 /randomizer/evolution_paths.*
 /randomizer/last_randomizer_run.json
