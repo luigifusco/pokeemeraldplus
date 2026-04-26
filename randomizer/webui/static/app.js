@@ -17,7 +17,12 @@ const defaultConfig = () => ({
     randomize_starters: false,
     randomize_trainers: false,
     random_mode: "global",
-    level_scale: { wild_percent: 0, trainer_percent: 0 },
+    level_scale: {
+        wild_percent: 0,
+        trainer_percent: 0,
+        wild_fixed_level: null,
+        trainer_fixed_level: null,
+    },
     randomize_level_up_moves: false,
     randomize_egg_moves: false,
     randomize_tm_moves: false,

@@ -102,17 +102,25 @@
             </div>
 
             <div class="group">
-                <div class="group-title">Level scaling</div>
-                <div class="group-desc">Scale wild and trainer levels by a percentage. 0 = unchanged. Negative values weaken encounters.</div>
+                <div class="group-title">Level control</div>
+                <div class="group-desc">Scale wild and trainer levels by a percentage, or enter a fixed level to force every Pokémon in that category to the same level. Fixed levels override percentages.</div>
                 <div class="row">
                     <div class="row-label"><strong>Wild %</strong><small>Applies to wild encounters.</small></div>
                     <input type="range" min="-100" max="100" step="5" data-bind="level_scale.wild_percent" />
                     <input type="number" class="num-mirror" min="-100" max="100" data-bind="level_scale.wild_percent" />
                 </div>
                 <div class="row">
+                    <div class="row-label"><strong>Wild fixed level</strong><small>Sets every wild min/max level to this value.</small></div>
+                    <input type="number" min="1" max="100" placeholder="—" data-bind="level_scale.wild_fixed_level" />
+                </div>
+                <div class="row">
                     <div class="row-label"><strong>Trainer %</strong><small>Applies to every trainer team slot.</small></div>
                     <input type="range" min="-100" max="100" step="5" data-bind="level_scale.trainer_percent" />
                     <input type="number" class="num-mirror" min="-100" max="100" data-bind="level_scale.trainer_percent" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Trainer fixed level</strong><small>Sets every trainer team slot to this value.</small></div>
+                    <input type="number" min="1" max="100" placeholder="—" data-bind="level_scale.trainer_fixed_level" />
                 </div>
                 <div class="row">
                     <label class="check"><input type="checkbox" id="level-link" /><span class="box"></span> Link sliders (wild + trainer move together)</label>

@@ -56,6 +56,26 @@ class ApiBasics(unittest.TestCase):
         self.assertEqual([s["label"] for s in steps], ["randomize", "evolution graph", "spoiler report"])
         self.assertIn("--wild", steps[0]["argv"])
 
+    def test_preview_with_fixed_levels(self) -> None:
+        r = self.client.post(
+            "/api/preview",
+            json={
+                "config": {
+                    "level_scale": {
+                        "wild_fixed_level": 12,
+                        "trainer_fixed_level": 34,
+                    }
+                },
+                "run_randomize": True,
+                "run_make": False,
+            },
+        )
+        self.assertEqual(r.status_code, 200, r.text)
+        argv = r.json()["steps"][0]["argv"]
+        self.assertIn("--restore", argv)
+        self.assertEqual(argv[argv.index("--wild-level") + 1], "12")
+        self.assertEqual(argv[argv.index("--trainer-level") + 1], "34")
+
     def test_build_rejects_empty(self) -> None:
         r = self.client.post(
             "/api/build",

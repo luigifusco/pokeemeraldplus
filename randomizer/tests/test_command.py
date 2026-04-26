@@ -70,11 +70,27 @@ class RandomizeArgsTest(unittest.TestCase):
         self.assertEqual(args[args.index("--wild-level-percent") + 1], "25")
         self.assertEqual(args[args.index("--trainer-level-percent") + 1], "-10")
 
+    def test_fixed_levels_without_targets(self) -> None:
+        cfg = BuildConfig(level_scale=LevelScale(wild_fixed_level=42, trainer_fixed_level=55))
+        args = to_randomize_args(cfg, python_executable="py")
+        self.assertIn("--restore", args)
+        self.assertEqual(args[args.index("--wild-level") + 1], "42")
+        self.assertEqual(args[args.index("--trainer-level") + 1], "55")
+
     def test_level_scaling_clamped_to_range(self) -> None:
-        cfg = BuildConfig(level_scale=LevelScale(wild_percent=999, trainer_percent=-999))
+        cfg = BuildConfig(
+            level_scale=LevelScale(
+                wild_percent=999,
+                trainer_percent=-999,
+                wild_fixed_level=999,
+                trainer_fixed_level=-999,
+            )
+        )
         args = to_randomize_args(cfg, python_executable="py")
         self.assertEqual(args[args.index("--wild-level-percent") + 1], "100")
         self.assertEqual(args[args.index("--trainer-level-percent") + 1], "-100")
+        self.assertEqual(args[args.index("--wild-level") + 1], "100")
+        self.assertEqual(args[args.index("--trainer-level") + 1], "1")
 
     def test_move_randomizer_flags(self) -> None:
         cfg = BuildConfig(

@@ -46,6 +46,8 @@ class EvoConstraintsModel(BaseModel):
 class LevelScaleModel(BaseModel):
     wild_percent: int = 0
     trainer_percent: int = 0
+    wild_fixed_level: Optional[int] = None
+    trainer_fixed_level: Optional[int] = None
 
     def to_dc(self) -> LevelScale:
         return LevelScale(**self.model_dump())

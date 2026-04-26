@@ -60,10 +60,12 @@ class EvoConstraints:
 
 @dataclass
 class LevelScale:
-    """Level % sliders from the Randomizer tab."""
+    """Level controls from the Randomizer tab."""
 
     wild_percent: int = 0
     trainer_percent: int = 0
+    wild_fixed_level: int | None = None
+    trainer_fixed_level: int | None = None
 
 
 @dataclass
@@ -197,8 +199,12 @@ def to_randomize_args(
     ls = cfg.level_scale
     if ls.wild_percent != 0:
         argv.extend(["--wild-level-percent", str(_clamp(ls.wild_percent, -100, 100))])
+    if ls.wild_fixed_level is not None:
+        argv.extend(["--wild-level", str(_clamp(ls.wild_fixed_level, 1, 100))])
     if ls.trainer_percent != 0:
         argv.extend(["--trainer-level-percent", str(_clamp(ls.trainer_percent, -100, 100))])
+    if ls.trainer_fixed_level is not None:
+        argv.extend(["--trainer-level", str(_clamp(ls.trainer_fixed_level, 1, 100))])
 
     if cfg.randomize_level_up_moves:
         argv.append("--randomize-level-up-moves")

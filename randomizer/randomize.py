@@ -72,8 +72,14 @@ def _scale_level(level: int, percent: int) -> int:
     return _clamp_level(int(round(level * factor)))
 
 
-def scale_wild_levels_json(text: str, percent: int) -> str:
-    if percent == 0:
+def _adjust_level(level: int, percent: int, fixed_level: int | None) -> int:
+    if fixed_level is not None:
+        return _clamp_level(fixed_level)
+    return _scale_level(level, percent)
+
+
+def scale_wild_levels_json(text: str, percent: int, fixed_level: int | None = None) -> str:
+    if percent == 0 and fixed_level is None:
         return text
 
     data = json.loads(text)
@@ -89,11 +95,12 @@ def scale_wild_levels_json(text: str, percent: int) -> str:
                     if not isinstance(mon, dict):
                         continue
                     if "min_level" in mon and isinstance(mon["min_level"], int):
-                        mon["min_level"] = _scale_level(mon["min_level"], percent)
+                        mon["min_level"] = _adjust_level(mon["min_level"], percent, fixed_level)
                     if "max_level" in mon and isinstance(mon["max_level"], int):
-                        mon["max_level"] = _scale_level(mon["max_level"], percent)
+                        mon["max_level"] = _adjust_level(mon["max_level"], percent, fixed_level)
                     if (
-                        "min_level" in mon
+                        fixed_level is None
+                        and "min_level" in mon
                         and "max_level" in mon
                         and isinstance(mon["min_level"], int)
                         and isinstance(mon["max_level"], int)
@@ -104,13 +111,13 @@ def scale_wild_levels_json(text: str, percent: int) -> str:
     return json.dumps(data, indent=2, sort_keys=False) + "\n"
 
 
-def scale_trainer_party_levels(text: str, percent: int) -> str:
-    if percent == 0:
+def scale_trainer_party_levels(text: str, percent: int, fixed_level: int | None = None) -> str:
+    if percent == 0 and fixed_level is None:
         return text
 
     def repl(match: re.Match[str]) -> str:
         prefix, lvl_str, suffix = match.groups()
-        new_lvl = _scale_level(int(lvl_str), percent)
+        new_lvl = _adjust_level(int(lvl_str), percent, fixed_level)
         return f"{prefix}{new_lvl}{suffix}"
 
     return TRAINER_LVL_PATTERN.sub(repl, text)
@@ -1346,6 +1353,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--wild-level",
+        type=int,
+        default=None,
+        help=(
+            "Set every wild encounter min_level/max_level to this fixed level. "
+            "Overrides --level-percent and --wild-level-percent for wild encounters. "
+            "Clamped to 1..100."
+        ),
+    )
+    parser.add_argument(
         "--trainer-level-percent",
         type=int,
         default=None,
@@ -1353,6 +1370,16 @@ def parse_args() -> argparse.Namespace:
             "Scale trainer party levels (.lvl) by a percentage. "
             "Example: 25 increases levels by 25%%, -20 decreases by 20%%. "
             "Levels are clamped to 1..100."
+        ),
+    )
+    parser.add_argument(
+        "--trainer-level",
+        type=int,
+        default=None,
+        help=(
+            "Set every trainer party level (.lvl) to this fixed level. "
+            "Overrides --level-percent and --trainer-level-percent for trainer parties. "
+            "Clamped to 1..100."
         ),
     )
     parser.add_argument(
@@ -1500,6 +1527,10 @@ def main() -> None:
     trainer_level_percent = (
         args.level_percent if args.trainer_level_percent is None else args.trainer_level_percent
     )
+    wild_fixed_level = args.wild_level
+    trainer_fixed_level = args.trainer_level
+    has_wild_level_change = wild_level_percent != 0 or wild_fixed_level is not None
+    has_trainer_level_change = trainer_level_percent != 0 or trainer_fixed_level is not None
 
     restore_originals(randomizer_dir, repo_root)
     write_run_metadata(randomizer_dir, args)
@@ -1540,20 +1571,28 @@ def main() -> None:
         random_evos_header.write_text("\n".join(default_lines))
 
     if args.restore:
-        # Allow "restore + level scaling" as a convenience mode (used by the GUI):
+        # Allow "restore + level changes" as a convenience mode (used by the GUI):
         # when no randomization targets are selected, apply only the requested
-        # level scaling on top of the restored (template) files.
-        if not selected_any and (wild_level_percent != 0 or trainer_level_percent != 0):
-            if wild_level_percent != 0:
+        # level edits on top of the restored (template) files.
+        if not selected_any and (has_wild_level_change or has_trainer_level_change):
+            if has_wild_level_change:
                 encounters_path = repo_root / "src/data/wild_encounters.json"
                 encounters = encounters_path.read_text()
-                encounters = scale_wild_levels_json(encounters, wild_level_percent)
+                encounters = scale_wild_levels_json(
+                    encounters,
+                    wild_level_percent,
+                    fixed_level=wild_fixed_level,
+                )
                 encounters_path.write_text(encounters)
 
-            if trainer_level_percent != 0:
+            if has_trainer_level_change:
                 parties_path = repo_root / "src/data/trainer_parties.h"
                 parties = parties_path.read_text()
-                parties = scale_trainer_party_levels(parties, trainer_level_percent)
+                parties = scale_trainer_party_levels(
+                    parties,
+                    trainer_level_percent,
+                    fixed_level=trainer_fixed_level,
+                )
                 parties_path.write_text(parties)
             write_run_metadata(randomizer_dir, args)
         return
@@ -1569,7 +1608,11 @@ def main() -> None:
         else:
             encounters = randomize_species_in_text(encounters, all_species, per_occurrence=args.per_occurrence)
 
-        encounters = scale_wild_levels_json(encounters, wild_level_percent)
+        encounters = scale_wild_levels_json(
+            encounters,
+            wild_level_percent,
+            fixed_level=wild_fixed_level,
+        )
         (repo_root / "src/data/wild_encounters.json").write_text(encounters)
 
     if do_starters:
@@ -1580,7 +1623,11 @@ def main() -> None:
     if do_trainers:
         trainer_parties = (randomizer_dir / "trainer_parties.h").read_text()
         trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
-        trainer_parties = scale_trainer_party_levels(trainer_parties, trainer_level_percent)
+        trainer_parties = scale_trainer_party_levels(
+            trainer_parties,
+            trainer_level_percent,
+            fixed_level=trainer_fixed_level,
+        )
         trainer_parties = convert_custom_moves_trainer_parties_to_default_moves(trainer_parties)
         (repo_root / "src/data/trainer_parties.h").write_text(trainer_parties)
 
