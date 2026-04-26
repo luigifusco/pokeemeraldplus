@@ -1540,7 +1540,11 @@ void CB2_NewGame(void)
     PlayTimeCounter_Start();
     ScriptContext_Init();
     UnlockPlayerFieldControls();
+#ifdef FAST_INTRO
+    gFieldCallback = FieldCB_WarpExitFadeFromBlack;
+#else
     gFieldCallback = ExecuteTruckSequence;
+#endif
     gFieldCallback2 = NULL;
     DoMapLoadLoop(&gMain.state);
     SetFieldVBlankCallback();
