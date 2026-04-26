@@ -961,7 +961,8 @@ static void Intro_WaitForShinyAnimAndHealthbox(void)
     bool8 hasPartner = FALSE;
 
     if (IsDoubleBattle() && !(gBattleTypeFlags & BATTLE_TYPE_MULTI)
-     && !(gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)]))
+     && !(gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)])
+     && !(gBattleStruct->absentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)]))
         hasPartner = TRUE;
 
     // Check if healthbox has finished sliding in
@@ -1010,7 +1011,8 @@ static void Intro_TryShinyAnimShowHealthbox(void)
     bool8 hasPartner = FALSE;
 
     if (IsDoubleBattle() && !(gBattleTypeFlags & BATTLE_TYPE_MULTI)
-     && !(gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)]))
+     && !(gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)])
+     && !(gBattleStruct->absentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)]))
         hasPartner = TRUE;
 
     // Start shiny animation if applicable for 1st Pokémon

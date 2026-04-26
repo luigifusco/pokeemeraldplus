@@ -1249,8 +1249,7 @@ static void UNUSED DestroySpriteAndFreeResources_Ball(struct Sprite *sprite)
 
 #define sSpeedX data[0]
 #define sSpeedY data[1]
-
-#define sDelayTimer data[1]
+#define sDelayTimer data[2]
 
 void StartHealthboxSlideIn(u8 battler)
 {

@@ -259,7 +259,8 @@ static void Intro_WaitForShinyAnimAndHealthbox(void)
 
     if (IsDoubleBattle()
      && !(gBattleTypeFlags & (BATTLE_TYPE_MULTI | BATTLE_TYPE_TWO_OPPONENTS))
-     && !(gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)]))
+     && !(gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)])
+     && !(gBattleStruct->absentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)]))
         hasPartner = TRUE;
 
     if (!hasPartner)
@@ -334,7 +335,8 @@ static void Intro_TryShinyAnimShowHealthbox(void)
 
     if (IsDoubleBattle()
      && !(gBattleTypeFlags & (BATTLE_TYPE_TWO_OPPONENTS | BATTLE_TYPE_MULTI))
-     && !(gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)]))
+     && !(gAbsentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)])
+     && !(gBattleStruct->absentBattlerFlags & gBitTable[BATTLE_PARTNER(gActiveBattler)]))
         hasPartner = TRUE;
 
     if (!gBattleSpritesDataPtr->healthBoxesData[gActiveBattler].triedShinyMonAnim
