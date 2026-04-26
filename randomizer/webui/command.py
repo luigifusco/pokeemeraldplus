@@ -66,6 +66,7 @@ class LevelScale:
     trainer_percent: int = 0
     wild_fixed_level: int | None = None
     trainer_fixed_level: int | None = None
+    starter_level: int = 5
 
 
 @dataclass
@@ -323,6 +324,7 @@ def to_make_args(
     argv.append(f"OPPONENT_STAT_STAGE_MOD={_clamp(cfg.opponent_stat_stage_mod, -6, 6)}")
     argv.append(f"PLAYER_STAT_STAGE_MOD={_clamp(cfg.player_stat_stage_mod, -6, 6)}")
     argv.append(f"GYM_LEADER_FIRST_ROSTER={_clamp(cfg.gym_leader_first_roster, 0, 4)}")
+    argv.append(f"STARTER_LEVEL={_clamp(cfg.level_scale.starter_level, 1, 100)}")
 
     pow_ = _clamp(cfg.wait_time_divisor_pow, 0, 5)
     argv.append(f"WAIT_TIME_DIVISOR={1 << pow_}")

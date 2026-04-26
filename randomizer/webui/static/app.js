@@ -22,6 +22,7 @@ const defaultConfig = () => ({
         trainer_percent: 0,
         wild_fixed_level: null,
         trainer_fixed_level: null,
+        starter_level: 5,
     },
     randomize_level_up_moves: false,
     randomize_egg_moves: false,
@@ -570,6 +571,7 @@ function wirePresets() {
             li.querySelector(".preset-load").addEventListener("click", () => {
                 const p = presets[name];
                 state.config = Object.assign(defaultConfig(), p.config);
+                state.config.level_scale = Object.assign(defaultConfig().level_scale, p.config.level_scale);
                 state.buildOpts = Object.assign({ run_randomize: true, run_make: true, jobs: null }, p.buildOpts);
                 applyStateToDom();
                 debouncedPreview();

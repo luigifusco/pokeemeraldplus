@@ -48,6 +48,7 @@ class LevelScaleModel(BaseModel):
     trainer_percent: int = 0
     wild_fixed_level: Optional[int] = None
     trainer_fixed_level: Optional[int] = None
+    starter_level: int = 5
 
     def to_dc(self) -> LevelScale:
         return LevelScale(**self.model_dump())

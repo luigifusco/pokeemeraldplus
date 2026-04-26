@@ -103,7 +103,12 @@
 
             <div class="group">
                 <div class="group-title">Level control</div>
-                <div class="group-desc">Scale wild and trainer levels by a percentage, or enter a fixed level to force every Pokémon in that category to the same level. Fixed levels override percentages.</div>
+                <div class="group-desc">Scale wild and trainer levels by a percentage, or enter fixed levels to force Pokémon in that category to the same level. Fixed wild/trainer levels override percentages.</div>
+                <div class="row">
+                    <div class="row-label"><strong>Starter level</strong><small>Level of the starter received from Professor Birch.</small></div>
+                    <input type="range" min="1" max="100" step="1" data-bind="level_scale.starter_level" />
+                    <input type="number" class="num-mirror" min="1" max="100" data-bind="level_scale.starter_level" />
+                </div>
                 <div class="row">
                     <div class="row-label"><strong>Wild %</strong><small>Applies to wild encounters.</small></div>
                     <input type="range" min="-100" max="100" step="5" data-bind="level_scale.wild_percent" />

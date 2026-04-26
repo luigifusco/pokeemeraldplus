@@ -52,6 +52,10 @@
 #define GYM_LEADER_FIRST_ROSTER 0
 #endif
 
+#ifndef STARTER_LEVEL
+#define STARTER_LEVEL 5
+#endif
+
 enum {
     TRANSITION_TYPE_NORMAL,
     TRANSITION_TYPE_CAVE,
@@ -86,6 +90,7 @@ static u8 GetTrainerBattleTransition(void);
 static void TryUpdateGymLeaderRematchFromWild(void);
 static void TryUpdateGymLeaderRematchFromTrainer(void);
 static void CB2_GiveStarter(void);
+static u8 GetStarterLevel(void);
 static void CB2_StartFirstBattle(void);
 static void CB2_EndFirstBattle(void);
 static void CB2_EndTrainerBattle(void);
@@ -926,11 +931,20 @@ static void CB2_GiveStarter(void)
 
     *GetVarPointer(VAR_STARTER_MON) = gSpecialVar_Result;
     starterMon = GetStarterPokemon(gSpecialVar_Result);
-    ScriptGiveMon(starterMon, 5, ITEM_NONE, 0, 0, 0);
+    ScriptGiveMon(starterMon, GetStarterLevel(), ITEM_NONE, 0, 0, 0);
     ResetTasks();
     PlayBattleBGM();
     SetMainCallback2(CB2_StartFirstBattle);
     BattleTransition_Start(B_TRANSITION_BLUR);
+}
+
+static u8 GetStarterLevel(void)
+{
+    if (STARTER_LEVEL < 1)
+        return 1;
+    if (STARTER_LEVEL > MAX_LEVEL)
+        return MAX_LEVEL;
+    return STARTER_LEVEL;
 }
 
 static void CB2_StartFirstBattle(void)

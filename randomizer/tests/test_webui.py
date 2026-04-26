@@ -71,6 +71,21 @@ class ApiBasics(unittest.TestCase):
         self.assertEqual([s["label"] for s in steps], ["make"])
         self.assertIn("GYM_LEADER_FIRST_ROSTER=4", steps[0]["argv"])
 
+    def test_preview_with_starter_level(self) -> None:
+        r = self.client.post(
+            "/api/preview",
+            json={
+                "config": {"level_scale": {"starter_level": 25}},
+                "run_randomize": False,
+                "run_make": True,
+                "jobs": 1,
+            },
+        )
+        self.assertEqual(r.status_code, 200, r.text)
+        steps = r.json()["steps"]
+        self.assertEqual([s["label"] for s in steps], ["make"])
+        self.assertIn("STARTER_LEVEL=25", steps[0]["argv"])
+
     def test_preview_with_fixed_levels(self) -> None:
         r = self.client.post(
             "/api/preview",
