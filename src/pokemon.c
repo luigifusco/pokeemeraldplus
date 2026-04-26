@@ -68,6 +68,7 @@ static void EncryptBoxMon(struct BoxPokemon *boxMon);
 static void DecryptBoxMon(struct BoxPokemon *boxMon);
 static void Task_PlayMapChosenOrBattleBGM(u8 taskId);
 static bool8 ShouldGetStatBadgeBoost(u16 flagId, u8 battler);
+static u8 GetValidAbilityNumBySpecies(u16 species, u8 abilityNum);
 static u16 GiveMoveToBoxMon(struct BoxPokemon *boxMon, u16 move);
 static bool8 ShouldSkipFriendshipChange(void);
 static u8 CopyMonToPC(struct Pokemon *mon);
@@ -4552,8 +4553,31 @@ u8 GetMonsStateToDoubles_2(void)
     return (aliveCount > 1) ? PLAYER_HAS_TWO_USABLE_MONS : PLAYER_HAS_ONE_USABLE_MON;
 }
 
+static u8 GetValidAbilityNumBySpecies(u16 species, u8 abilityNum)
+{
+    if (gSpeciesInfo[species].abilities[abilityNum] != ABILITY_NONE)
+        return abilityNum;
+    if (gSpeciesInfo[species].abilities[0] != ABILITY_NONE)
+        return 0;
+    if (gSpeciesInfo[species].abilities[1] != ABILITY_NONE)
+        return 1;
+    return 0;
+}
+
+void NormalizeMonAbilityNum(struct Pokemon *mon)
+{
+    u16 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
+    u8 abilityNum = GetMonData(mon, MON_DATA_ABILITY_NUM, NULL);
+    u8 validAbilityNum = GetValidAbilityNumBySpecies(species, abilityNum);
+
+    if (abilityNum != validAbilityNum)
+        SetMonData(mon, MON_DATA_ABILITY_NUM, &validAbilityNum);
+}
+
 u8 GetAbilityBySpecies(u16 species, u8 abilityNum)
 {
+    abilityNum = GetValidAbilityNumBySpecies(species, abilityNum);
+
     if (abilityNum)
         gLastUsedAbility = gSpeciesInfo[species].abilities[1];
     else
