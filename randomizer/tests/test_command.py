@@ -214,11 +214,9 @@ class MakeArgsTest(unittest.TestCase):
             self.assertIn(f"RANDOM_EVOLUTIONS={expect_random}", args)
             self.assertIn(f"HARDCODED_RANDOM_EVOLUTIONS={expect_hardcoded}", args)
 
-    def test_wait_time_divisor_is_power_of_two(self) -> None:
-        for pow_, val in ((0, 1), (1, 2), (2, 4), (3, 8), (4, 16), (5, 32), (99, 32)):
-            cfg = BuildConfig(wait_time_divisor_pow=pow_)
-            args = to_make_args(cfg, jobs=1)
-            self.assertIn(f"WAIT_TIME_DIVISOR={val}", args, f"pow={pow_}")
+    def test_fastest_speed_sets_max_wait_divisor(self) -> None:
+        self.assertIn("WAIT_TIME_DIVISOR=1", to_make_args(BuildConfig(fastest_speed=False), jobs=1))
+        self.assertIn("WAIT_TIME_DIVISOR=32", to_make_args(BuildConfig(fastest_speed=True), jobs=1))
 
     def test_fast_battle_anims_is_independent_of_transition_skip(self) -> None:
         args = to_make_args(BuildConfig(fast_battle_anims=True), jobs=1)

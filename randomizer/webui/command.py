@@ -127,7 +127,7 @@ class BuildConfig:
     skip_fade_anims: bool = False
     fast_stat_anims: bool = False
     manual_battle_text: bool = False
-    wait_time_divisor_pow: int = 0          # 0..5 => divisor = 1..32
+    fastest_speed: bool = False             # WAIT_TIME_DIVISOR=32
 
 
 # ---------------------------------------------------------------------------
@@ -330,7 +330,6 @@ def to_make_args(
     argv.append(f"GYM_LEADER_FIRST_ROSTER={_clamp(cfg.gym_leader_first_roster, 0, 4)}")
     argv.append(f"STARTER_LEVEL={_clamp(cfg.level_scale.starter_level, 1, 100)}")
 
-    pow_ = _clamp(cfg.wait_time_divisor_pow, 0, 5)
-    argv.append(f"WAIT_TIME_DIVISOR={1 << pow_}")
+    argv.append(f"WAIT_TIME_DIVISOR={32 if cfg.fastest_speed else 1}")
 
     return argv

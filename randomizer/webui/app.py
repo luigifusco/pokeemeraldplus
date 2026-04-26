@@ -101,7 +101,7 @@ class BuildConfigModel(BaseModel):
     skip_fade_anims: bool = False
     fast_stat_anims: bool = False
     manual_battle_text: bool = False
-    wait_time_divisor_pow: int = 0
+    fastest_speed: bool = False
 
     def to_dc(self) -> BuildConfig:
         data = self.model_dump()

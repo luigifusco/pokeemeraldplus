@@ -67,7 +67,7 @@ const defaultConfig = () => ({
     skip_fade_anims: false,
     fast_stat_anims: false,
     manual_battle_text: false,
-    wait_time_divisor_pow: 0,
+    fastest_speed: false,
 });
 
 const state = {
@@ -322,7 +322,6 @@ function quoteIfNeeded(a) {
 
 function onConfigChanged() {
     updateEvoConstraintsEnabled();
-    updateWaitDivisorLabel();
     updateStatMirror();
     updateLevelLink();
     debouncedPreview();
@@ -335,12 +334,6 @@ function updateEvoConstraintsEnabled() {
     if (!group) return;
     group.style.opacity = enabled ? "1" : "0.45";
     $$("#evo-constraints-group input").forEach((i) => { i.disabled = !enabled; });
-}
-
-function updateWaitDivisorLabel() {
-    const p = state.config.wait_time_divisor_pow | 0;
-    const lbl = $("#wait-divisor-label");
-    if (lbl) lbl.textContent = `${1 << p}× base (${p === 0 ? "slowest" : "faster"})`;
 }
 
 let mirroringStats = false;
@@ -389,28 +382,19 @@ function wireCrossField() {
     }
     opp.forEach((i) => i.addEventListener("input", statSync));
 
-    $("#qol-enable-all").addEventListener("click", () => {
-        ["walk_fast","instant_text","fast_battle_anims","skip_battle_transition","skip_intro_cutscene","fast_intro",
-         "skip_fade_anims","fast_stat_anims"].forEach((k) => { state.config[k] = true; });
-        wireBindings(); // re-sync checkboxes
-        $$("[data-bind]").forEach((el) => {
-            if (el.type === "checkbox") el.checked = !!getPath(state.config, el.dataset.bind);
+    function setQolCheckboxes(checked) {
+        $$('[data-section="qol"] input[type="checkbox"][data-bind]').forEach((el) => {
+            setPath(state.config, el.dataset.bind, checked);
+            el.checked = checked;
         });
+    }
+
+    $("#qol-enable-all").addEventListener("click", () => {
+        setQolCheckboxes(true);
         debouncedPreview();
     });
     $("#qol-clear-all").addEventListener("click", () => {
-        ["walk_fast","instant_text","fast_battle_anims","skip_battle_transition","skip_intro_cutscene","fast_intro",
-         "skip_fade_anims","fast_stat_anims","manual_battle_text"].forEach((k) => {
-            state.config[k] = false;
-        });
-        state.config.wait_time_divisor_pow = 0;
-        $$("[data-bind]").forEach((el) => {
-            if (el.type === "checkbox") el.checked = !!getPath(state.config, el.dataset.bind);
-            else if (el.type === "range" || el.type === "number") {
-                const v = getPath(state.config, el.dataset.bind);
-                if (v !== null && v !== undefined) el.value = String(v);
-            }
-        });
+        setQolCheckboxes(false);
         debouncedPreview();
     });
 }
@@ -606,7 +590,6 @@ function applyStateToDom() {
     $("#opt-run-make").checked      = state.buildOpts.run_make;
     $("#opt-jobs").value = state.buildOpts.jobs == null ? "" : String(state.buildOpts.jobs);
     updateEvoConstraintsEnabled();
-    updateWaitDivisorLabel();
 }
 
 // ---------- Bootstrap ----------
@@ -617,5 +600,4 @@ wireBuild();
 wireGraphRender();
 wirePresets();
 updateEvoConstraintsEnabled();
-updateWaitDivisorLabel();
 refreshPreview();

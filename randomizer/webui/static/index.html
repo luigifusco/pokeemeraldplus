@@ -244,7 +244,7 @@
                 <label class="check"><input type="checkbox" data-bind="fast_intro" /><span class="box"></span> Fast new-game intro</label>
                 <label class="check"><input type="checkbox" data-bind="skip_fade_anims" /><span class="box"></span> Skip fade animations</label>
                 <label class="check"><input type="checkbox" data-bind="fast_stat_anims" /><span class="box"></span> Fast stat animations</label>
-                <label class="check"><input type="checkbox" data-bind="manual_battle_text" /><span class="box"></span> Manual advance of battle text</label>
+                <label class="check"><input type="checkbox" data-bind="fastest_speed" /><span class="box"></span> Fastest speed (32× waits)</label>
                 <div class="row" style="margin-top: 8px;">
                     <button class="btn" id="qol-enable-all">Enable all</button>
                     <button class="btn btn-ghost" id="qol-clear-all">Reset</button>
@@ -252,13 +252,9 @@
             </div>
 
             <div class="group">
-                <div class="group-title">Wait time divisor</div>
-                <div class="group-desc">Global in-game wait divisor. <code>2^pow</code>, so 0 = 1×, 1 = 2×, …, 5 = 32×.</div>
-                <div class="row">
-                    <div class="row-label"><strong>Divisor power</strong><small id="wait-divisor-label">1× (slowest)</small></div>
-                    <input type="range" min="0" max="5" step="1" data-bind="wait_time_divisor_pow" />
-                    <input type="number" class="num-mirror" min="0" max="5" data-bind="wait_time_divisor_pow" />
-                </div>
+                <div class="group-title">Battle text</div>
+                <div class="group-desc">Battle message pacing options.</div>
+                <label class="check"><input type="checkbox" data-bind="manual_battle_text" /><span class="box"></span> Manual advance of battle text</label>
             </div>
 
             <div class="group">
