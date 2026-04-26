@@ -80,6 +80,7 @@ static void CB2_HandleStartMultiBattle(void);
 static void CB2_HandleStartBattle(void);
 static void TryCorrectShedinjaLanguage(struct Pokemon *mon);
 static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 firstTrainer);
+static bool8 IsBattlerAbsent(u8 battler);
 
 #ifdef STEAL_TRAINER_TEAM
 static void ReplacePlayerPartyWithEnemyPartyAndRewriteOT(void);
@@ -2129,6 +2130,12 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
     return gTrainers[trainerNum].partySize;
 }
 
+static bool8 IsBattlerAbsent(u8 battler)
+{
+    return ((gAbsentBattlerFlags & gBitTable[battler])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[battler]));
+}
+
 static void UNUSED HBlankCB_Battle(void)
 {
     if (REG_VCOUNT < DISPLAY_HEIGHT && REG_VCOUNT >= 111)
@@ -3164,6 +3171,7 @@ static void BattleStartClearSetData(void)
     gBattleScripting.animTargetsHit = 0;
     gLeveledUpInBattle = 0;
     gAbsentBattlerFlags = 0;
+    gBattleStruct->absentBattlerFlags = 0;
 
 #ifdef FORCE_DOUBLE_BATTLES
     // When forcing doubles, allow 2v1 / 1v2 / 1v1 by leaving the missing slot absent.
@@ -3182,6 +3190,8 @@ static void BattleStartClearSetData(void)
             if (CountUsablePartyMons(gEnemyParty) < 2)
                 gAbsentBattlerFlags |= gBitTable[B_BATTLER_3];
         }
+
+        gBattleStruct->absentBattlerFlags = gAbsentBattlerFlags;
     }
 #endif
 
@@ -3476,6 +3486,12 @@ static void BattleIntroDrawTrainersOrMonsSprites(void)
 
     for (gActiveBattler = 0; gActiveBattler < gBattlersCount; gActiveBattler++)
     {
+        if (IsBattlerAbsent(gActiveBattler))
+        {
+            memset(&gBattleMons[gActiveBattler], 0, sizeof(struct BattlePokemon));
+            continue;
+        }
+
         if ((gBattleTypeFlags & BATTLE_TYPE_SAFARI)
             && GetBattlerSide(gActiveBattler) == B_SIDE_PLAYER)
         {
@@ -3954,7 +3970,10 @@ static void TryDoEventsBeforeFirstTurn(void)
     // Check all switch in abilities happening from the fastest mon to slowest.
     while (gBattleStruct->switchInAbilitiesCounter < gBattlersCount)
     {
-        if (AbilityBattleEffects(ABILITYEFFECT_ON_SWITCHIN, gBattlerByTurnOrder[gBattleStruct->switchInAbilitiesCounter], 0, 0, 0) != 0)
+        u8 battler = gBattlerByTurnOrder[gBattleStruct->switchInAbilitiesCounter];
+
+        if (!IsBattlerAbsent(battler)
+         && AbilityBattleEffects(ABILITYEFFECT_ON_SWITCHIN, battler, 0, 0, 0) != 0)
             effect++;
 
         gBattleStruct->switchInAbilitiesCounter++;
@@ -3969,7 +3988,10 @@ static void TryDoEventsBeforeFirstTurn(void)
     // Check all switch in items having effect from the fastest mon to slowest.
     while (gBattleStruct->switchInItemsCounter < gBattlersCount)
     {
-        if (ItemBattleEffects(ITEMEFFECT_ON_SWITCH_IN, gBattlerByTurnOrder[gBattleStruct->switchInItemsCounter], FALSE))
+        u8 battler = gBattlerByTurnOrder[gBattleStruct->switchInItemsCounter];
+
+        if (!IsBattlerAbsent(battler)
+         && ItemBattleEffects(ITEMEFFECT_ON_SWITCH_IN, battler, FALSE))
             effect++;
 
         gBattleStruct->switchInItemsCounter++;

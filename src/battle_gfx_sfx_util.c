@@ -1267,7 +1267,8 @@ void SpriteCB_SetInvisible(struct Sprite *sprite)
 
 void SetBattlerShadowSpriteCallback(u8 battler, u16 species)
 {
-    if (gAbsentBattlerFlags & gBitTable[battler])
+    if ((gAbsentBattlerFlags & gBitTable[battler])
+     || (gBattleStruct->absentBattlerFlags & gBitTable[battler]))
         return;
 
     // The player's shadow is never seen.

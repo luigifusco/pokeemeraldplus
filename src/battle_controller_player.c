@@ -318,6 +318,7 @@ static void HandleInputChooseAction(void)
         if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
          && GetBattlerPosition(gActiveBattler) == B_POSITION_PLAYER_RIGHT
          && !(gAbsentBattlerFlags & gBitTable[GetBattlerAtPosition(B_POSITION_PLAYER_LEFT)])
+         && !(gBattleStruct->absentBattlerFlags & gBitTable[GetBattlerAtPosition(B_POSITION_PLAYER_LEFT)])
          && !(gBattleTypeFlags & BATTLE_TYPE_MULTI))
         {
             if (gBattleBufferA[gActiveBattler][1] == B_ACTION_USE_ITEM)
@@ -429,7 +430,8 @@ static void HandleInputChooseTarget(void)
                 break;
             }
 
-            if (gAbsentBattlerFlags & gBitTable[gMultiUsePlayerCursor])
+            if ((gAbsentBattlerFlags & gBitTable[gMultiUsePlayerCursor])
+             || (gBattleStruct->absentBattlerFlags & gBitTable[gMultiUsePlayerCursor]))
                 i = 0;
         } while (i == 0);
         gSprites[gBattlerSpriteIds[gMultiUsePlayerCursor]].callback = SpriteCB_ShowAsMoveTarget;
@@ -471,7 +473,8 @@ static void HandleInputChooseTarget(void)
                 break;
             }
 
-            if (gAbsentBattlerFlags & gBitTable[gMultiUsePlayerCursor])
+            if ((gAbsentBattlerFlags & gBitTable[gMultiUsePlayerCursor])
+             || (gBattleStruct->absentBattlerFlags & gBitTable[gMultiUsePlayerCursor]))
                 i = 0;
         } while (i == 0);
         gSprites[gBattlerSpriteIds[gMultiUsePlayerCursor]].callback = SpriteCB_ShowAsMoveTarget;
@@ -550,7 +553,8 @@ static void HandleInputChooseMove(void)
 
             if (moveTarget & (MOVE_TARGET_USER | MOVE_TARGET_USER_OR_SELECTED))
                 gMultiUsePlayerCursor = gActiveBattler;
-            else if (gAbsentBattlerFlags & gBitTable[GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT)])
+            else if ((gAbsentBattlerFlags & gBitTable[GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT)])
+                  || (gBattleStruct->absentBattlerFlags & gBitTable[GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT)]))
                 gMultiUsePlayerCursor = GetBattlerAtPosition(B_POSITION_OPPONENT_RIGHT);
             else
                 gMultiUsePlayerCursor = GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT);

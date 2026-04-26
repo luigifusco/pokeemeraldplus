@@ -3383,21 +3383,27 @@ u8 CountAliveMonsInBattle(u8 caseId)
     case BATTLE_ALIVE_EXCEPT_ACTIVE:
         for (i = 0; i < MAX_BATTLERS_COUNT; i++)
         {
-            if (i != gActiveBattler && !(gAbsentBattlerFlags & gBitTable[i]))
+            if (i != gActiveBattler
+             && !(gAbsentBattlerFlags & gBitTable[i])
+             && !(gBattleStruct->absentBattlerFlags & gBitTable[i]))
                 retVal++;
         }
         break;
     case BATTLE_ALIVE_ATK_SIDE:
         for (i = 0; i < MAX_BATTLERS_COUNT; i++)
         {
-            if (GetBattlerSide(i) == GetBattlerSide(gBattlerAttacker) && !(gAbsentBattlerFlags & gBitTable[i]))
+            if (GetBattlerSide(i) == GetBattlerSide(gBattlerAttacker)
+             && !(gAbsentBattlerFlags & gBitTable[i])
+             && !(gBattleStruct->absentBattlerFlags & gBitTable[i]))
                 retVal++;
         }
         break;
     case BATTLE_ALIVE_DEF_SIDE:
         for (i = 0; i < MAX_BATTLERS_COUNT; i++)
         {
-            if (GetBattlerSide(i) == GetBattlerSide(gBattlerTarget) && !(gAbsentBattlerFlags & gBitTable[i]))
+            if (GetBattlerSide(i) == GetBattlerSide(gBattlerTarget)
+             && !(gAbsentBattlerFlags & gBitTable[i])
+             && !(gBattleStruct->absentBattlerFlags & gBitTable[i]))
                 retVal++;
         }
         break;
@@ -3439,10 +3445,13 @@ u8 GetDefaultMoveTarget(u8 battler)
     }
     else
     {
-        if ((gAbsentBattlerFlags & gBitTable[opposing]))
+        u8 opposingBattler = GetBattlerAtPosition(opposing);
+
+        if ((gAbsentBattlerFlags & gBitTable[opposingBattler])
+         || (gBattleStruct->absentBattlerFlags & gBitTable[opposingBattler]))
             return GetBattlerAtPosition(BATTLE_PARTNER(opposing));
         else
-            return GetBattlerAtPosition(opposing);
+            return opposingBattler;
     }
 }
 
