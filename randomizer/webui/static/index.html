@@ -192,6 +192,16 @@
             </div>
 
             <div class="group">
+                <div class="group-title">Gym leaders</div>
+                <div class="group-desc">Choose which of each gym leader's five teams is used the first time you battle them.</div>
+                <div class="row">
+                    <div class="row-label"><strong>First roster</strong><small>0 = base team, 4 = fourth rematch team.</small></div>
+                    <input type="range" min="0" max="4" step="1" data-bind="gym_leader_first_roster" />
+                    <input type="number" class="num-mirror" min="0" max="4" data-bind="gym_leader_first_roster" />
+                </div>
+            </div>
+
+            <div class="group">
                 <div class="group-title">External control</div>
                 <label class="check"><input type="checkbox" data-bind="webui_opponent" /><span class="box"></span>
                     <span><strong>Web-UI opponent</strong> (WEBUI_OPPONENT) — the opponent's battle decisions are driven by a browser UI via an mGBA Lua bridge. See <code>battleui/README.md</code> for how to run the companion server.</span></label>

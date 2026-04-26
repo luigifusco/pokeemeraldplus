@@ -56,6 +56,21 @@ class ApiBasics(unittest.TestCase):
         self.assertEqual([s["label"] for s in steps], ["randomize", "evolution graph", "spoiler report"])
         self.assertIn("--wild", steps[0]["argv"])
 
+    def test_preview_with_gym_leader_first_roster(self) -> None:
+        r = self.client.post(
+            "/api/preview",
+            json={
+                "config": {"gym_leader_first_roster": 4},
+                "run_randomize": False,
+                "run_make": True,
+                "jobs": 1,
+            },
+        )
+        self.assertEqual(r.status_code, 200, r.text)
+        steps = r.json()["steps"]
+        self.assertEqual([s["label"] for s in steps], ["make"])
+        self.assertIn("GYM_LEADER_FIRST_ROSTER=4", steps[0]["argv"])
+
     def test_preview_with_fixed_levels(self) -> None:
         r = self.client.post(
             "/api/preview",

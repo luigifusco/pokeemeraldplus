@@ -56,6 +56,7 @@ const defaultConfig = () => ({
     webui_opponent: false,
     opponent_stat_stage_mod: 0,
     player_stat_stage_mod: 0,
+    gym_leader_first_roster: 0,
     walk_fast: false,
     instant_text: false,
     skip_battle_transition: false,

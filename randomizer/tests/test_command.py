@@ -195,6 +195,7 @@ class MakeArgsTest(unittest.TestCase):
             "HARDCODED_RANDOM_EVOLUTIONS=0",
             "OPPONENT_STAT_STAGE_MOD=0",
             "PLAYER_STAT_STAGE_MOD=0",
+            "GYM_LEADER_FIRST_ROSTER=0",
             "WAIT_TIME_DIVISOR=1",
         ):
             self.assertIn(expected, args, f"missing {expected} in {args!r}")
@@ -221,6 +222,12 @@ class MakeArgsTest(unittest.TestCase):
         args = to_make_args(cfg, jobs=1)
         self.assertIn("OPPONENT_STAT_STAGE_MOD=6", args)
         self.assertIn("PLAYER_STAT_STAGE_MOD=-6", args)
+
+    def test_gym_leader_first_roster_clamped(self) -> None:
+        high = to_make_args(BuildConfig(gym_leader_first_roster=99), jobs=1)
+        self.assertIn("GYM_LEADER_FIRST_ROSTER=4", high)
+        low = to_make_args(BuildConfig(gym_leader_first_roster=-99), jobs=1)
+        self.assertIn("GYM_LEADER_FIRST_ROSTER=0", low)
 
     def test_webui_opponent_toggle(self) -> None:
         on = to_make_args(BuildConfig(webui_opponent=True), jobs=1)

@@ -112,6 +112,7 @@ class BuildConfig:
     webui_opponent: bool = False            # WEBUI_OPPONENT=1 — control opponent via browser UI
     opponent_stat_stage_mod: int = 0        # -6..+6
     player_stat_stage_mod: int = 0          # -6..+6
+    gym_leader_first_roster: int = 0        # 0 = base, 4 = fourth rematch
 
     # --- Speed & Skips tab ---
     fast_evolution_anim: bool = False
@@ -321,6 +322,7 @@ def to_make_args(
 
     argv.append(f"OPPONENT_STAT_STAGE_MOD={_clamp(cfg.opponent_stat_stage_mod, -6, 6)}")
     argv.append(f"PLAYER_STAT_STAGE_MOD={_clamp(cfg.player_stat_stage_mod, -6, 6)}")
+    argv.append(f"GYM_LEADER_FIRST_ROSTER={_clamp(cfg.gym_leader_first_roster, 0, 4)}")
 
     pow_ = _clamp(cfg.wait_time_divisor_pow, 0, 5)
     argv.append(f"WAIT_TIME_DIVISOR={1 << pow_}")

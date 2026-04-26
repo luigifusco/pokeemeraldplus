@@ -87,6 +87,7 @@ class BuildConfigModel(BaseModel):
     webui_opponent: bool = False
     opponent_stat_stage_mod: int = 0
     player_stat_stage_mod: int = 0
+    gym_leader_first_roster: int = 0
     # Speed
     fast_evolution_anim: bool = False
     prevent_evolution_cancel: bool = False

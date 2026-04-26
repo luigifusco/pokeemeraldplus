@@ -48,6 +48,10 @@
 #include "constants/trainer_hill.h"
 #include "constants/weather.h"
 
+#ifndef GYM_LEADER_FIRST_ROSTER
+#define GYM_LEADER_FIRST_ROSTER 0
+#endif
+
 enum {
     TRANSITION_TYPE_NORMAL,
     TRANSITION_TYPE_CAVE,
@@ -87,6 +91,8 @@ static void CB2_EndFirstBattle(void);
 static void CB2_EndTrainerBattle(void);
 static bool32 IsPlayerDefeated(u32 battleOutcome);
 static u16 GetRematchTrainerId(u16 trainerId);
+static void UseGymLeaderFirstRoster(void);
+static void SetSkippedGymLeaderRosterFlags(u16 trainerId);
 static void RegisterTrainerInMatchCall(void);
 static void HandleRematchVarsOnBattleEnd(void);
 static const u8 *GetIntroSpeechOfApproachingTrainer(void);
@@ -1109,10 +1115,12 @@ const u8 *BattleSetup_ConfigureTrainerBattle(const u8 *data)
     {
     case TRAINER_BATTLE_SINGLE_NO_INTRO_TEXT:
         TrainerBattleLoadArgs(sOrdinaryNoIntroBattleParams, data);
+        UseGymLeaderFirstRoster();
         return EventScript_DoNoIntroTrainerBattle;
     case TRAINER_BATTLE_DOUBLE:
         TrainerBattleLoadArgs(sDoubleBattleParams, data);
         SetMapVarsToTrainer();
+        UseGymLeaderFirstRoster();
         return EventScript_TryDoDoubleTrainerBattle;
     case TRAINER_BATTLE_CONTINUE_SCRIPT:
         if (gApproachingTrainerId == 0)
@@ -1124,15 +1132,18 @@ const u8 *BattleSetup_ConfigureTrainerBattle(const u8 *data)
         {
             TrainerBattleLoadArgs(sTrainerBContinueScriptBattleParams, data);
         }
+        UseGymLeaderFirstRoster();
         return EventScript_TryDoNormalTrainerBattle;
     case TRAINER_BATTLE_CONTINUE_SCRIPT_NO_MUSIC:
         TrainerBattleLoadArgs(sContinueScriptBattleParams, data);
         SetMapVarsToTrainer();
+        UseGymLeaderFirstRoster();
         return EventScript_TryDoNormalTrainerBattle;
     case TRAINER_BATTLE_CONTINUE_SCRIPT_DOUBLE:
     case TRAINER_BATTLE_CONTINUE_SCRIPT_DOUBLE_NO_MUSIC:
         TrainerBattleLoadArgs(sContinueScriptDoubleBattleParams, data);
         SetMapVarsToTrainer();
+        UseGymLeaderFirstRoster();
         return EventScript_TryDoDoubleTrainerBattle;
     case TRAINER_BATTLE_REMATCH_DOUBLE:
         TrainerBattleLoadArgs(sDoubleBattleParams, data);
@@ -1186,6 +1197,7 @@ const u8 *BattleSetup_ConfigureTrainerBattle(const u8 *data)
         {
             TrainerBattleLoadArgs(sTrainerBOrdinaryBattleParams, data);
         }
+        UseGymLeaderFirstRoster();
         return EventScript_TryDoNormalTrainerBattle;
     }
 }
@@ -1247,6 +1259,7 @@ static void SetBattledTrainersFlags(void)
     if (gTrainerBattleOpponent_B != 0)
         FlagSet(GetTrainerBFlag());
     FlagSet(GetTrainerAFlag());
+    SetSkippedGymLeaderRosterFlags(gTrainerBattleOpponent_A);
 }
 
 static void UNUSED SetBattledTrainerFlag(void)
@@ -1573,6 +1586,58 @@ static s32 TrainerIdToRematchTableId(const struct RematchTrainer *table, u16 tra
     return -1;
 }
 
+static bool32 IsGymLeaderRematchTableId(s32 rematchTableId)
+{
+    return rematchTableId >= REMATCH_ROXANNE && rematchTableId <= REMATCH_JUAN;
+}
+
+static u8 GetGymLeaderFirstRosterIndex(void)
+{
+    if (GYM_LEADER_FIRST_ROSTER < 0)
+        return 0;
+    if (GYM_LEADER_FIRST_ROSTER >= REMATCHES_COUNT)
+        return REMATCHES_COUNT - 1;
+    return GYM_LEADER_FIRST_ROSTER;
+}
+
+static void UseGymLeaderFirstRoster(void)
+{
+    u8 rosterIndex = GetGymLeaderFirstRosterIndex();
+    s32 rematchTableId;
+
+    if (rosterIndex == 0)
+        return;
+    if (HasTrainerBeenFought(gTrainerBattleOpponent_A))
+        return;
+
+    rematchTableId = FirstBattleTrainerIdToRematchTableId(gRematchTable, gTrainerBattleOpponent_A);
+    if (!IsGymLeaderRematchTableId(rematchTableId))
+        return;
+    if (gRematchTable[rematchTableId].trainerIds[rosterIndex] == 0)
+        return;
+
+    gTrainerBattleOpponent_A = gRematchTable[rematchTableId].trainerIds[rosterIndex];
+}
+
+static void SetSkippedGymLeaderRosterFlags(u16 trainerId)
+{
+    s32 rematchTableId = TrainerIdToRematchTableId(gRematchTable, trainerId);
+    s32 i;
+
+    if (!IsGymLeaderRematchTableId(rematchTableId))
+        return;
+
+    for (i = 0; i < REMATCHES_COUNT; i++)
+    {
+        if (gRematchTable[rematchTableId].trainerIds[i] == 0)
+            return;
+
+        SetTrainerFlag(gRematchTable[rematchTableId].trainerIds[i]);
+        if (gRematchTable[rematchTableId].trainerIds[i] == trainerId)
+            return;
+    }
+}
+
 // Returns TRUE if the given trainer (by their entry in the rematch table) is not allowed to have rematches.
 // This applies to the Elite Four and Victory Road Wally (if he's not been defeated yet)
 static bool32 IsRematchForbidden(s32 rematchTableId)
@@ -1740,13 +1805,10 @@ static void ClearTrainerWantRematchState(const struct RematchTrainer *table, u16
 
 static u32 GetTrainerMatchCallFlag(u32 trainerId)
 {
-    s32 i;
+    s32 tableId = TrainerIdToRematchTableId(gRematchTable, trainerId);
 
-    for (i = 0; i < REMATCH_TABLE_ENTRIES; i++)
-    {
-        if (gRematchTable[i].trainerIds[0] == trainerId)
-            return TRAINER_REGISTERED_FLAGS_START + i;
-    }
+    if (tableId != -1)
+        return TRAINER_REGISTERED_FLAGS_START + tableId;
 
     return 0xFFFF;
 }
