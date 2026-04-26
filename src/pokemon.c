@@ -69,6 +69,7 @@ static void DecryptBoxMon(struct BoxPokemon *boxMon);
 static void Task_PlayMapChosenOrBattleBGM(u8 taskId);
 static bool8 ShouldGetStatBadgeBoost(u16 flagId, u8 battler);
 static u8 GetValidAbilityNumBySpecies(u16 species, u8 abilityNum);
+static bool8 ShouldUseMonSpritesGfxPtrForTemplate(void);
 static u16 GiveMoveToBoxMon(struct BoxPokemon *boxMon, u16 move);
 static bool8 ShouldSkipFriendshipChange(void);
 static u8 CopyMonToPC(struct Pokemon *mon);
@@ -3487,9 +3488,7 @@ u8 GetGenderFromSpeciesAndPersonality(u16 species, u32 personality)
 
 void SetMultiuseSpriteTemplateToPokemon(u16 speciesTag, u8 battlerPosition)
 {
-    // Use gMonSpritesGfxPtr when it's valid (battle, evolution scene, etc.)
-    // Only prefer MonSpritesGfxManagers when gMonSpritesGfxPtr is NULL (e.g. summary screen outside battle)
-    if (gMonSpritesGfxPtr != NULL)
+    if (ShouldUseMonSpritesGfxPtrForTemplate())
         gMultiuseSpriteTemplate = gMonSpritesGfxPtr->templates[battlerPosition];
     else if (sMonSpritesGfxManagers[MON_SPR_GFX_MANAGER_A])
         gMultiuseSpriteTemplate = sMonSpritesGfxManagers[MON_SPR_GFX_MANAGER_A]->templates[battlerPosition];
@@ -3505,6 +3504,18 @@ void SetMultiuseSpriteTemplateToPokemon(u16 speciesTag, u8 battlerPosition)
         gMultiuseSpriteTemplate.anims = gMonFrontAnimsPtrTable[speciesTag - SPECIES_SHINY_TAG];
     else
         gMultiuseSpriteTemplate.anims = gMonFrontAnimsPtrTable[speciesTag];
+}
+
+static bool8 ShouldUseMonSpritesGfxPtrForTemplate(void)
+{
+    if (gMonSpritesGfxPtr == NULL)
+        return FALSE;
+
+    // Summary screens create manager A; prefer it over any lingering battle/evolution gfx.
+    if (!gMain.inBattle && sMonSpritesGfxManagers[MON_SPR_GFX_MANAGER_A] != NULL)
+        return FALSE;
+
+    return TRUE;
 }
 
 void SetMultiuseSpriteTemplateToTrainerBack(u16 trainerPicId, u8 battlerPosition)
