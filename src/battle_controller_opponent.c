@@ -2034,7 +2034,8 @@ static void Task_StartSendOutAnim(u8 taskId)
         gBattleBufferA[gActiveBattler][1] = gBattlerPartyIndexes[gActiveBattler];
         StartSendOutAnim(gActiveBattler, FALSE);
         gActiveBattler ^= BIT_FLANK;
-        if (!(gAbsentBattlerFlags & gBitTable[gActiveBattler]))
+        if (!(gAbsentBattlerFlags & gBitTable[gActiveBattler])
+         && !(gBattleStruct->absentBattlerFlags & gBitTable[gActiveBattler]))
         {
             gBattleBufferA[gActiveBattler][1] = gBattlerPartyIndexes[gActiveBattler];
             StartSendOutAnim(gActiveBattler, FALSE);
