@@ -60,6 +60,7 @@ const defaultConfig = () => ({
     gym_leader_first_roster: 0,
     walk_fast: false,
     instant_text: false,
+    fast_battle_anims: false,
     skip_battle_transition: false,
     skip_intro_cutscene: false,
     skip_fade_anims: false,
@@ -388,7 +389,7 @@ function wireCrossField() {
     opp.forEach((i) => i.addEventListener("input", statSync));
 
     $("#qol-enable-all").addEventListener("click", () => {
-        ["walk_fast","instant_text","skip_battle_transition","skip_intro_cutscene",
+        ["walk_fast","instant_text","fast_battle_anims","skip_battle_transition","skip_intro_cutscene",
          "skip_fade_anims","fast_stat_anims"].forEach((k) => { state.config[k] = true; });
         wireBindings(); // re-sync checkboxes
         $$("[data-bind]").forEach((el) => {
@@ -397,7 +398,7 @@ function wireCrossField() {
         debouncedPreview();
     });
     $("#qol-clear-all").addEventListener("click", () => {
-        ["walk_fast","instant_text","skip_battle_transition","skip_intro_cutscene",
+        ["walk_fast","instant_text","fast_battle_anims","skip_battle_transition","skip_intro_cutscene",
          "skip_fade_anims","fast_stat_anims","manual_battle_text"].forEach((k) => {
             state.config[k] = false;
         });

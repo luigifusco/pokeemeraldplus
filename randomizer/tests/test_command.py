@@ -189,6 +189,7 @@ class MakeArgsTest(unittest.TestCase):
             "WALK_FAST=0",
             "NUZLOCKE_DELETE_FAINTED=0",
             "INSTANT_TEXT=0",
+            "FAST_BATTLE_ANIMS=0",
             "FORCE_DOUBLE_BATTLES=0",
             "NO_EXP=0",
             "RANDOM_EVOLUTIONS=0",
@@ -217,6 +218,11 @@ class MakeArgsTest(unittest.TestCase):
             cfg = BuildConfig(wait_time_divisor_pow=pow_)
             args = to_make_args(cfg, jobs=1)
             self.assertIn(f"WAIT_TIME_DIVISOR={val}", args, f"pow={pow_}")
+
+    def test_fast_battle_anims_is_independent_of_transition_skip(self) -> None:
+        args = to_make_args(BuildConfig(fast_battle_anims=True), jobs=1)
+        self.assertIn("FAST_BATTLE_ANIMS=1", args)
+        self.assertIn("SKIP_BATTLE_TRANSITION=0", args)
 
     def test_stat_stage_clamped(self) -> None:
         cfg = BuildConfig(opponent_stat_stage_mod=999, player_stat_stage_mod=-999)

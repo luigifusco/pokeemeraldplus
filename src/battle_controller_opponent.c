@@ -39,7 +39,7 @@
 #include "constants/trainers.h"
 #include "trainer_hill.h"
 
-#ifdef SKIP_BATTLE_TRANSITION
+#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
 #define SHOULD_WAIT_FOR_CRY() FALSE
 #else
 #define SHOULD_WAIT_FOR_CRY() IsCryPlayingOrClearCrySongs()
@@ -1980,7 +1980,7 @@ static void OpponentHandleIntroTrainerBallThrow(void)
 {
     u8 taskId;
 
-#ifdef SKIP_BATTLE_TRANSITION
+#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
 #define INTRO_TRAINER_THROW_FRAMES 10
 #else
 #define INTRO_TRAINER_THROW_FRAMES 35

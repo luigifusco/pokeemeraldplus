@@ -94,6 +94,7 @@ class BuildConfigModel(BaseModel):
     prevent_evolution_cancel: bool = False
     walk_fast: bool = False
     instant_text: bool = False
+    fast_battle_anims: bool = False
     skip_battle_transition: bool = False
     skip_intro_cutscene: bool = False
     skip_fade_anims: bool = False

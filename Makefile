@@ -284,6 +284,14 @@ SKIP_BATTLE_TRANSITION ?= 0
 ifeq ($(SKIP_BATTLE_TRANSITION),1)
 	CPPFLAGS += -DSKIP_BATTLE_TRANSITION
 endif
+# Compile-time toggle: speed up battle intro/sendout/healthbox animations without
+# skipping the battle transition itself. SKIP_BATTLE_TRANSITION also enables these
+# speedups for compatibility with older presets.
+# Usage: make FAST_BATTLE_ANIMS=1
+FAST_BATTLE_ANIMS ?= 0
+ifeq ($(FAST_BATTLE_ANIMS),1)
+	CPPFLAGS += -DFAST_BATTLE_ANIMS
+endif
 
 ifeq ($(MODERN),0)
   CPPFLAGS += -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89

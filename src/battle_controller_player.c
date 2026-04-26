@@ -40,7 +40,7 @@
 #include "constants/trainers.h"
 #include "constants/rgb.h"
 
-#ifdef SKIP_BATTLE_TRANSITION
+#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
 #define SHOULD_WAIT_FOR_CRY() FALSE
 #else
 #define SHOULD_WAIT_FOR_CRY() IsCryPlayingOrClearCrySongs()
@@ -1329,7 +1329,7 @@ static void Task_PrepareToGiveExpWithExpBar(u8 taskId)
 static void Task_GiveExpWithExpBar(u8 taskId)
 {
     if (gTasks[taskId].tExpTask_frames <
-#ifdef SKIP_BATTLE_TRANSITION
+#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
     3
 #else
     13
@@ -3138,7 +3138,7 @@ static void PlayerHandleIntroSlide(void)
 
 #define sBattlerId data[5]
 
-#ifdef SKIP_BATTLE_TRANSITION
+#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
 #define INTRO_TRAINER_THROW_FRAMES 12
 #define INTRO_SENDOUT_DELAY_FRAMES 10
 #else

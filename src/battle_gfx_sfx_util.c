@@ -397,7 +397,7 @@ void SpriteCB_TrainerSlideIn(struct Sprite *sprite)
 {
     if (!(gIntroSlideFlags & 1))
     {
-#ifdef SKIP_BATTLE_TRANSITION
+#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
         sprite->x2 += 8 * sprite->sSpeedX;
         if (abs(sprite->x2) < abs(8 * sprite->sSpeedX))
 #else
@@ -417,7 +417,7 @@ void SpriteCB_TrainerSlideIn(struct Sprite *sprite)
 // Slide up to 0 if necessary (used by multi battle intro)
 static void SpriteCB_TrainerSlideVertical(struct Sprite *sprite)
 {
-#ifdef SKIP_BATTLE_TRANSITION
+#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
     sprite->y2 -= 4;
 #else
     sprite->y2 -= 2;
