@@ -280,6 +280,12 @@ SKIP_INTRO_CUTSCENE ?= 0
 ifeq ($(SKIP_INTRO_CUTSCENE),1)
 	CPPFLAGS += -DSKIP_INTRO_CUTSCENE
 endif
+# Compile-time toggle: skip the new-game moving/truck intro after gender/name.
+# Usage: make FAST_INTRO=1
+FAST_INTRO ?= 0
+ifeq ($(FAST_INTRO),1)
+	CPPFLAGS += -DFAST_INTRO
+endif
 SKIP_BATTLE_TRANSITION ?= 0
 ifeq ($(SKIP_BATTLE_TRANSITION),1)
 	CPPFLAGS += -DSKIP_BATTLE_TRANSITION

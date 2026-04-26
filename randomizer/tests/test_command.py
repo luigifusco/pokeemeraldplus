@@ -190,6 +190,7 @@ class MakeArgsTest(unittest.TestCase):
             "NUZLOCKE_DELETE_FAINTED=0",
             "INSTANT_TEXT=0",
             "FAST_BATTLE_ANIMS=0",
+            "FAST_INTRO=0",
             "FORCE_DOUBLE_BATTLES=0",
             "NO_EXP=0",
             "RANDOM_EVOLUTIONS=0",
@@ -223,6 +224,10 @@ class MakeArgsTest(unittest.TestCase):
         args = to_make_args(BuildConfig(fast_battle_anims=True), jobs=1)
         self.assertIn("FAST_BATTLE_ANIMS=1", args)
         self.assertIn("SKIP_BATTLE_TRANSITION=0", args)
+
+    def test_fast_intro_emits_make_flag(self) -> None:
+        args = to_make_args(BuildConfig(fast_intro=True), jobs=1)
+        self.assertIn("FAST_INTRO=1", args)
 
     def test_stat_stage_clamped(self) -> None:
         cfg = BuildConfig(opponent_stat_stage_mod=999, player_stat_stage_mod=-999)

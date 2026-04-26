@@ -97,6 +97,7 @@ class BuildConfigModel(BaseModel):
     fast_battle_anims: bool = False
     skip_battle_transition: bool = False
     skip_intro_cutscene: bool = False
+    fast_intro: bool = False
     skip_fade_anims: bool = False
     fast_stat_anims: bool = False
     manual_battle_text: bool = False

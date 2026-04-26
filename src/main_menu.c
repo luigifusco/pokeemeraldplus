@@ -1286,10 +1286,27 @@ static void Task_NewGameBirchSpeech_Init(u8 taskId)
     AddBirchSpeechObjects(taskId);
     BeginNormalPaletteFade(PALETTES_ALL, 0, 16, 0, RGB_BLACK);
     gTasks[taskId].tBG1HOFS = 0;
+#ifdef FAST_INTRO
+    InitWindows(sNewGameBirchSpeechTextWindows);
+    LoadMainMenuWindowFrameTiles(0, 0xF3);
+    LoadMessageBoxGfx(0, BIRCH_DLG_BASE_TILE_NUM, BG_PLTT_ID(15));
+    NewGameBirchSpeech_ShowDialogueWindow(0, 1);
+    PutWindowTilemap(0);
+    CopyWindowToVram(0, COPYWIN_FULL);
+    gTasks[taskId].tBG1HOFS = -60;
+    gTasks[taskId].tPlayerSpriteId = gTasks[taskId].tBrendanSpriteId;
+    gTasks[taskId].tPlayerGender = MALE;
+    gSprites[gTasks[taskId].tPlayerSpriteId].x = 180;
+    gSprites[gTasks[taskId].tPlayerSpriteId].y = 60;
+    gSprites[gTasks[taskId].tPlayerSpriteId].invisible = FALSE;
+    SetGpuReg(REG_OFFSET_BG1HOFS, -60);
+    gTasks[taskId].func = Task_NewGameBirchSpeech_BoyOrGirl;
+#else
     gTasks[taskId].func = Task_NewGameBirchSpeech_WaitToShowBirch;
     gTasks[taskId].tPlayerSpriteId = SPRITE_NONE;
     gTasks[taskId].data[3] = 0xFF;
     gTasks[taskId].tTimer = 0xD8;
+#endif
     PlayBGM(MUS_ROUTE122);
     ShowBg(0);
     ShowBg(1);
@@ -1629,10 +1646,15 @@ static void Task_NewGameBirchSpeech_ProcessNameYesNoMenu(u8 taskId)
     {
         case 0:
             PlaySE(SE_SELECT);
+#ifdef FAST_INTRO
+            BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+            gTasks[taskId].func = Task_NewGameBirchSpeech_Cleanup;
+#else
             gSprites[gTasks[taskId].tPlayerSpriteId].oam.objMode = ST_OAM_OBJ_BLEND;
             NewGameBirchSpeech_StartFadeOutTarget1InTarget2(taskId, 2);
             NewGameBirchSpeech_StartFadePlatformIn(taskId, 1);
             gTasks[taskId].func = Task_NewGameBirchSpeech_SlidePlatformAway2;
+#endif
             break;
         case MENU_B_PRESSED:
         case 1:

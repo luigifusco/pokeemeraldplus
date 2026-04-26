@@ -44,12 +44,19 @@
 #include "berry_powder.h"
 #include "mystery_gift.h"
 #include "union_room_chat.h"
+#include "constants/flags.h"
+#include "constants/heal_locations.h"
 #include "constants/items.h"
+#include "constants/vars.h"
 
 extern const u8 EventScript_ResetAllMapFlags[];
 
 static void ClearFrontierRecord(void);
 static void WarpToTruck(void);
+#ifdef FAST_INTRO
+static void InitFastIntroState(void);
+static void WarpToFastIntroStart(void);
+#endif
 static void ResetMiniGamesRecords(void);
 
 EWRAM_DATA bool8 gDifferentSaveFile = FALSE;
@@ -130,6 +137,49 @@ static void WarpToTruck(void)
     WarpIntoMap();
 }
 
+#ifdef FAST_INTRO
+static void WarpToFastIntroStart(void)
+{
+    if (gSaveBlock2Ptr->playerGender == MALE)
+        SetWarpDestination(MAP_GROUP(MAP_LITTLEROOT_TOWN), MAP_NUM(MAP_LITTLEROOT_TOWN), WARP_ID_NONE, 5, 9);
+    else
+        SetWarpDestination(MAP_GROUP(MAP_LITTLEROOT_TOWN), MAP_NUM(MAP_LITTLEROOT_TOWN), WARP_ID_NONE, 14, 9);
+    WarpIntoMap();
+}
+
+static void InitFastIntroState(void)
+{
+    u8 healLocation;
+
+    FlagSet(FLAG_SET_WALL_CLOCK);
+    FlagSet(FLAG_MET_RIVAL_MOM);
+    FlagSet(FLAG_RIVAL_LEFT_FOR_ROUTE103);
+    FlagSet(FLAG_HIDE_LITTLEROOT_TOWN_BRENDANS_HOUSE_TRUCK);
+    FlagSet(FLAG_HIDE_LITTLEROOT_TOWN_MAYS_HOUSE_TRUCK);
+    if (gSaveBlock2Ptr->playerGender == MALE)
+    {
+        FlagSet(FLAG_HIDE_LITTLEROOT_TOWN_MAYS_HOUSE_2F_POKE_BALL);
+        FlagClear(FLAG_HIDE_LITTLEROOT_TOWN_MAYS_HOUSE_RIVAL_BEDROOM);
+    }
+    else
+    {
+        FlagSet(FLAG_HIDE_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F_POKE_BALL);
+        FlagClear(FLAG_HIDE_LITTLEROOT_TOWN_BRENDANS_HOUSE_RIVAL_BEDROOM);
+    }
+
+    VarSet(VAR_LITTLEROOT_INTRO_STATE, 7);
+    VarSet(VAR_LITTLEROOT_RIVAL_STATE, 3);
+    VarSet(VAR_LITTLEROOT_TOWN_STATE, 2);
+    VarSet(VAR_ROUTE101_STATE, 2);
+
+    RtcInitLocalTimeOffset(10, 0);
+    healLocation = gSaveBlock2Ptr->playerGender == MALE
+        ? HEAL_LOCATION_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F
+        : HEAL_LOCATION_LITTLEROOT_TOWN_MAYS_HOUSE_2F;
+    SetLastHealLocationWarp(healLocation);
+}
+#endif
+
 void Sav2_ClearSetDefault(void)
 {
     ClearSav2();
@@ -197,8 +247,15 @@ void NewGameInitData(void)
     InitDewfordTrend();
     ResetFanClub();
     ResetLotteryCorner();
+#ifdef FAST_INTRO
+    WarpToFastIntroStart();
+#else
     WarpToTruck();
+#endif
     RunScriptImmediately(EventScript_ResetAllMapFlags);
+#ifdef FAST_INTRO
+    InitFastIntroState();
+#endif
     ResetMiniGamesRecords();
     InitUnionRoomChatRegisteredTexts();
     InitLilycoveLady();

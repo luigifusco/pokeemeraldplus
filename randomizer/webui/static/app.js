@@ -63,6 +63,7 @@ const defaultConfig = () => ({
     fast_battle_anims: false,
     skip_battle_transition: false,
     skip_intro_cutscene: false,
+    fast_intro: false,
     skip_fade_anims: false,
     fast_stat_anims: false,
     manual_battle_text: false,
@@ -389,7 +390,7 @@ function wireCrossField() {
     opp.forEach((i) => i.addEventListener("input", statSync));
 
     $("#qol-enable-all").addEventListener("click", () => {
-        ["walk_fast","instant_text","fast_battle_anims","skip_battle_transition","skip_intro_cutscene",
+        ["walk_fast","instant_text","fast_battle_anims","skip_battle_transition","skip_intro_cutscene","fast_intro",
          "skip_fade_anims","fast_stat_anims"].forEach((k) => { state.config[k] = true; });
         wireBindings(); // re-sync checkboxes
         $$("[data-bind]").forEach((el) => {
@@ -398,7 +399,7 @@ function wireCrossField() {
         debouncedPreview();
     });
     $("#qol-clear-all").addEventListener("click", () => {
-        ["walk_fast","instant_text","fast_battle_anims","skip_battle_transition","skip_intro_cutscene",
+        ["walk_fast","instant_text","fast_battle_anims","skip_battle_transition","skip_intro_cutscene","fast_intro",
          "skip_fade_anims","fast_stat_anims","manual_battle_text"].forEach((k) => {
             state.config[k] = false;
         });

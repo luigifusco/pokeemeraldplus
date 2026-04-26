@@ -123,6 +123,7 @@ class BuildConfig:
     fast_battle_anims: bool = False
     skip_battle_transition: bool = False
     skip_intro_cutscene: bool = False
+    fast_intro: bool = False
     skip_fade_anims: bool = False
     fast_stat_anims: bool = False
     manual_battle_text: bool = False
@@ -285,6 +286,7 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("fast_battle_anims", "FAST_BATTLE_ANIMS"),
     ("skip_battle_transition", "SKIP_BATTLE_TRANSITION"),
     ("skip_intro_cutscene", "SKIP_INTRO_CUTSCENE"),
+    ("fast_intro", "FAST_INTRO"),
     ("skip_fade_anims", "SKIP_FADE_ANIMS"),
     ("fast_stat_anims", "FAST_STAT_ANIMS"),
     ("manual_battle_text", "MANUAL_BATTLE_TEXT"),
