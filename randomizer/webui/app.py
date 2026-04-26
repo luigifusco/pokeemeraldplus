@@ -82,6 +82,7 @@ class BuildConfigModel(BaseModel):
     no_exp: bool = False
     negative_exp: bool = False
     no_pokeballs: bool = False
+    first_shop_pokeballs: bool = False
     money_for_moves: bool = False
     start_with_super_rare_candy: bool = False
     walk_through_walls: bool = False

@@ -107,6 +107,7 @@ class BuildConfig:
     no_exp: bool = False
     negative_exp: bool = False
     no_pokeballs: bool = False
+    first_shop_pokeballs: bool = False
     money_for_moves: bool = False
     start_with_super_rare_candy: bool = False
     walk_through_walls: bool = False
@@ -295,6 +296,7 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("no_exp", "NO_EXP"),
     ("negative_exp", "NEGATIVE_EXP"),
     ("no_pokeballs", "NO_POKEBALLS"),
+    ("first_shop_pokeballs", "FIRST_SHOP_POKEBALLS"),
     ("money_for_moves", "MONEY_FOR_MOVES"),
     ("start_with_super_rare_candy", "START_WITH_SUPER_RARE_CANDY"),
     ("webui_opponent", "WEBUI_OPPONENT"),

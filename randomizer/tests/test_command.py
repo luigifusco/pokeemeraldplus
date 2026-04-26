@@ -193,6 +193,7 @@ class MakeArgsTest(unittest.TestCase):
             "FAST_INTRO=0",
             "FORCE_DOUBLE_BATTLES=0",
             "NO_EXP=0",
+            "FIRST_SHOP_POKEBALLS=0",
             "RANDOM_EVOLUTIONS=0",
             "HARDCODED_RANDOM_EVOLUTIONS=0",
             "OPPONENT_STAT_STAGE_MOD=0",
@@ -226,6 +227,10 @@ class MakeArgsTest(unittest.TestCase):
     def test_fast_intro_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(fast_intro=True), jobs=1)
         self.assertIn("FAST_INTRO=1", args)
+
+    def test_first_shop_pokeballs_emits_make_flag(self) -> None:
+        args = to_make_args(BuildConfig(first_shop_pokeballs=True), jobs=1)
+        self.assertIn("FIRST_SHOP_POKEBALLS=1", args)
 
     def test_stat_stage_clamped(self) -> None:
         cfg = BuildConfig(opponent_stat_stage_mod=999, player_stat_stage_mod=-999)

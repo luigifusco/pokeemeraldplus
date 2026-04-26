@@ -247,6 +247,13 @@ ifeq ($(NO_POKEBALLS),1)
 	CPPFLAGS += -DNO_POKEBALLS
 endif
 
+# Compile-time toggle: stock Poké Balls in Oldale Mart before the first rival fight.
+# Usage: make FIRST_SHOP_POKEBALLS=1
+FIRST_SHOP_POKEBALLS ?= 0
+ifeq ($(FIRST_SHOP_POKEBALLS),1)
+	CPPFLAGS += -DFIRST_SHOP_POKEBALLS
+endif
+
 # Compile-time toggle: use money instead of PP for moves.
 # Usage: make MONEY_FOR_MOVES=1
 MONEY_FOR_MOVES ?= 0
