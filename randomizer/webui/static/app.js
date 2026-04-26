@@ -76,6 +76,21 @@ const state = {
     currentRun: null,
 };
 
+const QOL_CHECKBOX_FIELDS = [
+    "walk_fast",
+    "instant_text",
+    "fast_battle_anims",
+    "skip_battle_transition",
+    "skip_intro_cutscene",
+    "fast_intro",
+    "skip_fade_anims",
+    "fast_stat_anims",
+    "fastest_speed",
+    "manual_battle_text",
+    "fast_evolution_anim",
+    "prevent_evolution_cancel",
+];
+
 // ---------- Path helpers (dotted paths like "level_scale.wild_percent") ----------
 function getPath(obj, path) {
     return path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
@@ -383,10 +398,10 @@ function wireCrossField() {
     opp.forEach((i) => i.addEventListener("input", statSync));
 
     function setQolCheckboxes(checked) {
-        $$('[data-section="qol"] input[type="checkbox"][data-bind]').forEach((el) => {
-            setPath(state.config, el.dataset.bind, checked);
-            el.checked = checked;
+        QOL_CHECKBOX_FIELDS.forEach((path) => {
+            setPath(state.config, path, checked);
         });
+        applyStateToDom();
     }
 
     $("#qol-enable-all").addEventListener("click", () => {

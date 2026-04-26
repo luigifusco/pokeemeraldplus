@@ -248,13 +248,12 @@ void NewGameInitData(void)
     ResetFanClub();
     ResetLotteryCorner();
 #ifdef FAST_INTRO
+    RunScriptImmediately(EventScript_ResetAllMapFlags);
+    InitFastIntroState();
     WarpToFastIntroStart();
 #else
     WarpToTruck();
-#endif
     RunScriptImmediately(EventScript_ResetAllMapFlags);
-#ifdef FAST_INTRO
-    InitFastIntroState();
 #endif
     ResetMiniGamesRecords();
     InitUnionRoomChatRegisteredTexts();
