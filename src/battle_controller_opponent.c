@@ -47,6 +47,8 @@
 
 #ifdef WEBUI_OPPONENT
 // 0 = none, 1 = action pending, 2 = move pending
+#define WEBUI_OPP_FAILSAFE_BUTTONS (A_BUTTON | B_BUTTON | START_BUTTON | SELECT_BUTTON)
+
 static EWRAM_DATA u8 sWebuiPendingAction[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA struct ChooseMoveStruct sWebuiPendingMoveInfo[MAX_BATTLERS_COUNT] = {0};
 // One-shot cache populated when the user picks FIGHT+move+target from the
@@ -55,6 +57,7 @@ static EWRAM_DATA struct ChooseMoveStruct sWebuiPendingMoveInfo[MAX_BATTLERS_COU
 static EWRAM_DATA u8 sWebuiHasQueuedMove[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA u8 sWebuiQueuedMoveSlot[MAX_BATTLERS_COUNT] = {0};
 static EWRAM_DATA u8 sWebuiQueuedTarget[MAX_BATTLERS_COUNT] = {0};
+static EWRAM_DATA u8 sWebuiForceDefaultMove[MAX_BATTLERS_COUNT] = {0};
 #endif
 
 static void OpponentHandleGetMonData(void);
@@ -85,6 +88,7 @@ static void WebuiBuildMonInfo(u8 battler, struct WebuiOppMonInfo *out);
 static void WebuiBuildMoveInfo(u8 battler, struct WebuiOppMoveInfo *out);
 static void WebuiBuildPartyInfo(u8 battler, struct WebuiOppPartyInfo *out);
 static void WebuiChooseMoveWithDefaultAI(struct ChooseMoveStruct *moveInfo);
+static bool32 WebuiOpponent_FailsafeButtonsHeld(void);
 #endif
 static void OpponentHandleChooseItem(void);
 static void OpponentHandleChoosePokemon(void);
@@ -1600,6 +1604,7 @@ static void OpponentHandleChooseAction(void)
         WebuiOpponent_PostRequest(gActiveBattler, &controlledMon, left, &targetLeft, right, &targetRight, &moves, &partyInfo);
         sWebuiPendingAction[gActiveBattler] = 1;
         sWebuiHasQueuedMove[gActiveBattler] = 0;
+        sWebuiForceDefaultMove[gActiveBattler] = 0;
         gBattlerControllerFuncs[gActiveBattler] = OpponentHandleChooseAction_WebuiWait;
         return;
     }
@@ -1627,6 +1632,12 @@ static void OpponentHandleChooseMove(void)
         struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[gActiveBattler][4]);
 
 #ifdef WEBUI_OPPONENT
+        if (sWebuiForceDefaultMove[gActiveBattler])
+        {
+            sWebuiForceDefaultMove[gActiveBattler] = 0;
+            WebuiChooseMoveWithDefaultAI(moveInfo);
+            return;
+        }
         if (sWebuiHasQueuedMove[gActiveBattler])
         {
             u8 moveSlot = sWebuiQueuedMoveSlot[gActiveBattler];
@@ -2302,6 +2313,17 @@ static void OpponentHandleChooseAction_WebuiWait(void)
     u8 engineAction;
     u8 engineData = 0;
 
+    if (WebuiOpponent_FailsafeButtonsHeld())
+    {
+        WebuiOpponent_CancelRequest();
+        sWebuiForceDefaultMove[gActiveBattler] = 1;
+        AI_TrySwitchOrUseItem();
+        sWebuiPendingAction[gActiveBattler] = 0;
+        sWebuiHasQueuedMove[gActiveBattler] = 0;
+        OpponentBufferExecCompleted();
+        return;
+    }
+
     if (!WebuiOpponent_TryGetResponse(&action, &p1, &p2))
         return;
 
@@ -2346,6 +2368,15 @@ static void OpponentHandleChooseMove_WebuiWait(void)
     struct ChooseMoveStruct *moveInfo;
     u16 move;
 
+    if (WebuiOpponent_FailsafeButtonsHeld())
+    {
+        moveInfo = &sWebuiPendingMoveInfo[gActiveBattler];
+        WebuiOpponent_CancelRequest();
+        WebuiChooseMoveWithDefaultAI(moveInfo);
+        sWebuiPendingAction[gActiveBattler] = 0;
+        return;
+    }
+
     if (!WebuiOpponent_TryGetResponse(&action, &moveSlot, &targetBattler))
         return;
 
@@ -2379,5 +2410,10 @@ static void OpponentHandleChooseMove_WebuiWait(void)
     BtlController_EmitTwoReturnValues(B_COMM_TO_ENGINE, 10, moveSlot | (targetBattler << 8));
     sWebuiPendingAction[gActiveBattler] = 0;
     OpponentBufferExecCompleted();
+}
+
+static bool32 WebuiOpponent_FailsafeButtonsHeld(void)
+{
+    return (gMain.heldKeysRaw & WEBUI_OPP_FAILSAFE_BUTTONS) == WEBUI_OPP_FAILSAFE_BUTTONS;
 }
 #endif // WEBUI_OPPONENT

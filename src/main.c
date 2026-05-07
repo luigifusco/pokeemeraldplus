@@ -136,6 +136,9 @@ void AgbMain(void)
         ReadKeys();
 
         if (gSoftResetDisabled == FALSE
+#ifdef WEBUI_OPPONENT
+         && !WebuiOpponent_IsWaitingForResponse()
+#endif
          && JOY_HELD_RAW(A_BUTTON)
          && JOY_HELD_RAW(B_START_SELECT) == B_START_SELECT)
         {

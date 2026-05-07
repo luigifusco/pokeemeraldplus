@@ -293,7 +293,9 @@ mgba pokeemerald.gba
 
 In mGBA: **Tools → Scripting… → Load** `tools/battleui/mgba_bridge.lua`. The
 script logs `connected to luigifusco.dev:9877` once the TCP handshake + token
-hello succeed.
+hello succeed. While the ROM is waiting for the remote opponent, holding
+**A+B+Start+Select** uses Emerald's default CPU choice for that decision instead
+of soft-resetting.
 
 The friend opens:
 

@@ -87,6 +87,8 @@ void WebuiOpponent_PostRequest(
     const struct WebuiOppMoveInfo *moveInfo,
     const struct WebuiOppPartyInfo *partyInfo);
 bool32 WebuiOpponent_TryGetResponse(u8 *outAction, u8 *outParam1, u8 *outParam2);
+void WebuiOpponent_CancelRequest(void);
+bool32 WebuiOpponent_IsWaitingForResponse(void);
 
 #endif // WEBUI_OPPONENT
 

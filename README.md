@@ -93,6 +93,8 @@ Load the ROM in mGBA (0.10+), open **Tools → Scripting…**, and load
 `tools/battleui/mgba_bridge.lua`. Then open
 [http://127.0.0.1:9876](http://127.0.0.1:9876). Start a trainer battle — the
 page will prompt you to pick the opponent's move / switch / item on every turn.
+While the ROM is waiting for the remote opponent, hold **A+B+Start+Select** to
+fall back to Emerald's default CPU choice for that decision.
 
 Tests: `pytest battleui/tests/ -q`.
 
@@ -147,4 +149,3 @@ https://luigifusco.dev/?token=some-long-random-string
 
 For a full public deployment walkthrough (systemd unit, nginx TLS config,
 firewall, troubleshooting) see [`docs/battleui-remote.md`](docs/battleui-remote.md).
-

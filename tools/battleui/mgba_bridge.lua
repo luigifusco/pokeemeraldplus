@@ -531,7 +531,12 @@ end
 
 local function write_response(msg)
     if not validate_mailbox() then return false end
+    local state = read_u8(mailbox_addr + 5)
     local seq = read_u8(mailbox_addr + 4)
+    if state ~= STATE_REQUEST then
+        log(string.format("response seq=%s arrived while mailbox state=%d, dropping", tostring(msg.seq), state))
+        return true
+    end
     if msg.seq ~= nil and msg.seq ~= seq then
         log(string.format("stale response seq=%s (current=%d), dropping", tostring(msg.seq), seq))
         return true

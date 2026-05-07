@@ -9,6 +9,7 @@
 // initializer below), and so the Lua bridge can find it without needing a
 // battle to occur first.
 EWRAM_DATA struct WebuiOpponentMailbox gWebuiOpponentMailbox = { .magic = WEBUI_OPP_MAGIC };
+static EWRAM_DATA bool8 sWebuiOpponentWaiting = FALSE;
 
 static void ZeroMailbox(void)
 {
@@ -24,6 +25,7 @@ void WebuiOpponent_Init(void)
     gWebuiOpponentMailbox.magic = WEBUI_OPP_MAGIC;
     gWebuiOpponentMailbox.seq = 0;
     gWebuiOpponentMailbox.state = WEBUI_OPP_STATE_IDLE;
+    sWebuiOpponentWaiting = FALSE;
 }
 
 void WebuiOpponent_PostRequest(
@@ -54,6 +56,7 @@ void WebuiOpponent_PostRequest(
 
     gWebuiOpponentMailbox.seq++;
     gWebuiOpponentMailbox.state = WEBUI_OPP_STATE_REQUEST;
+    sWebuiOpponentWaiting = TRUE;
 }
 
 bool32 WebuiOpponent_TryGetResponse(u8 *outAction, u8 *outParam1, u8 *outParam2)
@@ -69,7 +72,22 @@ bool32 WebuiOpponent_TryGetResponse(u8 *outAction, u8 *outParam1, u8 *outParam2)
         *outParam2 = gWebuiOpponentMailbox.param2;
 
     gWebuiOpponentMailbox.state = WEBUI_OPP_STATE_IDLE;
+    sWebuiOpponentWaiting = FALSE;
     return TRUE;
+}
+
+void WebuiOpponent_CancelRequest(void)
+{
+    if (gWebuiOpponentMailbox.magic != WEBUI_OPP_MAGIC)
+        WebuiOpponent_Init();
+    else
+        gWebuiOpponentMailbox.state = WEBUI_OPP_STATE_IDLE;
+    sWebuiOpponentWaiting = FALSE;
+}
+
+bool32 WebuiOpponent_IsWaitingForResponse(void)
+{
+    return sWebuiOpponentWaiting && gWebuiOpponentMailbox.magic == WEBUI_OPP_MAGIC;
 }
 
 #endif // WEBUI_OPPONENT
