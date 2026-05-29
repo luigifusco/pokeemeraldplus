@@ -203,7 +203,7 @@ _VILLAIN_BOSS_PARTIES: dict[str, tuple[int, list[tuple[str, int]]]] = {
     ]),
     "Archie": (_VILLAIN_LEADER_IV, [
         ("SPECIES_MIGHTYENA", 43), ("SPECIES_TENTACRUEL", 44), ("SPECIES_KINGDRA", 45),
-        ("SPECIES_CRAWDAUNT", 45), ("SPECIES_WALREIN", 45), ("SPECIES_SHARPEDO", 46),
+        ("SPECIES_CRAWDAUNT", 45), ("SPECIES_GYARADOS", 45), ("SPECIES_SHARPEDO", 46),
     ]),
     # --- Minibosses / admins (ace at area gym-leader level) ---
     "TabithaMtChimney": (_VILLAIN_ADMIN_IV, [

@@ -69,7 +69,7 @@ Original (vanilla) Team Aqua / Team Magma rosters vs. the **Stronger Villains** 
 | 57 | Grunt (Team Aqua) | Seafloor Cavern | Carvanha Lv.36 | Sharpedo Lv.36, Golbat Lv.36, Wailmer Lv.36 |
 | 58 | Grunt (Team Aqua) | Seafloor Cavern | Mightyena Lv.35, Golbat Lv.35 | Mightyena Lv.35, Golbat Lv.35, Wailmer Lv.35 |
 | 59 | Shelly — Aqua Admin | Seafloor Cavern | Sharpedo Lv.37, Mightyena Lv.37 | Gorebyss Lv.44, Huntail Lv.45, Crawdaunt Lv.45, Sharpedo Lv.46 |
-| 60 | Archie — Aqua Leader | Seafloor Cavern | Mightyena Lv.41, Crobat Lv.41, Sharpedo Lv.43 | Mightyena Lv.43, Tentacruel Lv.44, Kingdra Lv.45, Crawdaunt Lv.45, Walrein Lv.45, Sharpedo Lv.46 |
+| 60 | Archie — Aqua Leader | Seafloor Cavern | Mightyena Lv.41, Crobat Lv.41, Sharpedo Lv.43 | Mightyena Lv.43, Tentacruel Lv.44, Kingdra Lv.45, Crawdaunt Lv.45, Gyarados Lv.45, Sharpedo Lv.46 |
 | 61 | Grunt (Team Magma) | — | Wailmer Lv.31, Zubat Lv.31 | Wailmer Lv.31, Golbat Lv.31 |
 | 62 | Tabitha — Magma Admin | — | Camerupt Lv.36, Mightyena Lv.38, Golbat Lv.40 | Magcargo Lv.44, Flareon Lv.45, Nidoqueen Lv.45, Camerupt Lv.46 |
 | 63 | Maxie — Magma Leader | — | Mightyena Lv.42, Crobat Lv.43, Camerupt Lv.44 | Mightyena Lv.43, Claydol Lv.44, Flygon Lv.45, Houndoom Lv.45, Tyranitar Lv.46, Camerupt Lv.46 |
@@ -124,12 +124,12 @@ Total Pokémon across all 63 villain battles: **100** (vanilla) → **190** (Str
 | 24 | Flareon | 1 |
 | 25 | Flygon | 1 |
 | 26 | Gorebyss | 1 |
-| 27 | Horsea | 1 |
-| 28 | Huntail | 1 |
-| 29 | Kingdra | 1 |
-| 30 | Magcargo | 1 |
-| 31 | Nidoking | 1 |
-| 32 | Nidoqueen | 1 |
-| 33 | Tentacruel | 1 |
-| 34 | Tyranitar | 1 |
-| 35 | Walrein | 1 |
+| 27 | Gyarados | 1 |
+| 28 | Horsea | 1 |
+| 29 | Huntail | 1 |
+| 30 | Kingdra | 1 |
+| 31 | Magcargo | 1 |
+| 32 | Nidoking | 1 |
+| 33 | Nidoqueen | 1 |
+| 34 | Tentacruel | 1 |
+| 35 | Tyranitar | 1 |
