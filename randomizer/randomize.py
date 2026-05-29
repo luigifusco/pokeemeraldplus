@@ -324,7 +324,7 @@ _WALLY_MAUVILLE = [
 # Gardevoir is the ace; the rest sit one or two levels below it.
 _WALLY_VR_TEAM = [
     ("SPECIES_ALTARIA", 150, -1),
-    ("SPECIES_ROSELIA", 150, -2),
+    ("SPECIES_CLEFABLE", 150, -2),
     ("SPECIES_MILOTIC", 150, -1),
     ("SPECIES_ESPEON", 150, -2),
     ("SPECIES_UMBREON", 150, -2),
