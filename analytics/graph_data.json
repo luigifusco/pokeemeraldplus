@@ -6,7 +6,7 @@
       "slug": "geodude",
       "trainers": 17,
       "individuals": 27,
-      "community": 16
+      "community": 0
     },
     {
       "id": "SPECIES_POOCHYENA",
@@ -14,15 +14,7 @@
       "slug": "poochyena",
       "trainers": 21,
       "individuals": 21,
-      "community": 9
-    },
-    {
-      "id": "SPECIES_ZUBAT",
-      "label": "Zubat",
-      "slug": "zubat",
-      "trainers": 23,
-      "individuals": 23,
-      "community": 9
+      "community": 12
     },
     {
       "id": "SPECIES_CARVANHA",
@@ -30,31 +22,15 @@
       "slug": "carvanha",
       "trainers": 30,
       "individuals": 31,
-      "community": 16
+      "community": 2
     },
     {
-      "id": "SPECIES_ZIGZAGOON",
-      "label": "Zigzagoon",
-      "slug": "zigzagoon",
+      "id": "SPECIES_ZUBAT",
+      "label": "Zubat",
+      "slug": "zubat",
       "trainers": 23,
-      "individuals": 24,
-      "community": 9
-    },
-    {
-      "id": "SPECIES_LOTAD",
-      "label": "Lotad",
-      "slug": "lotad",
-      "trainers": 9,
-      "individuals": 9,
-      "community": 9
-    },
-    {
-      "id": "SPECIES_TAILLOW",
-      "label": "Taillow",
-      "slug": "taillow",
-      "trainers": 12,
-      "individuals": 12,
-      "community": 9
+      "individuals": 23,
+      "community": 12
     },
     {
       "id": "SPECIES_SEEDOT",
@@ -62,7 +38,23 @@
       "slug": "seedot",
       "trainers": 5,
       "individuals": 5,
-      "community": 9
+      "community": 12
+    },
+    {
+      "id": "SPECIES_LOTAD",
+      "label": "Lotad",
+      "slug": "lotad",
+      "trainers": 9,
+      "individuals": 9,
+      "community": 12
+    },
+    {
+      "id": "SPECIES_TAILLOW",
+      "label": "Taillow",
+      "slug": "taillow",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 12
     },
     {
       "id": "SPECIES_SKITTY",
@@ -73,12 +65,20 @@
       "community": 3
     },
     {
+      "id": "SPECIES_ZIGZAGOON",
+      "label": "Zigzagoon",
+      "slug": "zigzagoon",
+      "trainers": 23,
+      "individuals": 24,
+      "community": 12
+    },
+    {
       "id": "SPECIES_SHIFTRY",
       "label": "Shiftry",
       "slug": "shiftry",
       "trainers": 7,
       "individuals": 7,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_MANECTRIC",
@@ -86,15 +86,7 @@
       "slug": "manectric",
       "trainers": 26,
       "individuals": 30,
-      "community": 4
-    },
-    {
-      "id": "SPECIES_XATU",
-      "label": "Xatu",
-      "slug": "xatu",
-      "trainers": 12,
-      "individuals": 12,
-      "community": 22
+      "community": 5
     },
     {
       "id": "SPECIES_PELIPPER",
@@ -102,15 +94,15 @@
       "slug": "pelipper",
       "trainers": 39,
       "individuals": 39,
-      "community": 12
+      "community": 6
     },
     {
-      "id": "SPECIES_SEVIPER",
-      "label": "Seviper",
-      "slug": "seviper",
-      "trainers": 7,
-      "individuals": 7,
-      "community": 17
+      "id": "SPECIES_XATU",
+      "label": "Xatu",
+      "slug": "xatu",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 20
     },
     {
       "id": "SPECIES_ZANGOOSE",
@@ -118,7 +110,15 @@
       "slug": "zangoose",
       "trainers": 4,
       "individuals": 4,
-      "community": 17
+      "community": 0
+    },
+    {
+      "id": "SPECIES_SEVIPER",
+      "label": "Seviper",
+      "slug": "seviper",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 0
     },
     {
       "id": "SPECIES_GYARADOS",
@@ -126,7 +126,7 @@
       "slug": "gyarados",
       "trainers": 11,
       "individuals": 19,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_NUMEL",
@@ -134,7 +134,7 @@
       "slug": "numel",
       "trainers": 35,
       "individuals": 36,
-      "community": 16
+      "community": 3
     },
     {
       "id": "SPECIES_MACHOKE",
@@ -142,7 +142,7 @@
       "slug": "machoke",
       "trainers": 23,
       "individuals": 28,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_MAKUHITA",
@@ -150,6 +150,14 @@
       "slug": "makuhita",
       "trainers": 24,
       "individuals": 24,
+      "community": 12
+    },
+    {
+      "id": "SPECIES_MIGHTYENA",
+      "label": "Mightyena",
+      "slug": "mightyena",
+      "trainers": 28,
+      "individuals": 29,
       "community": 9
     },
     {
@@ -158,15 +166,7 @@
       "slug": "golbat",
       "trainers": 3,
       "individuals": 3,
-      "community": 10
-    },
-    {
-      "id": "SPECIES_MIGHTYENA",
-      "label": "Mightyena",
-      "slug": "mightyena",
-      "trainers": 28,
-      "individuals": 29,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_HARIYAMA",
@@ -174,7 +174,7 @@
       "slug": "hariyama",
       "trainers": 31,
       "individuals": 31,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_SHARPEDO",
@@ -182,7 +182,7 @@
       "slug": "sharpedo",
       "trainers": 15,
       "individuals": 15,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_CROBAT",
@@ -190,7 +190,7 @@
       "slug": "crobat",
       "trainers": 3,
       "individuals": 3,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_SPOINK",
@@ -198,7 +198,7 @@
       "slug": "spoink",
       "trainers": 6,
       "individuals": 6,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_SHROOMISH",
@@ -222,7 +222,7 @@
       "slug": "claydol",
       "trainers": 9,
       "individuals": 9,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_MEDICHAM",
@@ -230,7 +230,7 @@
       "slug": "medicham",
       "trainers": 19,
       "individuals": 19,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_GLOOM",
@@ -273,20 +273,20 @@
       "community": 0
     },
     {
-      "id": "SPECIES_WHISMUR",
-      "label": "Whismur",
-      "slug": "whismur",
-      "trainers": 5,
-      "individuals": 5,
-      "community": 9
-    },
-    {
       "id": "SPECIES_MAGNEMITE",
       "label": "Magnemite",
       "slug": "magnemite",
       "trainers": 17,
       "individuals": 21,
-      "community": 9
+      "community": 12
+    },
+    {
+      "id": "SPECIES_WHISMUR",
+      "label": "Whismur",
+      "slug": "whismur",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 12
     },
     {
       "id": "SPECIES_LOUDRED",
@@ -294,7 +294,7 @@
       "slug": "loudred",
       "trainers": 21,
       "individuals": 21,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_MAGNETON",
@@ -302,7 +302,7 @@
       "slug": "magneton",
       "trainers": 22,
       "individuals": 24,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_EXPLOUD",
@@ -310,7 +310,7 @@
       "slug": "exploud",
       "trainers": 5,
       "individuals": 5,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_AZURILL",
@@ -342,7 +342,7 @@
       "slug": "linoone",
       "trainers": 31,
       "individuals": 31,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_SWELLOW",
@@ -350,7 +350,7 @@
       "slug": "swellow",
       "trainers": 25,
       "individuals": 25,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_SPINDA",
@@ -358,7 +358,7 @@
       "slug": "spinda",
       "trainers": 11,
       "individuals": 12,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_SLAKOTH",
@@ -366,7 +366,7 @@
       "slug": "slakoth",
       "trainers": 1,
       "individuals": 1,
-      "community": 15
+      "community": 14
     },
     {
       "id": "SPECIES_VIGOROTH",
@@ -374,7 +374,7 @@
       "slug": "vigoroth",
       "trainers": 6,
       "individuals": 6,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_TRAPINCH",
@@ -382,7 +382,7 @@
       "slug": "trapinch",
       "trainers": 2,
       "individuals": 2,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_WAILMER",
@@ -390,7 +390,7 @@
       "slug": "wailmer",
       "trainers": 29,
       "individuals": 30,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_SABLEYE",
@@ -398,7 +398,7 @@
       "slug": "sableye",
       "trainers": 10,
       "individuals": 10,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_STARMIE",
@@ -406,7 +406,7 @@
       "slug": "starmie",
       "trainers": 8,
       "individuals": 9,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_MAWILE",
@@ -414,7 +414,7 @@
       "slug": "mawile",
       "trainers": 3,
       "individuals": 3,
-      "community": 16
+      "community": 20
     },
     {
       "id": "SPECIES_ELECTRIKE",
@@ -422,7 +422,7 @@
       "slug": "electrike",
       "trainers": 13,
       "individuals": 14,
-      "community": 9
+      "community": 12
     },
     {
       "id": "SPECIES_CACTURNE",
@@ -430,7 +430,7 @@
       "slug": "cacturne",
       "trainers": 3,
       "individuals": 3,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_MUK",
@@ -438,7 +438,7 @@
       "slug": "muk",
       "trainers": 1,
       "individuals": 1,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_KADABRA",
@@ -446,7 +446,7 @@
       "slug": "kadabra",
       "trainers": 15,
       "individuals": 15,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_ELECTRODE",
@@ -454,7 +454,7 @@
       "slug": "electrode",
       "trainers": 5,
       "individuals": 5,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_DODRIO",
@@ -462,7 +462,7 @@
       "slug": "dodrio",
       "trainers": 6,
       "individuals": 6,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_KECLEON",
@@ -470,7 +470,7 @@
       "slug": "kecleon",
       "trainers": 10,
       "individuals": 10,
-      "community": 17
+      "community": 0
     },
     {
       "id": "SPECIES_WAILORD",
@@ -478,7 +478,7 @@
       "slug": "wailord",
       "trainers": 3,
       "individuals": 3,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_GRAVELER",
@@ -486,7 +486,7 @@
       "slug": "graveler",
       "trainers": 10,
       "individuals": 15,
-      "community": 16
+      "community": 0
     },
     {
       "id": "SPECIES_LUDICOLO",
@@ -494,7 +494,7 @@
       "slug": "ludicolo",
       "trainers": 9,
       "individuals": 9,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_DELCATTY",
@@ -510,7 +510,7 @@
       "slug": "wigglytuff",
       "trainers": 1,
       "individuals": 1,
-      "community": 18
+      "community": 16
     },
     {
       "id": "SPECIES_LAIRON",
@@ -518,7 +518,7 @@
       "slug": "lairon",
       "trainers": 5,
       "individuals": 5,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_WINGULL",
@@ -526,7 +526,7 @@
       "slug": "wingull",
       "trainers": 38,
       "individuals": 38,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_TORKOAL",
@@ -534,7 +534,7 @@
       "slug": "torkoal",
       "trainers": 7,
       "individuals": 7,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_SKARMORY",
@@ -542,7 +542,7 @@
       "slug": "skarmory",
       "trainers": 12,
       "individuals": 13,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_NINETALES",
@@ -558,7 +558,7 @@
       "slug": "tropius",
       "trainers": 18,
       "individuals": 18,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_CAMERUPT",
@@ -566,7 +566,7 @@
       "slug": "camerupt",
       "trainers": 14,
       "individuals": 14,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_BANETTE",
@@ -574,7 +574,7 @@
       "slug": "banette",
       "trainers": 4,
       "individuals": 5,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_LUNATONE",
@@ -582,7 +582,7 @@
       "slug": "lunatone",
       "trainers": 12,
       "individuals": 12,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_SHUPPET",
@@ -590,7 +590,7 @@
       "slug": "shuppet",
       "trainers": 3,
       "individuals": 3,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_DUSKULL",
@@ -598,7 +598,7 @@
       "slug": "duskull",
       "trainers": 4,
       "individuals": 4,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_GRUMPIG",
@@ -606,7 +606,7 @@
       "slug": "grumpig",
       "trainers": 1,
       "individuals": 1,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_LUVDISC",
@@ -614,7 +614,7 @@
       "slug": "luvdisc",
       "trainers": 12,
       "individuals": 16,
-      "community": 16
+      "community": 24
     },
     {
       "id": "SPECIES_SEAKING",
@@ -638,7 +638,7 @@
       "slug": "corphish",
       "trainers": 1,
       "individuals": 1,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_CLAMPERL",
@@ -646,7 +646,7 @@
       "slug": "clamperl",
       "trainers": 1,
       "individuals": 1,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_LOMBRE",
@@ -654,7 +654,7 @@
       "slug": "lombre",
       "trainers": 27,
       "individuals": 27,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_WHISCASH",
@@ -662,7 +662,7 @@
       "slug": "whiscash",
       "trainers": 7,
       "individuals": 7,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_MEDITITE",
@@ -670,7 +670,7 @@
       "slug": "meditite",
       "trainers": 23,
       "individuals": 24,
-      "community": 9
+      "community": 12
     },
     {
       "id": "SPECIES_ARON",
@@ -678,7 +678,7 @@
       "slug": "aron",
       "trainers": 9,
       "individuals": 10,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_HORSEA",
@@ -686,7 +686,7 @@
       "slug": "horsea",
       "trainers": 5,
       "individuals": 5,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_RHYHORN",
@@ -694,7 +694,7 @@
       "slug": "rhyhorn",
       "trainers": 3,
       "individuals": 3,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_RHYDON",
@@ -702,7 +702,7 @@
       "slug": "rhydon",
       "trainers": 1,
       "individuals": 1,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_AGGRON",
@@ -710,7 +710,7 @@
       "slug": "aggron",
       "trainers": 2,
       "individuals": 2,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_TENTACOOL",
@@ -718,7 +718,7 @@
       "slug": "tentacool",
       "trainers": 28,
       "individuals": 33,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_TENTACRUEL",
@@ -726,7 +726,7 @@
       "slug": "tentacruel",
       "trainers": 15,
       "individuals": 15,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_SEALEO",
@@ -734,7 +734,7 @@
       "slug": "sealeo",
       "trainers": 3,
       "individuals": 4,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_SPHEAL",
@@ -742,7 +742,7 @@
       "slug": "spheal",
       "trainers": 6,
       "individuals": 6,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_STARYU",
@@ -750,7 +750,7 @@
       "slug": "staryu",
       "trainers": 20,
       "individuals": 25,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_MACHOP",
@@ -758,7 +758,7 @@
       "slug": "machop",
       "trainers": 23,
       "individuals": 23,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_MACHAMP",
@@ -766,7 +766,7 @@
       "slug": "machamp",
       "trainers": 7,
       "individuals": 8,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_VOLTORB",
@@ -774,7 +774,7 @@
       "slug": "voltorb",
       "trainers": 7,
       "individuals": 8,
-      "community": 9
+      "community": 12
     },
     {
       "id": "SPECIES_SLUGMA",
@@ -782,7 +782,7 @@
       "slug": "slugma",
       "trainers": 23,
       "individuals": 24,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_MAGCARGO",
@@ -790,7 +790,7 @@
       "slug": "magcargo",
       "trainers": 5,
       "individuals": 5,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_NUZLEAF",
@@ -798,7 +798,7 @@
       "slug": "nuzleaf",
       "trainers": 12,
       "individuals": 12,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_SURSKIT",
@@ -806,15 +806,7 @@
       "slug": "surskit",
       "trainers": 8,
       "individuals": 15,
-      "community": 23
-    },
-    {
-      "id": "SPECIES_BEAUTIFLY",
-      "label": "Beautifly",
-      "slug": "beautifly",
-      "trainers": 7,
-      "individuals": 7,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_WURMPLE",
@@ -822,7 +814,7 @@
       "slug": "wurmple",
       "trainers": 6,
       "individuals": 10,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_SILCOON",
@@ -830,7 +822,15 @@
       "slug": "silcoon",
       "trainers": 1,
       "individuals": 1,
-      "community": 23
+      "community": 21
+    },
+    {
+      "id": "SPECIES_BEAUTIFLY",
+      "label": "Beautifly",
+      "slug": "beautifly",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 21
     },
     {
       "id": "SPECIES_DUSTOX",
@@ -838,7 +838,7 @@
       "slug": "dustox",
       "trainers": 9,
       "individuals": 9,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_CASCOON",
@@ -846,7 +846,7 @@
       "slug": "cascoon",
       "trainers": 1,
       "individuals": 1,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_MASQUERAIN",
@@ -854,7 +854,7 @@
       "slug": "masquerain",
       "trainers": 3,
       "individuals": 3,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_ABRA",
@@ -862,7 +862,7 @@
       "slug": "abra",
       "trainers": 2,
       "individuals": 2,
-      "community": 24
+      "community": 22
     },
     {
       "id": "SPECIES_KIRLIA",
@@ -870,7 +870,7 @@
       "slug": "kirlia",
       "trainers": 8,
       "individuals": 8,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_RALTS",
@@ -878,7 +878,7 @@
       "slug": "ralts",
       "trainers": 7,
       "individuals": 8,
-      "community": 9
+      "community": 20
     },
     {
       "id": "SPECIES_GIRAFARIG",
@@ -886,7 +886,7 @@
       "slug": "girafarig",
       "trainers": 3,
       "individuals": 3,
-      "community": 25
+      "community": 23
     },
     {
       "id": "SPECIES_SOLROCK",
@@ -894,7 +894,7 @@
       "slug": "solrock",
       "trainers": 12,
       "individuals": 12,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_ALAKAZAM",
@@ -902,7 +902,7 @@
       "slug": "alakazam",
       "trainers": 2,
       "individuals": 2,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_WOBBUFFET",
@@ -910,7 +910,7 @@
       "slug": "wobbuffet",
       "trainers": 4,
       "individuals": 4,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_NATU",
@@ -918,7 +918,7 @@
       "slug": "natu",
       "trainers": 7,
       "individuals": 7,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_GOLDUCK",
@@ -926,15 +926,7 @@
       "slug": "golduck",
       "trainers": 1,
       "individuals": 1,
-      "community": 4
-    },
-    {
-      "id": "SPECIES_CRAWDAUNT",
-      "label": "Crawdaunt",
-      "slug": "crawdaunt",
-      "trainers": 6,
-      "individuals": 6,
-      "community": 17
+      "community": 5
     },
     {
       "id": "SPECIES_ABSOL",
@@ -942,7 +934,15 @@
       "slug": "absol",
       "trainers": 3,
       "individuals": 3,
-      "community": 10
+      "community": 9
+    },
+    {
+      "id": "SPECIES_CRAWDAUNT",
+      "label": "Crawdaunt",
+      "slug": "crawdaunt",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 24
     },
     {
       "id": "SPECIES_DUSCLOPS",
@@ -950,7 +950,7 @@
       "slug": "dusclops",
       "trainers": 2,
       "individuals": 3,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_GLALIE",
@@ -958,7 +958,7 @@
       "slug": "glalie",
       "trainers": 1,
       "individuals": 2,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_WALREIN",
@@ -966,7 +966,7 @@
       "slug": "walrein",
       "trainers": 5,
       "individuals": 5,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_SHELGON",
@@ -974,7 +974,7 @@
       "slug": "shelgon",
       "trainers": 2,
       "individuals": 2,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_FLYGON",
@@ -982,23 +982,7 @@
       "slug": "flygon",
       "trainers": 1,
       "individuals": 1,
-      "community": 17
-    },
-    {
-      "id": "SPECIES_ALTARIA",
-      "label": "Altaria",
-      "slug": "altaria",
-      "trainers": 20,
-      "individuals": 25,
-      "community": 12
-    },
-    {
-      "id": "SPECIES_KINGDRA",
-      "label": "Kingdra",
-      "slug": "kingdra",
-      "trainers": 7,
-      "individuals": 7,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_SALAMENCE",
@@ -1006,7 +990,23 @@
       "slug": "salamence",
       "trainers": 1,
       "individuals": 1,
-      "community": 17
+      "community": 24
+    },
+    {
+      "id": "SPECIES_ALTARIA",
+      "label": "Altaria",
+      "slug": "altaria",
+      "trainers": 20,
+      "individuals": 25,
+      "community": 6
+    },
+    {
+      "id": "SPECIES_KINGDRA",
+      "label": "Kingdra",
+      "slug": "kingdra",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 24
     },
     {
       "id": "SPECIES_NOSEPASS",
@@ -1022,7 +1022,7 @@
       "slug": "slaking",
       "trainers": 9,
       "individuals": 13,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_SWABLU",
@@ -1038,7 +1038,7 @@
       "slug": "oddish",
       "trainers": 3,
       "individuals": 3,
-      "community": 16
+      "community": 3
     },
     {
       "id": "SPECIES_PIKACHU",
@@ -1046,15 +1046,7 @@
       "slug": "pikachu",
       "trainers": 2,
       "individuals": 2,
-      "community": 4
-    },
-    {
-      "id": "SPECIES_MINUN",
-      "label": "Minun",
-      "slug": "minun",
-      "trainers": 12,
-      "individuals": 12,
-      "community": 13
+      "community": 5
     },
     {
       "id": "SPECIES_PLUSLE",
@@ -1062,7 +1054,15 @@
       "slug": "plusle",
       "trainers": 12,
       "individuals": 12,
-      "community": 13
+      "community": 11
+    },
+    {
+      "id": "SPECIES_MINUN",
+      "label": "Minun",
+      "slug": "minun",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 11
     },
     {
       "id": "SPECIES_GULPIN",
@@ -1070,7 +1070,7 @@
       "slug": "gulpin",
       "trainers": 3,
       "individuals": 3,
-      "community": 9
+      "community": 12
     },
     {
       "id": "SPECIES_GARDEVOIR",
@@ -1086,7 +1086,7 @@
       "slug": "milotic",
       "trainers": 1,
       "individuals": 1,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_MAGIKARP",
@@ -1094,7 +1094,7 @@
       "slug": "magikarp",
       "trainers": 8,
       "individuals": 13,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_BARBOACH",
@@ -1102,7 +1102,7 @@
       "slug": "barboach",
       "trainers": 3,
       "individuals": 3,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_DODUO",
@@ -1110,7 +1110,7 @@
       "slug": "doduo",
       "trainers": 10,
       "individuals": 10,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_BAGON",
@@ -1118,7 +1118,7 @@
       "slug": "bagon",
       "trainers": 2,
       "individuals": 2,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_NINJASK",
@@ -1126,7 +1126,7 @@
       "slug": "ninjask",
       "trainers": 11,
       "individuals": 12,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_KOFFING",
@@ -1134,7 +1134,7 @@
       "slug": "koffing",
       "trainers": 11,
       "individuals": 25,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_LANTURN",
@@ -1142,7 +1142,7 @@
       "slug": "lanturn",
       "trainers": 5,
       "individuals": 5,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_WEEZING",
@@ -1150,7 +1150,7 @@
       "slug": "weezing",
       "trainers": 1,
       "individuals": 1,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_CASTFORM",
@@ -1158,7 +1158,7 @@
       "slug": "castform",
       "trainers": 2,
       "individuals": 2,
-      "community": 14
+      "community": 13
     },
     {
       "id": "SPECIES_SEADRA",
@@ -1166,7 +1166,7 @@
       "slug": "seadra",
       "trainers": 3,
       "individuals": 3,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_VILEPLUME",
@@ -1182,7 +1182,7 @@
       "slug": "feebas",
       "trainers": 2,
       "individuals": 3,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_CHINCHOU",
@@ -1190,7 +1190,7 @@
       "slug": "chinchou",
       "trainers": 4,
       "individuals": 4,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_TREECKO",
@@ -1198,7 +1198,7 @@
       "slug": "treecko",
       "trainers": 4,
       "individuals": 4,
-      "community": 16
+      "community": 2
     },
     {
       "id": "SPECIES_GROVYLE",
@@ -1206,7 +1206,7 @@
       "slug": "grovyle",
       "trainers": 6,
       "individuals": 6,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_TORCHIC",
@@ -1214,7 +1214,7 @@
       "slug": "torchic",
       "trainers": 4,
       "individuals": 4,
-      "community": 9
+      "community": 12
     },
     {
       "id": "SPECIES_COMBUSKEN",
@@ -1222,7 +1222,7 @@
       "slug": "combusken",
       "trainers": 6,
       "individuals": 6,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_MUDKIP",
@@ -1230,7 +1230,7 @@
       "slug": "mudkip",
       "trainers": 4,
       "individuals": 4,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_MARSHTOMP",
@@ -1238,7 +1238,7 @@
       "slug": "marshtomp",
       "trainers": 6,
       "individuals": 6,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_PINSIR",
@@ -1246,7 +1246,7 @@
       "slug": "pinsir",
       "trainers": 1,
       "individuals": 1,
-      "community": 20
+      "community": 15
     },
     {
       "id": "SPECIES_BELLOSSOM",
@@ -1262,7 +1262,7 @@
       "slug": "nincada",
       "trainers": 4,
       "individuals": 5,
-      "community": 23
+      "community": 21
     },
     {
       "id": "SPECIES_ILLUMISE",
@@ -1270,7 +1270,7 @@
       "slug": "illumise",
       "trainers": 7,
       "individuals": 7,
-      "community": 21
+      "community": 18
     },
     {
       "id": "SPECIES_VOLBEAT",
@@ -1278,7 +1278,7 @@
       "slug": "volbeat",
       "trainers": 7,
       "individuals": 7,
-      "community": 21
+      "community": 18
     },
     {
       "id": "SPECIES_GOLEM",
@@ -1329,17 +1329,17 @@
       "community": 0
     },
     {
-      "id": "SPECIES_STEELIX",
-      "label": "Steelix",
-      "slug": "steelix",
+      "id": "SPECIES_AERODACTYL",
+      "label": "Aerodactyl",
+      "slug": "aerodactyl",
       "trainers": 1,
       "individuals": 1,
       "community": 0
     },
     {
-      "id": "SPECIES_AERODACTYL",
-      "label": "Aerodactyl",
-      "slug": "aerodactyl",
+      "id": "SPECIES_STEELIX",
+      "label": "Steelix",
+      "slug": "steelix",
       "trainers": 1,
       "individuals": 1,
       "community": 0
@@ -1350,7 +1350,7 @@
       "slug": "hitmontop",
       "trainers": 4,
       "individuals": 4,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_HITMONCHAN",
@@ -1358,7 +1358,7 @@
       "slug": "hitmonchan",
       "trainers": 2,
       "individuals": 2,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_HITMONLEE",
@@ -1366,7 +1366,7 @@
       "slug": "hitmonlee",
       "trainers": 1,
       "individuals": 1,
-      "community": 10
+      "community": 9
     },
     {
       "id": "SPECIES_MAREEP",
@@ -1374,7 +1374,7 @@
       "slug": "mareep",
       "trainers": 1,
       "individuals": 1,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_FLAAFFY",
@@ -1382,7 +1382,7 @@
       "slug": "flaaffy",
       "trainers": 1,
       "individuals": 1,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_RAICHU",
@@ -1390,7 +1390,7 @@
       "slug": "raichu",
       "trainers": 2,
       "individuals": 2,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_AMPHAROS",
@@ -1398,7 +1398,7 @@
       "slug": "ampharos",
       "trainers": 2,
       "individuals": 2,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_ELECTABUZZ",
@@ -1406,7 +1406,7 @@
       "slug": "electabuzz",
       "trainers": 1,
       "individuals": 1,
-      "community": 4
+      "community": 5
     },
     {
       "id": "SPECIES_PONYTA",
@@ -1414,7 +1414,7 @@
       "slug": "ponyta",
       "trainers": 2,
       "individuals": 2,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_GROWLITHE",
@@ -1422,7 +1422,7 @@
       "slug": "growlithe",
       "trainers": 2,
       "individuals": 2,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_HOUNDOUR",
@@ -1430,7 +1430,7 @@
       "slug": "houndour",
       "trainers": 1,
       "individuals": 1,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_RAPIDASH",
@@ -1438,7 +1438,7 @@
       "slug": "rapidash",
       "trainers": 2,
       "individuals": 2,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_ARCANINE",
@@ -1446,7 +1446,7 @@
       "slug": "arcanine",
       "trainers": 1,
       "individuals": 1,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_HOUNDOOM",
@@ -1454,7 +1454,7 @@
       "slug": "houndoom",
       "trainers": 1,
       "individuals": 1,
-      "community": 19
+      "community": 17
     },
     {
       "id": "SPECIES_CHANSEY",
@@ -1462,7 +1462,7 @@
       "slug": "chansey",
       "trainers": 2,
       "individuals": 2,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_KANGASKHAN",
@@ -1470,7 +1470,7 @@
       "slug": "kangaskhan",
       "trainers": 3,
       "individuals": 3,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_BLISSEY",
@@ -1478,7 +1478,7 @@
       "slug": "blissey",
       "trainers": 2,
       "individuals": 2,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_TAUROS",
@@ -1486,7 +1486,7 @@
       "slug": "tauros",
       "trainers": 1,
       "individuals": 1,
-      "community": 11
+      "community": 10
     },
     {
       "id": "SPECIES_DRATINI",
@@ -1494,15 +1494,7 @@
       "slug": "dratini",
       "trainers": 1,
       "individuals": 1,
-      "community": 12
-    },
-    {
-      "id": "SPECIES_DRAGONAIR",
-      "label": "Dragonair",
-      "slug": "dragonair",
-      "trainers": 2,
-      "individuals": 2,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_HOOTHOOT",
@@ -1510,7 +1502,15 @@
       "slug": "hoothoot",
       "trainers": 1,
       "individuals": 1,
-      "community": 12
+      "community": 6
+    },
+    {
+      "id": "SPECIES_DRAGONAIR",
+      "label": "Dragonair",
+      "slug": "dragonair",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 6
     },
     {
       "id": "SPECIES_NOCTOWL",
@@ -1518,7 +1518,7 @@
       "slug": "noctowl",
       "trainers": 2,
       "individuals": 2,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_DRAGONITE",
@@ -1526,7 +1526,7 @@
       "slug": "dragonite",
       "trainers": 1,
       "individuals": 1,
-      "community": 12
+      "community": 6
     },
     {
       "id": "SPECIES_SLOWPOKE",
@@ -1534,7 +1534,7 @@
       "slug": "slowpoke",
       "trainers": 3,
       "individuals": 3,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_DROWZEE",
@@ -1542,7 +1542,7 @@
       "slug": "drowzee",
       "trainers": 1,
       "individuals": 1,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_HYPNO",
@@ -1550,7 +1550,7 @@
       "slug": "hypno",
       "trainers": 2,
       "individuals": 2,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_SLOWKING",
@@ -1558,7 +1558,7 @@
       "slug": "slowking",
       "trainers": 1,
       "individuals": 1,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_POLIWAG",
@@ -1566,7 +1566,7 @@
       "slug": "poliwag",
       "trainers": 1,
       "individuals": 1,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_POLIWHIRL",
@@ -1574,7 +1574,7 @@
       "slug": "poliwhirl",
       "trainers": 2,
       "individuals": 2,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_LAPRAS",
@@ -1582,7 +1582,7 @@
       "slug": "lapras",
       "trainers": 2,
       "individuals": 2,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_POLITOED",
@@ -1590,7 +1590,7 @@
       "slug": "politoed",
       "trainers": 1,
       "individuals": 1,
-      "community": 17
+      "community": 24
     },
     {
       "id": "SPECIES_CRADILY",
@@ -1598,15 +1598,7 @@
       "slug": "cradily",
       "trainers": 1,
       "individuals": 1,
-      "community": 22
-    },
-    {
-      "id": "SPECIES_ARMALDO",
-      "label": "Armaldo",
-      "slug": "armaldo",
-      "trainers": 1,
-      "individuals": 1,
-      "community": 22
+      "community": 20
     },
     {
       "id": "SPECIES_METAGROSS",
@@ -1614,7 +1606,15 @@
       "slug": "metagross",
       "trainers": 1,
       "individuals": 1,
-      "community": 22
+      "community": 20
+    },
+    {
+      "id": "SPECIES_ARMALDO",
+      "label": "Armaldo",
+      "slug": "armaldo",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 20
     },
     {
       "id": "SPECIES_BELDUM",
@@ -1622,7 +1622,7 @@
       "slug": "beldum",
       "trainers": 7,
       "individuals": 7,
-      "community": 1
+      "community": 19
     },
     {
       "id": "SPECIES_CHIMECHO",
@@ -1630,7 +1630,7 @@
       "slug": "chimecho",
       "trainers": 1,
       "individuals": 1,
-      "community": 2
+      "community": 25
     },
     {
       "id": "SPECIES_CHARMANDER",
@@ -1638,7 +1638,7 @@
       "slug": "charmander",
       "trainers": 1,
       "individuals": 1,
-      "community": 5
+      "community": 1
     },
     {
       "id": "SPECIES_BULBASAUR",
@@ -1646,7 +1646,7 @@
       "slug": "bulbasaur",
       "trainers": 1,
       "individuals": 1,
-      "community": 6
+      "community": 4
     },
     {
       "id": "SPECIES_GROUDON",
@@ -1777,34 +1777,9 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_ZUBAT",
-      "target": "SPECIES_CARVANHA",
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_ZUBAT",
       "weight": 3
-    },
-    {
-      "source": "SPECIES_ZUBAT",
-      "target": "SPECIES_WAILMER",
-      "weight": 2
-    },
-    {
-      "source": "SPECIES_ZUBAT",
-      "target": "SPECIES_NUMEL",
-      "weight": 2
-    },
-    {
-      "source": "SPECIES_ZUBAT",
-      "target": "SPECIES_CAMERUPT",
-      "weight": 2
-    },
-    {
-      "source": "SPECIES_ZUBAT",
-      "target": "SPECIES_MIGHTYENA",
-      "weight": 2
-    },
-    {
-      "source": "SPECIES_ZUBAT",
-      "target": "SPECIES_BALTOY",
-      "weight": 1
     },
     {
       "source": "SPECIES_CARVANHA",
@@ -1857,82 +1832,67 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_ZIGZAGOON",
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_WAILMER",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_NUMEL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_BALTOY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SEEDOT",
       "target": "SPECIES_LOTAD",
       "weight": 3
     },
     {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_SEEDOT",
-      "weight": 3
-    },
-    {
-      "source": "SPECIES_ZIGZAGOON",
+      "source": "SPECIES_SEEDOT",
       "target": "SPECIES_SKITTY",
       "weight": 2
     },
     {
-      "source": "SPECIES_ZIGZAGOON",
+      "source": "SPECIES_SEEDOT",
       "target": "SPECIES_TAILLOW",
-      "weight": 7
-    },
-    {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_MAKUHITA",
-      "weight": 5
-    },
-    {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_GULPIN",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_ELECTRIKE",
-      "weight": 3
-    },
-    {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_ARON",
       "weight": 2
     },
     {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_WHISMUR",
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_ZIGZAGOON",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_LOMBRE",
       "weight": 1
     },
     {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_SHROOMISH",
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_NUZLEAF",
       "weight": 1
     },
     {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_NUMEL",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_TROPIUS",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_ZIGZAGOON",
-      "target": "SPECIES_WINGULL",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_ZIGZAGOON",
+      "source": "SPECIES_SEEDOT",
       "target": "SPECIES_MIGHTYENA",
       "weight": 1
     },
     {
       "source": "SPECIES_LOTAD",
-      "target": "SPECIES_SEEDOT",
-      "weight": 3
-    },
-    {
-      "source": "SPECIES_LOTAD",
       "target": "SPECIES_SKITTY",
       "weight": 2
     },
@@ -1940,6 +1900,11 @@
       "source": "SPECIES_LOTAD",
       "target": "SPECIES_TAILLOW",
       "weight": 2
+    },
+    {
+      "source": "SPECIES_LOTAD",
+      "target": "SPECIES_ZIGZAGOON",
+      "weight": 3
     },
     {
       "source": "SPECIES_LOTAD",
@@ -1968,13 +1933,13 @@
     },
     {
       "source": "SPECIES_TAILLOW",
-      "target": "SPECIES_SEEDOT",
-      "weight": 2
+      "target": "SPECIES_SKITTY",
+      "weight": 3
     },
     {
       "source": "SPECIES_TAILLOW",
-      "target": "SPECIES_SKITTY",
-      "weight": 3
+      "target": "SPECIES_ZIGZAGOON",
+      "weight": 7
     },
     {
       "source": "SPECIES_TAILLOW",
@@ -2022,24 +1987,9 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_SEEDOT",
-      "target": "SPECIES_SKITTY",
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_ZIGZAGOON",
       "weight": 2
-    },
-    {
-      "source": "SPECIES_SEEDOT",
-      "target": "SPECIES_LOMBRE",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_SEEDOT",
-      "target": "SPECIES_NUZLEAF",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_SEEDOT",
-      "target": "SPECIES_MIGHTYENA",
-      "weight": 1
     },
     {
       "source": "SPECIES_SKITTY",
@@ -2094,6 +2044,56 @@
     {
       "source": "SPECIES_SKITTY",
       "target": "SPECIES_NUZLEAF",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_MAKUHITA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_GULPIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_ARON",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_WHISMUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_SHROOMISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_NUMEL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_TROPIUS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_WINGULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_MIGHTYENA",
       "weight": 1
     },
     {
@@ -2282,64 +2282,9 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_PELIPPER",
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_XATU",
       "weight": 2
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_KIRLIA",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_CLAYDOL",
-      "weight": 5
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_LUNATONE",
-      "weight": 5
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_SOLROCK",
-      "weight": 5
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_TROPIUS",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_SWELLOW",
-      "weight": 2
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_ALTARIA",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_SLOWPOKE",
-      "weight": 3
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_DROWZEE",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_HYPNO",
-      "weight": 2
-    },
-    {
-      "source": "SPECIES_XATU",
-      "target": "SPECIES_SLOWKING",
-      "weight": 1
     },
     {
       "source": "SPECIES_PELIPPER",
@@ -2517,8 +2462,63 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_SEVIPER",
-      "target": "SPECIES_ZANGOOSE",
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_KIRLIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_CLAYDOL",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_LUNATONE",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_SOLROCK",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_TROPIUS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_SWELLOW",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_ALTARIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_SLOWPOKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_DROWZEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_HYPNO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_SLOWKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZANGOOSE",
+      "target": "SPECIES_SEVIPER",
       "weight": 2
     },
     {
@@ -2757,14 +2757,9 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_GOLBAT",
-      "target": "SPECIES_MIGHTYENA",
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_GOLBAT",
       "weight": 3
-    },
-    {
-      "source": "SPECIES_GOLBAT",
-      "target": "SPECIES_CAMERUPT",
-      "weight": 1
     },
     {
       "source": "SPECIES_MIGHTYENA",
@@ -2844,6 +2839,11 @@
     {
       "source": "SPECIES_MIGHTYENA",
       "target": "SPECIES_LUDICOLO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GOLBAT",
+      "target": "SPECIES_CAMERUPT",
       "weight": 1
     },
     {
@@ -3407,14 +3407,9 @@
       "weight": 2
     },
     {
-      "source": "SPECIES_WHISMUR",
-      "target": "SPECIES_MAGNEMITE",
+      "source": "SPECIES_MAGNEMITE",
+      "target": "SPECIES_WHISMUR",
       "weight": 3
-    },
-    {
-      "source": "SPECIES_WHISMUR",
-      "target": "SPECIES_ARON",
-      "weight": 1
     },
     {
       "source": "SPECIES_MAGNEMITE",
@@ -3425,6 +3420,11 @@
       "source": "SPECIES_MAGNEMITE",
       "target": "SPECIES_VOLTORB",
       "weight": 3
+    },
+    {
+      "source": "SPECIES_WHISMUR",
+      "target": "SPECIES_ARON",
+      "weight": 1
     },
     {
       "source": "SPECIES_LOUDRED",
@@ -4822,23 +4822,8 @@
       "weight": 2
     },
     {
-      "source": "SPECIES_BEAUTIFLY",
-      "target": "SPECIES_SILCOON",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_BEAUTIFLY",
-      "target": "SPECIES_WURMPLE",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_BEAUTIFLY",
-      "target": "SPECIES_DUSTOX",
-      "weight": 5
-    },
-    {
-      "source": "SPECIES_BEAUTIFLY",
-      "target": "SPECIES_MASQUERAIN",
+      "source": "SPECIES_WURMPLE",
+      "target": "SPECIES_BEAUTIFLY",
       "weight": 1
     },
     {
@@ -4864,6 +4849,21 @@
     {
       "source": "SPECIES_WURMPLE",
       "target": "SPECIES_NINCADA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SILCOON",
+      "target": "SPECIES_BEAUTIFLY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BEAUTIFLY",
+      "target": "SPECIES_DUSTOX",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_BEAUTIFLY",
+      "target": "SPECIES_MASQUERAIN",
       "weight": 1
     },
     {
@@ -4927,8 +4927,8 @@
       "weight": 2
     },
     {
-      "source": "SPECIES_CRAWDAUNT",
-      "target": "SPECIES_ABSOL",
+      "source": "SPECIES_ABSOL",
+      "target": "SPECIES_CRAWDAUNT",
       "weight": 1
     },
     {
@@ -5032,13 +5032,18 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_ALTARIA",
+      "source": "SPECIES_SALAMENCE",
+      "target": "SPECIES_ALTARIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SALAMENCE",
       "target": "SPECIES_KINGDRA",
       "weight": 1
     },
     {
       "source": "SPECIES_ALTARIA",
-      "target": "SPECIES_SALAMENCE",
+      "target": "SPECIES_KINGDRA",
       "weight": 1
     },
     {
@@ -5084,11 +5089,6 @@
     {
       "source": "SPECIES_ALTARIA",
       "target": "SPECIES_DRAGONITE",
-      "weight": 1
-    },
-    {
-      "source": "SPECIES_KINGDRA",
-      "target": "SPECIES_SALAMENCE",
       "weight": 1
     },
     {
@@ -5187,8 +5187,8 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_MINUN",
-      "target": "SPECIES_PLUSLE",
+      "source": "SPECIES_PLUSLE",
+      "target": "SPECIES_MINUN",
       "weight": 12
     },
     {
@@ -5317,8 +5317,8 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_STEELIX",
-      "target": "SPECIES_AERODACTYL",
+      "source": "SPECIES_AERODACTYL",
+      "target": "SPECIES_STEELIX",
       "weight": 1
     },
     {
@@ -5407,8 +5407,8 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_DRAGONAIR",
-      "target": "SPECIES_HOOTHOOT",
+      "source": "SPECIES_HOOTHOOT",
+      "target": "SPECIES_DRAGONAIR",
       "weight": 1
     },
     {
@@ -5457,8 +5457,8 @@
       "weight": 1
     },
     {
-      "source": "SPECIES_ARMALDO",
-      "target": "SPECIES_METAGROSS",
+      "source": "SPECIES_METAGROSS",
+      "target": "SPECIES_ARMALDO",
       "weight": 1
     }
   ]

@@ -148,10 +148,49 @@ def parse_trainer_labels() -> dict[str, str]:
     return labels
 
 
+def parse_trainers() -> list[dict]:
+    """Per-trainer records: {label, cls, group, species:[const,...]} from trainers.h."""
+    text = TRAINERS.read_text()
+    party_species: dict[str, list[str]] = {p: s for p, s in parse_rosters()}
+    out: list[dict] = []
+    seen: set[tuple] = set()
+    for block in re.split(r"\[TRAINER_", text)[1:]:
+        party = re.search(r"\(sParty_(\w+)\)", block)
+        if not party:
+            continue
+        species = party_species.get(party.group(1))
+        if not species:
+            continue
+        tname = re.search(r"\.trainerName\s*=\s*_\(\"([^\"]*)\"\)", block)
+        tclass = re.search(r"\.trainerClass\s*=\s*TRAINER_CLASS_([A-Z0-9_]+)", block)
+        cls_raw = tclass.group(1) if tclass else ""
+        name = tname.group(1).strip() if tname else ""
+        cls = cls_raw.replace("_", " ").title()
+        label = (cls + " " + name).strip() or party.group(1)
+        if cls_raw == "LEADER":
+            group = "leaders"
+        elif cls_raw in ("ELITE_FOUR", "CHAMPION"):
+            group = "e4"
+        elif cls_raw in ("TEAM_MAGMA", "MAGMA_ADMIN", "MAGMA_LEADER"):
+            group = "magma"
+        elif cls_raw in ("TEAM_AQUA", "AQUA_ADMIN", "AQUA_LEADER"):
+            group = "aqua"
+        else:
+            group = ""
+        key = (label, tuple(species))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"label": label, "cls": cls, "group": group, "species": species})
+    out.sort(key=lambda t: (t["cls"], t["label"]))
+    return out
+
+
 def main() -> None:
     names = load_species_names()
     rosters = parse_rosters()
     labels = parse_trainer_labels()
+    trainers = parse_trainers()
 
     # --- frequency stats -------------------------------------------------
     trainer_count = Counter()       # species -> # trainers using it
@@ -214,7 +253,7 @@ def main() -> None:
     colors = community_palette(max(partition.values()) + 1)
 
     write_visualization(G, partition, names, species_to_trainers, colors)
-    write_community_board(communities, names, trainer_count, individual_count, colors)
+    write_community_board(communities, names, trainer_count, individual_count, colors, trainers)
     write_report(
         G, names, labels, rosters, trainer_count, individual_count,
         edge_weight, pair_trainers, communities, modularity,
@@ -362,7 +401,7 @@ def write_visualization(G, partition, names, species_to_trainers, colors) -> Non
     print("wrote", out)
 
 
-def write_community_board(communities, names, trainer_count, individual_count, colors) -> None:
+def write_community_board(communities, names, trainer_count, individual_count, colors, trainers) -> None:
     maxt = max(trainer_count.values())
     ordered = sorted(communities.items(), key=lambda kv: len(kv[1]), reverse=True)
     cards = []
@@ -391,6 +430,73 @@ def write_community_board(communities, names, trainer_count, individual_count, c
             f'<div class="chips">{"".join(chips)}</div></section>'
         )
 
+    # --- trainer browser data -------------------------------------------
+    tr_payload = json.dumps([
+        {"l": t["label"], "g": t["group"],
+         "s": [[slug_for(s), names.get(s, s)] for s in t["species"]]}
+        for t in trainers
+    ])
+    tr_items = "".join(
+        f'<label class="tr" data-g="{t["group"]}" data-l="{t["label"].lower()}">'
+        f'<input type="checkbox" value="{i}" onchange="trRender()">'
+        f'<span>{t["label"]}</span></label>'
+        for i, t in enumerate(trainers)
+    )
+    n_leaders = sum(1 for t in trainers if t["group"] == "leaders")
+    n_e4 = sum(1 for t in trainers if t["group"] == "e4")
+    n_magma = sum(1 for t in trainers if t["group"] == "magma")
+    n_aqua = sum(1 for t in trainers if t["group"] == "aqua")
+
+    tjs = (
+        "var SP='" + _SPRITE_JS + "';\n"
+        "function trRender(){\n"
+        "  var box=document.getElementById('trOut');var checked=[];\n"
+        "  document.querySelectorAll('#trList input:checked').forEach(function(c){checked.push(+c.value);});\n"
+        "  document.getElementById('trCount').textContent=checked.length+' selected';\n"
+        "  if(!checked.length){box.innerHTML='<div class=\"empty\">Tick trainers on the left \u2014 or hit a quick group \u2014 to show their Pok\u00e9mon.</div>';return;}\n"
+        "  var h='';\n"
+        "  checked.forEach(function(i){var t=TR[i];\n"
+        "    h+='<section class=\"tcard\"><h3>'+t.l+' <small>'+t.s.length+'</small></h3><div class=\"trow\">';\n"
+        "    t.s.forEach(function(p){h+='<figure class=\"chip\"><img src=\"'+SP+p[0]+'.png\"><figcaption>'+p[1]+'</figcaption></figure>';});\n"
+        "    h+='</div></section>';});\n"
+        "  box.innerHTML=h;\n"
+        "}\n"
+        "function trGroup(g){\n"
+        "  document.querySelectorAll('#trList input').forEach(function(c){\n"
+        "    if(g==='all'){c.checked=true;}else if(g==='none'){c.checked=false;}\n"
+        "    else{c.checked=(TR[+c.value].g===g);}\n"
+        "  });\n"
+        "  trRender();\n"
+        "}\n"
+        "function trFilter(){var q=document.getElementById('trSearch').value.toLowerCase();\n"
+        "  document.querySelectorAll('#trList .tr').forEach(function(e){\n"
+        "    e.style.display=(!q||e.dataset.l.indexOf(q)>=0)?'':'none';});\n"
+        "}\n"
+        "trRender();\n"
+    )
+
+    browser = (
+        '<h1 style="margin-top:40px">Trainer browser</h1>'
+        '<div class="sub">Pick one or more trainers to see exactly which Pok\u00e9mon they field. '
+        'Use the quick buttons to load a whole roster group.</div>'
+        '<div class="tbrowse">'
+        '<div class="tpanel">'
+        '<div class="qbtns">'
+        f'<button onclick="trGroup(\'leaders\')">Gym Leaders <b>{n_leaders}</b></button>'
+        f'<button onclick="trGroup(\'e4\')">Elite Four + Champion <b>{n_e4}</b></button>'
+        f'<button onclick="trGroup(\'magma\')">Team Magma <b>{n_magma}</b></button>'
+        f'<button onclick="trGroup(\'aqua\')">Team Aqua <b>{n_aqua}</b></button>'
+        '<button class="clear" onclick="trGroup(\'none\')">Clear</button>'
+        '</div>'
+        '<input id="trSearch" placeholder="Filter trainers\u2026" oninput="trFilter()">'
+        f'<div id="trList">{tr_items}</div>'
+        '</div>'
+        '<div class="tresult"><div class="rhead"><span id="trCount">0 selected</span></div>'
+        '<div id="trOut"></div></div>'
+        '</div>'
+        f'<script>var TR={tr_payload};</script><script>{tjs}</script>'
+    )
+
     html = f"""<!doctype html><html><head><meta charset="utf-8">
 <title>Trainer Pokemon communities</title>
 <style>
@@ -407,12 +513,32 @@ h1{{margin:0 0 4px}} .sub{{color:#8aa0bd;margin-bottom:22px;font-size:14px}}
 .cluster .head{{color:#cdd8e6;font-size:13px;margin-top:4px}}
 .chips{{display:flex;flex-wrap:wrap;gap:6px;padding:6px 14px 16px}}
 .chip{{margin:0;display:flex;flex-direction:column;align-items:center;width:124px}}
-.chip img{{object-fit:contain;image-rendering:pixelated}}
+.chip img{{object-fit:contain;image-rendering:pixelated;width:96px;height:72px}}
 .chip figcaption{{font-size:10px;color:#aab6c6;text-align:center;line-height:1.1;margin-top:2px}}
+.tbrowse{{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start}}
+.tpanel{{background:#171c26;border:1px solid #232c3b;border-radius:12px;padding:14px;position:sticky;top:16px}}
+.qbtns{{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}}
+.qbtns button{{background:#223049;color:#e8eef5;border:1px solid #314056;border-radius:8px;
+  padding:9px 12px;font-size:13px;cursor:pointer;text-align:left;
+  display:flex;justify-content:space-between;align-items:center}}
+.qbtns button:hover{{background:#2c3e5c}}
+.qbtns button b{{background:#11151c;border-radius:10px;padding:1px 8px;font-size:11px;color:#9fb4d0}}
+.qbtns button.clear{{background:#3a2330;border-color:#56313f}}
+#trSearch{{width:100%;box-sizing:border-box;background:#11151c;color:#e8eef5;border:1px solid #314056;
+  border-radius:8px;padding:8px 10px;margin-bottom:10px}}
+#trList{{max-height:62vh;overflow:auto;display:flex;flex-direction:column;gap:2px}}
+.tr{{display:flex;gap:8px;align-items:center;font-size:12px;padding:3px 6px;border-radius:6px;cursor:pointer}}
+.tr:hover{{background:#1f2735}} .tr input{{accent-color:#4c8bf5}}
+.tresult .rhead{{color:#8aa0bd;font-size:12px;margin-bottom:8px}}
+.tcard{{background:#171c26;border:1px solid #232c3b;border-radius:10px;padding:10px 12px;margin-bottom:12px}}
+.tcard h3{{margin:0 0 8px;font-size:15px}} .tcard h3 small{{color:#8aa0bd;font-weight:normal}}
+.trow{{display:flex;flex-wrap:wrap;gap:6px}}
+.empty{{color:#7e93b0;font-size:13px;padding:30px;text-align:center;border:1px dashed #2a3647;border-radius:10px}}
 </style></head><body>
 <h1>Trainer-roster Pokémon communities</h1>
 <div class="sub">{len(ordered)} Louvain communities. Sprite size ∝ how many trainers field that species. Sorted by community size.</div>
 <div class="grid">{"".join(cards)}</div>
+{browser}
 </body></html>"""
     out = OUT / "communities.html"
     out.write_text(html)
