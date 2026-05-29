@@ -375,7 +375,7 @@ def write_community_board(communities, names, trainer_count, individual_count, c
         for s in members:
             slug = slug_for(s)
             t = trainer_count[s]
-            size = 34 + int(40 * (t / maxt))
+            size = 56 + int(64 * (t / maxt))
             chips.append(
                 f'<figure class="chip" title="{names.get(s, s)} — {t} trainers, '
                 f'{individual_count[s]} individuals">'
@@ -397,7 +397,7 @@ def write_community_board(communities, names, trainer_count, individual_count, c
 :root{{color-scheme:dark}}
 body{{margin:0;background:#11151c;color:#e8eef5;font-family:Verdana,Geneva,sans-serif;padding:24px}}
 h1{{margin:0 0 4px}} .sub{{color:#8aa0bd;margin-bottom:22px;font-size:14px}}
-.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;align-items:start}}
+.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:18px;align-items:start}}
 .cluster{{background:#171c26;border-radius:12px;overflow:hidden;border:1px solid #232c3b;
   border-top:4px solid var(--c)}}
 .cluster header{{display:flex;gap:12px;align-items:flex-start;padding:14px 16px 8px}}
@@ -406,7 +406,7 @@ h1{{margin:0 0 4px}} .sub{{color:#8aa0bd;margin-bottom:22px;font-size:14px}}
 .cluster .meta{{color:#8aa0bd;font-size:12px}}
 .cluster .head{{color:#cdd8e6;font-size:13px;margin-top:4px}}
 .chips{{display:flex;flex-wrap:wrap;gap:6px;padding:6px 14px 16px}}
-.chip{{margin:0;display:flex;flex-direction:column;align-items:center;width:74px}}
+.chip{{margin:0;display:flex;flex-direction:column;align-items:center;width:124px}}
 .chip img{{object-fit:contain;image-rendering:pixelated}}
 .chip figcaption{{font-size:10px;color:#aab6c6;text-align:center;line-height:1.1;margin-top:2px}}
 </style></head><body>
