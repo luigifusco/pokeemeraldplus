@@ -20,6 +20,11 @@ non-randomized teams). Sprites are pulled from the Pokémon Showdown CDN
 - `cooccurrence_graph.html` — interactive graph (open in a browser). Node = a
   species with its sprite + name; node size = how many trainers field it; node
   colour = Louvain community; edge width = shared-roster count. Hover for stats.
+  Click a node for a detail sidebar; use the top-left **community legend** to
+  isolate a single community (click again or "Show all" to reset).
+- `communities.html` — a sprite "board" with one card per Louvain community
+  (member sprites sized by usage, colour-coded headers, headliners). The
+  clearest way to see what each cluster contains.
 - `trainer_pokemon_analysis.md` — full report: usage rankings, strongest
   pairings, weighted-degree hubs, bridge (betweenness) and central (eigenvector)
   Pokémon, and the Louvain community breakdown.

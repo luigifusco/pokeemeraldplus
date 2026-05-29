@@ -74,6 +74,39 @@ _SIDEBAR_JS = (
     "})();\n"
 )
 
+_LEGEND_JS = (
+    "function pkBuildLegend(){\n"
+    "  var el=document.getElementById('pkLegend');\n"
+    "  var comms=Object.keys(COMM_INFO).map(Number).sort(function(a,b){\n"
+    "    return COMM_INFO[b].size-COMM_INFO[a].size;});\n"
+    "  var h='<h4>Communities</h4>';\n"
+    "  h+='<div class=\"lg all\" onclick=\"pkIsolate(-1)\">\u2b1c Show all</div>';\n"
+    "  comms.forEach(function(c){ var d=COMM_INFO[c];\n"
+    "    if(d.size<2) return;\n"
+    "    h+='<div class=\"lg\" id=\"lg'+c+'\" onclick=\"pkIsolate('+c+')\">'+\n"
+    "      '<span class=\"sw\" style=\"background:'+d.color+'\"></span>'+\n"
+    "      '<span class=\"t\">'+d.headliners.join(', ')+'</span>'+\n"
+    "      '<span class=\"c\">'+d.size+'</span></div>';\n"
+    "  });\n"
+    "  el.innerHTML=h;\n"
+    "}\n"
+    "var pkActiveComm=-1;\n"
+    "function pkIsolate(c){\n"
+    "  if(typeof network==='undefined'||!network) return;\n"
+    "  if(c===pkActiveComm) c=-1;\n"
+    "  pkActiveComm=c;\n"
+    "  var upd=[];\n"
+    "  Object.keys(POKE_INFO).forEach(function(id){\n"
+    "    var hide=(c!==-1 && POKE_INFO[id].community!==c);\n"
+    "    upd.push({id:id,hidden:hide});\n"
+    "  });\n"
+    "  network.body.data.nodes.update(upd);\n"
+    "  document.querySelectorAll('#pkLegend .lg').forEach(function(e){e.classList.remove('active');});\n"
+    "  var act=document.getElementById('lg'+c); if(act) act.classList.add('active');\n"
+    "}\n"
+    "pkBuildLegend();\n"
+)
+
 
 def load_species_names() -> dict[str, str]:
     names: dict[str, str] = {}
@@ -178,7 +211,10 @@ def main() -> None:
         for s in set(species):
             species_to_trainers[s].append(label)
 
-    write_visualization(G, partition, names, species_to_trainers)
+    colors = community_palette(max(partition.values()) + 1)
+
+    write_visualization(G, partition, names, species_to_trainers, colors)
+    write_community_board(communities, names, trainer_count, individual_count, colors)
     write_report(
         G, names, labels, rosters, trainer_count, individual_count,
         edge_weight, pair_trainers, communities, modularity,
@@ -193,9 +229,7 @@ def community_palette(n: int) -> list[str]:
     return [matplotlib.colors.to_hex(cmap(i % 20)) for i in range(n)]
 
 
-def write_visualization(G, partition, names, species_to_trainers) -> None:
-    ncomm = max(partition.values()) + 1
-    colors = community_palette(ncomm)
+def write_visualization(G, partition, names, species_to_trainers, colors) -> None:
     net = Network(
         height="100vh", width="100%", bgcolor="#11151c", font_color="#e8eef5",
         notebook=False, cdn_resources="in_line",
@@ -249,6 +283,20 @@ def write_visualization(G, partition, names, species_to_trainers) -> None:
             "topTrainers": list(dict.fromkeys(species_to_trainers.get(node, [])))[:10],
         }
 
+    # Per-community payload for the legend / isolate filter.
+    comm_members: dict[int, list[str]] = defaultdict(list)
+    for node in G:
+        comm_members[int(partition[node])].append(node)
+    comm_info = {}
+    for comm, members in comm_members.items():
+        members.sort(key=lambda s: G.nodes[s]["trainers"], reverse=True)
+        comm_info[comm] = {
+            "color": colors[comm],
+            "size": len(members),
+            "members": members,
+            "headliners": [G.nodes[s]["label"] for s in members[:3]],
+        }
+
     fullscreen_css = (
         "<style>html,body{margin:0;padding:0;height:100%;overflow:hidden;"
         "background:#11151c;font-family:Verdana,Geneva,sans-serif;}"
@@ -280,6 +328,19 @@ def write_visualization(G, partition, names, species_to_trainers) -> None:
         "#pkSidebar .tr{font-size:12px;color:#cdd8e6;padding:2px 0;}"
         "#pkHero{display:flex;align-items:center;gap:12px;}"
         "#pkHero img{width:96px;height:72px;object-fit:contain;image-rendering:pixelated;}"
+        "#pkLegend{position:fixed;top:0;left:0;max-height:100vh;width:230px;"
+        "background:rgba(23,28,38,.92);color:#e8eef5;z-index:900;overflow-y:auto;"
+        "box-sizing:border-box;padding:12px;font-size:12px;}"
+        "#pkLegend h4{margin:2px 0 8px;font-size:13px;color:#8aa0bd;"
+        "text-transform:uppercase;letter-spacing:.04em;}"
+        "#pkLegend .lg{display:flex;align-items:center;gap:8px;padding:4px 6px;"
+        "border-radius:6px;cursor:pointer;}"
+        "#pkLegend .lg:hover{background:#202736;}"
+        "#pkLegend .lg.active{background:#2a3344;}"
+        "#pkLegend .sw{width:14px;height:14px;border-radius:3px;flex:none;}"
+        "#pkLegend .lg .t{flex:1;}#pkLegend .lg .c{color:#8aa0bd;}"
+        "#pkLegend .all{margin-bottom:8px;font-weight:bold;color:#7fd1ff;}"
+        "#pkLegendToggle{position:fixed;top:8px;left:8px;z-index:901;display:none;}"
         "</style>"
     )
 
@@ -288,12 +349,72 @@ def write_visualization(G, partition, names, species_to_trainers) -> None:
         '<button class="close" onclick="document.getElementById(\'pkSidebar\').'
         'classList.remove(\'open\')">&times;</button>'
         '<div id="pkBody"></div></div>'
+        '<div id="pkLegend"></div>'
         '<script>const POKE_INFO=' + json.dumps(node_info) + ';</script>'
+        '<script>const COMM_INFO=' + json.dumps(comm_info) + ';</script>'
         '<script>' + _SIDEBAR_JS + '</script>'
+        '<script>' + _LEGEND_JS + '</script>'
     )
 
     html = out.read_text().replace("</head>", fullscreen_css + "</head>", 1)
     html = html.replace("</body>", sidebar_html + "</body>", 1)
+    out.write_text(html)
+    print("wrote", out)
+
+
+def write_community_board(communities, names, trainer_count, individual_count, colors) -> None:
+    maxt = max(trainer_count.values())
+    ordered = sorted(communities.items(), key=lambda kv: len(kv[1]), reverse=True)
+    cards = []
+    for comm, members in ordered:
+        members = sorted(members, key=lambda s: trainer_count[s], reverse=True)
+        color = colors[comm]
+        total_tr = sum(trainer_count[s] for s in members)
+        headliners = ", ".join(names.get(s, s) for s in members[:3])
+        chips = []
+        for s in members:
+            slug = slug_for(s)
+            t = trainer_count[s]
+            size = 34 + int(40 * (t / maxt))
+            chips.append(
+                f'<figure class="chip" title="{names.get(s, s)} — {t} trainers, '
+                f'{individual_count[s]} individuals">'
+                f'<img src="{SPRITE_URL.format(slug=slug)}" style="width:{size}px;height:{int(size*0.75)}px">'
+                f'<figcaption>{names.get(s, s)}</figcaption></figure>'
+            )
+        cards.append(
+            f'<section class="cluster" style="--c:{color}">'
+            f'<header><span class="dot"></span>'
+            f'<div><h2>Cluster {comm}</h2>'
+            f'<div class="meta">{len(members)} species · {total_tr} total trainer slots</div>'
+            f'<div class="head">{headliners}</div></div></header>'
+            f'<div class="chips">{"".join(chips)}</div></section>'
+        )
+
+    html = f"""<!doctype html><html><head><meta charset="utf-8">
+<title>Trainer Pokemon communities</title>
+<style>
+:root{{color-scheme:dark}}
+body{{margin:0;background:#11151c;color:#e8eef5;font-family:Verdana,Geneva,sans-serif;padding:24px}}
+h1{{margin:0 0 4px}} .sub{{color:#8aa0bd;margin-bottom:22px;font-size:14px}}
+.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;align-items:start}}
+.cluster{{background:#171c26;border-radius:12px;overflow:hidden;border:1px solid #232c3b;
+  border-top:4px solid var(--c)}}
+.cluster header{{display:flex;gap:12px;align-items:flex-start;padding:14px 16px 8px}}
+.cluster .dot{{width:16px;height:16px;border-radius:50%;background:var(--c);margin-top:4px;flex:none}}
+.cluster h2{{margin:0;font-size:18px}}
+.cluster .meta{{color:#8aa0bd;font-size:12px}}
+.cluster .head{{color:#cdd8e6;font-size:13px;margin-top:4px}}
+.chips{{display:flex;flex-wrap:wrap;gap:6px;padding:6px 14px 16px}}
+.chip{{margin:0;display:flex;flex-direction:column;align-items:center;width:74px}}
+.chip img{{object-fit:contain;image-rendering:pixelated}}
+.chip figcaption{{font-size:10px;color:#aab6c6;text-align:center;line-height:1.1;margin-top:2px}}
+</style></head><body>
+<h1>Trainer-roster Pokémon communities</h1>
+<div class="sub">{len(ordered)} Louvain communities. Sprite size ∝ how many trainers field that species. Sorted by community size.</div>
+<div class="grid">{"".join(cards)}</div>
+</body></html>"""
+    out = OUT / "communities.html"
     out.write_text(html)
     print("wrote", out)
 
