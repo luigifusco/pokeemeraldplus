@@ -63,6 +63,7 @@ class BuildConfigModel(BaseModel):
     random_mode: str = RandomMode.GLOBAL
     stronger_villains: bool = False
     stronger_rival: bool = False
+    stronger_wally: bool = False
     level_scale: LevelScaleModel = Field(default_factory=LevelScaleModel)
     randomize_level_up_moves: bool = False
     randomize_egg_moves: bool = False

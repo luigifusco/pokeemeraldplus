@@ -302,6 +302,91 @@ def apply_stronger_rival(parties_text: str, evolution_text: str) -> str:
     return parties_text
 
 
+# ---------------------------------------------------------------------------
+# Stronger Wally preprocessing
+# ---------------------------------------------------------------------------
+#
+# Wally's battles get explicit, default-move teams (the vanilla Victory Road
+# fights use custom movesets, which are dropped here):
+#   * The early Mauville battle gains a small pre-evolution team built from the
+#     first forms of his eventual aces.
+#   * Each of the five Victory Road battles becomes a six-Pokemon roster led by
+#     Gardevoir, pairing his canonical Hoenn mons with the elegant Eevee twins.
+
+# Early Mauville battle: (species, level, iv).
+_WALLY_MAUVILLE = [
+    ("SPECIES_SWABLU", 15, 50),
+    ("SPECIES_MAGNEMITE", 16, 50),
+    ("SPECIES_RALTS", 18, 150),
+]
+
+# Victory Road roster: (species, iv, level offset from the battle's ace level).
+# Gardevoir is the ace; the rest sit one or two levels below it.
+_WALLY_VR_TEAM = [
+    ("SPECIES_ALTARIA", 150, -1),
+    ("SPECIES_ROSELIA", 150, -2),
+    ("SPECIES_MILOTIC", 150, -1),
+    ("SPECIES_ESPEON", 150, -2),
+    ("SPECIES_UMBREON", 150, -2),
+    ("SPECIES_GARDEVOIR", 250, 0),
+]
+
+# Victory Road battle name -> ace (Gardevoir) level. Matches the vanilla +3/tier.
+_WALLY_VR_ACE_LEVELS = {
+    "WallyVR1": 45,
+    "WallyVR2": 48,
+    "WallyVR3": 51,
+    "WallyVR4": 54,
+    "WallyVR5": 57,
+}
+
+
+def _replace_trainer_party(text: str, name: str, block: str) -> str:
+    """Replace a party array regardless of its TrainerMon struct variant."""
+
+    pattern = re.compile(
+        r"static const struct TrainerMonNoItem(?:Custom|Default)Moves sParty_"
+        + re.escape(name)
+        + r"\[\] = \{.*?\n\};",
+        re.DOTALL,
+    )
+    return pattern.sub(lambda _match: block, text, count=1)
+
+
+def apply_stronger_wally(parties_text: str) -> str:
+    """Strengthen Wally's battles with explicit default-move teams.
+
+    The early Mauville battle gains a small pre-evolution team, and the five
+    Victory Road battles become six-Pokemon rosters led by Gardevoir. The
+    vanilla custom movesets are dropped, so the parties become default-move
+    structs; the trainers.h macros for the Victory Road battles must be
+    converted to match (see apply_stronger_wally_trainers).
+    """
+
+    parties_text = _replace_trainer_party(
+        parties_text, "WallyMauville", _format_mixed_party("WallyMauville", _WALLY_MAUVILLE)
+    )
+
+    for name, ace_level in _WALLY_VR_ACE_LEVELS.items():
+        mons = [
+            (species, ace_level + offset, iv) for species, iv, offset in _WALLY_VR_TEAM
+        ]
+        parties_text = _replace_trainer_party(parties_text, name, _format_mixed_party(name, mons))
+
+    return parties_text
+
+
+def apply_stronger_wally_trainers(trainers_text: str) -> str:
+    """Convert Wally's Victory Road party macros to default-move variants."""
+
+    for name in _WALLY_VR_ACE_LEVELS:
+        trainers_text = trainers_text.replace(
+            f"NO_ITEM_CUSTOM_MOVES(sParty_{name})",
+            f"NO_ITEM_DEFAULT_MOVES(sParty_{name})",
+        )
+    return trainers_text
+
+
 def parse_evolution_levels(text: str) -> dict[str, tuple[int, str]]:
     """Parse EVO_LEVEL rows from evolution.h into base -> (level, evolved)."""
 
@@ -1607,6 +1692,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--stronger-wally",
+        action="store_true",
+        help=(
+            "Strengthen Wally's battles: the early Mauville fight gains a small "
+            "pre-evolution team, and each of the five Victory Road battles becomes a "
+            "six-Pokemon roster led by Gardevoir (the vanilla custom movesets are "
+            "dropped). Applied before species randomization so it composes with it."
+        ),
+    )
+    parser.add_argument(
         "--restore",
         action="store_true",
         help="Restore original (unrandomized) files from randomizer/ templates.",
@@ -1873,7 +1968,7 @@ def main() -> None:
         # level edits on top of the restored (template) files.
         if not selected_any and (
             has_wild_level_change or has_trainer_level_change or args.stronger_villains
-            or args.stronger_rival
+            or args.stronger_rival or args.stronger_wally
         ):
             if has_wild_level_change:
                 encounters_path = repo_root / "src/data/wild_encounters.json"
@@ -1885,7 +1980,10 @@ def main() -> None:
                 )
                 encounters_path.write_text(encounters)
 
-            if has_trainer_level_change or args.stronger_villains or args.stronger_rival:
+            if (
+                has_trainer_level_change or args.stronger_villains or args.stronger_rival
+                or args.stronger_wally
+            ):
                 parties_path = repo_root / "src/data/trainer_parties.h"
                 parties = parties_path.read_text()
                 if args.stronger_villains or args.stronger_rival:
@@ -1894,6 +1992,8 @@ def main() -> None:
                         parties = apply_stronger_villains(parties, evolution_text)
                     if args.stronger_rival:
                         parties = apply_stronger_rival(parties, evolution_text)
+                if args.stronger_wally:
+                    parties = apply_stronger_wally(parties)
                 if has_trainer_level_change:
                     parties = scale_trainer_party_levels(
                         parties,
@@ -1901,6 +2001,11 @@ def main() -> None:
                         fixed_level=trainer_fixed_level,
                     )
                 parties_path.write_text(parties)
+            if args.stronger_wally:
+                trainers_path = repo_root / "src/data/trainers.h"
+                trainers = trainers_path.read_text()
+                trainers = apply_stronger_wally_trainers(trainers)
+                trainers_path.write_text(trainers)
             write_run_metadata(randomizer_dir, args)
         return
 
@@ -1927,7 +2032,7 @@ def main() -> None:
         starter_code = randomize_species_in_text(starter_code, all_species, per_occurrence=args.per_occurrence)
         (repo_root / "src/starter_choose.c").write_text(starter_code)
 
-    if do_trainers or args.stronger_villains or args.stronger_rival:
+    if do_trainers or args.stronger_villains or args.stronger_rival or args.stronger_wally:
         trainer_parties = (randomizer_dir / "trainer_parties.h").read_text()
         if args.stronger_villains or args.stronger_rival:
             evolution_text = (repo_root / "src/data/pokemon/evolution.h").read_text()
@@ -1935,6 +2040,8 @@ def main() -> None:
                 trainer_parties = apply_stronger_villains(trainer_parties, evolution_text)
             if args.stronger_rival:
                 trainer_parties = apply_stronger_rival(trainer_parties, evolution_text)
+        if args.stronger_wally:
+            trainer_parties = apply_stronger_wally(trainer_parties)
         if do_trainers:
             trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
         trainer_parties = scale_trainer_party_levels(

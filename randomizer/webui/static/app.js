@@ -19,6 +19,7 @@ const defaultConfig = () => ({
     random_mode: "global",
     stronger_villains: false,
     stronger_rival: false,
+    stronger_wally: false,
     level_scale: {
         wild_percent: 0,
         trainer_percent: 0,
