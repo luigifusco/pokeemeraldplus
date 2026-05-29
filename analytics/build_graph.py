@@ -191,7 +191,7 @@ def write_visualization(G, partition, names) -> None:
         "<style>html,body{margin:0;padding:0;height:100%;overflow:hidden;"
         "background:#11151c;}.card{border:none!important;width:100%!important;"
         "height:100vh!important;margin:0!important;}#mynetwork{height:100vh!important;"
-        "border:none!important;}#loadingBar{height:100vh!important;}"
+        "border:none!important;}#loadingBar{display:none!important;}"
         "center{display:none!important;}</style>"
     )
     html = out.read_text().replace("</head>", fullscreen_css + "</head>", 1)
