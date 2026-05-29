@@ -61,6 +61,16 @@ static const struct ScanlineEffectParams sFlashEffectParams =
 };
 
 // code
+
+// When FAST_WARP_FADE is enabled, warp fades use a large negative delay so the
+// palette fade engine advances to the target in a single step (near-instant),
+// instead of animating over ~16 frames. 0 is the vanilla (fastest animated) rate.
+#ifdef FAST_WARP_FADE
+#define WARP_FADE_DELAY -32
+#else
+#define WARP_FADE_DELAY 0
+#endif
+
 static void FillPalBufferWhite(void)
 {
     CpuFastFill16(RGB_WHITE, gPlttBufferFaded, PLTT_SIZE);
@@ -78,11 +88,11 @@ void WarpFadeInScreen(void)
     {
     case 0:
         FillPalBufferBlack();
-        FadeScreen(FADE_FROM_BLACK, 0);
+        FadeScreen(FADE_FROM_BLACK, WARP_FADE_DELAY);
         break;
     case 1:
         FillPalBufferWhite();
-        FadeScreen(FADE_FROM_WHITE, 0);
+        FadeScreen(FADE_FROM_WHITE, WARP_FADE_DELAY);
     }
 }
 
@@ -104,10 +114,10 @@ void WarpFadeOutScreen(void)
     switch (GetMapPairFadeToType(currentMapType, GetDestinationWarpMapHeader()->mapType))
     {
     case 0:
-        FadeScreen(FADE_TO_BLACK, 0);
+        FadeScreen(FADE_TO_BLACK, WARP_FADE_DELAY);
         break;
     case 1:
-        FadeScreen(FADE_TO_WHITE, 0);
+        FadeScreen(FADE_TO_WHITE, WARP_FADE_DELAY);
     }
 }
 

@@ -47,6 +47,13 @@
 // Uncomment to fix some identified minor bugs
 //#define BUGFIX
 
+// Speed up the fade to/from black when entering or exiting warps (doors,
+// stairs, cave entrances, etc.) so the dark transition is nearly instant.
+// Only the warp fade animations are affected; the map load in between is
+// genuine work and is unchanged, as are battle/menu fades. Comment this out
+// to restore the vanilla, slower warp fade.
+#define FAST_WARP_FADE
+
 // Various undefined behavior bugs may or may not prevent compilation with
 // newer compilers. So always fix them when using a modern compiler.
 #if MODERN || defined(BUGFIX)
