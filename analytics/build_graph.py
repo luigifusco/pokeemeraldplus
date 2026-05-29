@@ -108,6 +108,38 @@ _LEGEND_JS = (
 )
 
 
+_TRAINER_GRAPH_JS = (
+    "function pkTab(t){\n"
+    "  document.getElementById('pkLegend').style.display=(t==='legend')?'block':'none';\n"
+    "  document.getElementById('pkTrainers').style.display=(t==='trainers')?'block':'none';\n"
+    "  document.getElementById('tabLegend').classList.toggle('on',t==='legend');\n"
+    "  document.getElementById('tabTr').classList.toggle('on',t==='trainers');\n"
+    "}\n"
+    "function pkTrApply(){\n"
+    "  if(typeof network==='undefined'||!network) return;\n"
+    "  var sel=[];document.querySelectorAll('#pkTrList input:checked').forEach(function(c){sel.push(+c.value);});\n"
+    "  document.getElementById('pkTrCount').textContent=sel.length+' selected';\n"
+    "  var show=null;\n"
+    "  if(sel.length){show={};sel.forEach(function(i){TR_GRAPH[i].s.forEach(function(id){show[id]=1;});});}\n"
+    "  var upd=[];\n"
+    "  Object.keys(POKE_INFO).forEach(function(id){upd.push({id:id,hidden:show?!show[id]:false});});\n"
+    "  network.body.data.nodes.update(upd);\n"
+    "  if(sel.length){pkActiveComm=-1;document.querySelectorAll('#pkLegend .lg').forEach(function(e){e.classList.remove('active');});}\n"
+    "}\n"
+    "function pkTrGroup(g){\n"
+    "  document.querySelectorAll('#pkTrList input').forEach(function(c){\n"
+    "    if(g==='all'){c.checked=true;}else if(g==='none'){c.checked=false;}\n"
+    "    else{c.checked=(TR_GRAPH[+c.value].g===g);}\n"
+    "  });\n"
+    "  pkTrApply();\n"
+    "}\n"
+    "function pkTrFilter(){var q=document.getElementById('pkTrSearch').value.toLowerCase();\n"
+    "  document.querySelectorAll('#pkTrList .tr').forEach(function(e){\n"
+    "    e.style.display=(!q||e.dataset.l.indexOf(q)>=0)?'':'none';});\n"
+    "}\n"
+)
+
+
 def load_species_names() -> dict[str, str]:
     names: dict[str, str] = {}
     for const, raw in NAME_ROW.findall(NAMES.read_text()):
@@ -252,7 +284,7 @@ def main() -> None:
 
     colors = community_palette(max(partition.values()) + 1)
 
-    write_visualization(G, partition, names, species_to_trainers, colors)
+    write_visualization(G, partition, names, species_to_trainers, colors, trainers)
     write_community_board(communities, names, trainer_count, individual_count, colors, trainers)
     write_report(
         G, names, labels, rosters, trainer_count, individual_count,
@@ -268,7 +300,7 @@ def community_palette(n: int) -> list[str]:
     return [matplotlib.colors.to_hex(cmap(i % 20)) for i in range(n)]
 
 
-def write_visualization(G, partition, names, species_to_trainers, colors) -> None:
+def write_visualization(G, partition, names, species_to_trainers, colors, trainers) -> None:
     net = Network(
         height="100vh", width="100%", bgcolor="#11151c", font_color="#e8eef5",
         notebook=False, cdn_resources="in_line",
@@ -367,20 +399,69 @@ def write_visualization(G, partition, names, species_to_trainers, colors) -> Non
         "#pkSidebar .tr{font-size:12px;color:#cdd8e6;padding:2px 0;}"
         "#pkHero{display:flex;align-items:center;gap:12px;}"
         "#pkHero img{width:96px;height:72px;object-fit:contain;image-rendering:pixelated;}"
-        "#pkLegend{position:fixed;top:0;left:0;max-height:100vh;width:230px;"
-        "background:rgba(23,28,38,.92);color:#e8eef5;z-index:900;overflow-y:auto;"
-        "box-sizing:border-box;padding:12px;font-size:12px;}"
+        "#pkPanel{position:fixed;top:0;left:0;height:100vh;width:264px;"
+        "background:rgba(23,28,38,.95);color:#e8eef5;z-index:900;display:flex;"
+        "flex-direction:column;box-sizing:border-box;font-size:12px;}"
+        "#pkTabs{display:flex;gap:4px;padding:8px 8px 0;}"
+        "#pkTabs button{flex:1;background:#1c2330;color:#8aa0bd;border:1px solid #2a3344;"
+        "border-bottom:none;border-radius:8px 8px 0 0;padding:8px;cursor:pointer;font-size:12px;}"
+        "#pkTabs button.on{background:#2a3344;color:#e8eef5;}"
+        "#pkPanel .pbody{flex:1;overflow-y:auto;padding:10px 12px;}"
         "#pkLegend h4{margin:2px 0 8px;font-size:13px;color:#8aa0bd;"
         "text-transform:uppercase;letter-spacing:.04em;}"
-        "#pkLegend .lg{display:flex;align-items:center;gap:8px;padding:4px 6px;"
-        "border-radius:6px;cursor:pointer;}"
-        "#pkLegend .lg:hover{background:#202736;}"
-        "#pkLegend .lg.active{background:#2a3344;}"
-        "#pkLegend .sw{width:14px;height:14px;border-radius:3px;flex:none;}"
-        "#pkLegend .lg .t{flex:1;}#pkLegend .lg .c{color:#8aa0bd;}"
-        "#pkLegend .all{margin-bottom:8px;font-weight:bold;color:#7fd1ff;}"
-        "#pkLegendToggle{position:fixed;top:8px;left:8px;z-index:901;display:none;}"
+        ".lg{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;cursor:pointer;}"
+        ".lg:hover{background:#202736;}.lg.active{background:#2a3344;}"
+        ".lg .sw{width:14px;height:14px;border-radius:3px;flex:none;}"
+        ".lg .t{flex:1;}.lg .c{color:#8aa0bd;}"
+        ".all{margin-bottom:8px;font-weight:bold;color:#7fd1ff;}"
+        ".qbtns{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}"
+        ".qbtns button{background:#223049;color:#e8eef5;border:1px solid #314056;"
+        "border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer;text-align:left;"
+        "display:flex;justify-content:space-between;align-items:center;}"
+        ".qbtns button:hover{background:#2c3e5c;}"
+        ".qbtns button b{background:#11151c;border-radius:10px;padding:1px 7px;color:#9fb4d0;}"
+        ".qbtns button.clear{background:#3a2330;border-color:#56313f;}"
+        "#pkTrSearch{width:100%;box-sizing:border-box;background:#11151c;color:#e8eef5;"
+        "border:1px solid #314056;border-radius:8px;padding:7px 9px;margin-bottom:6px;}"
+        ".trmeta{color:#8aa0bd;margin-bottom:6px;}"
+        "#pkTrList{display:flex;flex-direction:column;gap:1px;}"
+        ".tr{display:flex;gap:7px;align-items:center;padding:3px 5px;border-radius:6px;cursor:pointer;}"
+        ".tr:hover{background:#1f2735;}.tr input{accent-color:#4c8bf5;}"
         "</style>"
+    )
+
+    # Trainer filter data for the graph (species are node ids).
+    tr_graph = json.dumps([
+        {"l": t["label"], "g": t["group"], "s": list(dict.fromkeys(t["species"]))}
+        for t in trainers
+    ])
+    tr_items = "".join(
+        f'<label class="tr" data-l="{t["label"].lower()}">'
+        f'<input type="checkbox" value="{i}" onchange="pkTrApply()">'
+        f'<span>{t["label"]}</span></label>'
+        for i, t in enumerate(trainers)
+    )
+    g_counts = Counter(t["group"] for t in trainers)
+
+    panel_html = (
+        '<div id="pkPanel">'
+        '<div id="pkTabs">'
+        '<button id="tabLegend" class="on" onclick="pkTab(\'legend\')">Communities</button>'
+        '<button id="tabTr" onclick="pkTab(\'trainers\')">Trainers</button></div>'
+        '<div class="pbody">'
+        '<div id="pkLegend"></div>'
+        '<div id="pkTrainers" style="display:none">'
+        '<div class="qbtns">'
+        f'<button onclick="pkTrGroup(\'leaders\')">Gym Leaders <b>{g_counts["leaders"]}</b></button>'
+        f'<button onclick="pkTrGroup(\'e4\')">Elite Four + Champion <b>{g_counts["e4"]}</b></button>'
+        f'<button onclick="pkTrGroup(\'magma\')">Team Magma <b>{g_counts["magma"]}</b></button>'
+        f'<button onclick="pkTrGroup(\'aqua\')">Team Aqua <b>{g_counts["aqua"]}</b></button>'
+        '<button class="clear" onclick="pkTrGroup(\'none\')">Clear / show all</button>'
+        '</div>'
+        '<input id="pkTrSearch" placeholder="Filter trainers\u2026" oninput="pkTrFilter()">'
+        '<div class="trmeta"><span id="pkTrCount">0 selected</span></div>'
+        f'<div id="pkTrList">{tr_items}</div>'
+        '</div></div></div>'
     )
 
     sidebar_html = (
@@ -388,11 +469,13 @@ def write_visualization(G, partition, names, species_to_trainers, colors) -> Non
         '<button class="close" onclick="document.getElementById(\'pkSidebar\').'
         'classList.remove(\'open\')">&times;</button>'
         '<div id="pkBody"></div></div>'
-        '<div id="pkLegend"></div>'
+        + panel_html +
         '<script>const POKE_INFO=' + json.dumps(node_info) + ';</script>'
         '<script>const COMM_INFO=' + json.dumps(comm_info) + ';</script>'
+        '<script>const TR_GRAPH=' + tr_graph + ';</script>'
         '<script>' + _SIDEBAR_JS + '</script>'
         '<script>' + _LEGEND_JS + '</script>'
+        '<script>' + _TRAINER_GRAPH_JS + '</script>'
     )
 
     html = out.read_text().replace("</head>", fullscreen_css + "</head>", 1)
