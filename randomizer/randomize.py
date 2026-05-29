@@ -4,6 +4,7 @@ import json
 import random
 import re
 import sys
+import zlib
 from pathlib import Path
 
 
@@ -162,9 +163,18 @@ EVO_LEVEL_ENTRY_PATTERN = re.compile(
     r"\[(SPECIES_[A-Z0-9_]+)\]\s*=\s*\{\{EVO_LEVEL,\s*(\d+),\s*(SPECIES_[A-Z0-9_]+)\}"
 )
 
-# Core evolution lines used to pad grunt teams (base species, evolved by level).
-_AQUA_GRUNT_CORE = ("SPECIES_POOCHYENA", "SPECIES_ZUBAT", "SPECIES_CARVANHA", "SPECIES_WAILMER")
-_MAGMA_GRUNT_CORE = ("SPECIES_POOCHYENA", "SPECIES_ZUBAT", "SPECIES_NUMEL", "SPECIES_BALTOY")
+# Pools of base species used to pad grunt teams. Each is evolved by the party's
+# level, so early grunts get base forms and late-game grunts get evolved forms.
+# Poochyena/Zubat are kept last so padding only adds Mightyena/Golbat as a last
+# resort, avoiding the monotony of every grunt fielding that same pair.
+_AQUA_GRUNT_POOL = (
+    "SPECIES_CARVANHA", "SPECIES_WAILMER", "SPECIES_PSYDUCK", "SPECIES_SLOWPOKE",
+    "SPECIES_HORSEA", "SPECIES_TOTODILE", "SPECIES_POOCHYENA", "SPECIES_ZUBAT",
+)
+_MAGMA_GRUNT_POOL = (
+    "SPECIES_NUMEL", "SPECIES_BALTOY", "SPECIES_PHANPY", "SPECIES_DIGLETT",
+    "SPECIES_TRAPINCH", "SPECIES_CYNDAQUIL", "SPECIES_POOCHYENA", "SPECIES_ZUBAT",
+)
 
 # Substrings that mark a grunt party as Team Magma; everything else is Team Aqua.
 _MAGMA_GRUNT_HINTS = ("Magma", "SpaceCenter", "MtChimney", "JaggedPass")
@@ -175,48 +185,49 @@ _VILLAIN_LEADER_IV = 200
 _VILLAIN_ADMIN_IV = 150
 
 # Curated boss/miniboss rosters: name -> (iv, [(species, level), ...]).
-# Ace level matches the gym leader for the encounter's area.
+# Ace level matches the gym leader for the encounter's area. Rosters are kept
+# deliberately varied so Mightyena/Crobat are no longer the universal lead pair.
 _VILLAIN_BOSS_PARTIES: dict[str, tuple[int, list[tuple[str, int]]]] = {
     # --- Leaders (ace at area gym-leader level) ---
     "MaxieMtChimney": (_VILLAIN_LEADER_IV, [
-        ("SPECIES_MIGHTYENA", 26), ("SPECIES_GOLBAT", 27), ("SPECIES_HOUNDOOM", 28),
+        ("SPECIES_MIGHTYENA", 26), ("SPECIES_NUMEL", 27), ("SPECIES_HOUNDOOM", 28),
         ("SPECIES_WEEZING", 28), ("SPECIES_CAMERUPT", 29),
     ]),
     "MaxieMagmaHideout": (_VILLAIN_LEADER_IV, [
-        ("SPECIES_MIGHTYENA", 37), ("SPECIES_CROBAT", 38), ("SPECIES_CLAYDOL", 38),
-        ("SPECIES_HOUNDOOM", 39), ("SPECIES_WEEZING", 39), ("SPECIES_CAMERUPT", 40),
+        ("SPECIES_MIGHTYENA", 37), ("SPECIES_CLAYDOL", 38), ("SPECIES_DONPHAN", 38),
+        ("SPECIES_HOUNDOOM", 39), ("SPECIES_DUGTRIO", 39), ("SPECIES_CAMERUPT", 40),
     ]),
     "MaxieMossdeep": (_VILLAIN_LEADER_IV, [
-        ("SPECIES_MIGHTYENA", 43), ("SPECIES_CROBAT", 44), ("SPECIES_CLAYDOL", 44),
-        ("SPECIES_MAGCARGO", 45), ("SPECIES_HOUNDOOM", 45), ("SPECIES_CAMERUPT", 46),
+        ("SPECIES_MIGHTYENA", 43), ("SPECIES_CLAYDOL", 44), ("SPECIES_FLYGON", 45),
+        ("SPECIES_HOUNDOOM", 45), ("SPECIES_TYRANITAR", 46), ("SPECIES_CAMERUPT", 46),
     ]),
     "Archie": (_VILLAIN_LEADER_IV, [
-        ("SPECIES_MIGHTYENA", 43), ("SPECIES_CROBAT", 44), ("SPECIES_TENTACRUEL", 44),
+        ("SPECIES_MIGHTYENA", 43), ("SPECIES_TENTACRUEL", 44), ("SPECIES_KINGDRA", 45),
         ("SPECIES_CRAWDAUNT", 45), ("SPECIES_WALREIN", 45), ("SPECIES_SHARPEDO", 46),
     ]),
     # --- Minibosses / admins (ace at area gym-leader level) ---
     "TabithaMtChimney": (_VILLAIN_ADMIN_IV, [
-        ("SPECIES_MIGHTYENA", 27), ("SPECIES_GOLBAT", 28), ("SPECIES_WEEZING", 28),
+        ("SPECIES_NUMEL", 27), ("SPECIES_WEEZING", 28), ("SPECIES_HOUNDOOM", 28),
         ("SPECIES_CAMERUPT", 29),
     ]),
     "TabithaMagmaHideout": (_VILLAIN_ADMIN_IV, [
-        ("SPECIES_MIGHTYENA", 38), ("SPECIES_CROBAT", 39), ("SPECIES_CLAYDOL", 39),
+        ("SPECIES_HOUNDOOM", 38), ("SPECIES_CLAYDOL", 39), ("SPECIES_NIDOKING", 39),
         ("SPECIES_CAMERUPT", 40),
     ]),
     "TabithaMossdeep": (_VILLAIN_ADMIN_IV, [
-        ("SPECIES_MIGHTYENA", 44), ("SPECIES_CROBAT", 45), ("SPECIES_MAGCARGO", 45),
+        ("SPECIES_MAGCARGO", 44), ("SPECIES_FLAREON", 45), ("SPECIES_NIDOQUEEN", 45),
         ("SPECIES_CAMERUPT", 46),
     ]),
     "ShellyWeatherInstitute": (_VILLAIN_ADMIN_IV, [
-        ("SPECIES_MIGHTYENA", 31), ("SPECIES_GOLBAT", 32), ("SPECIES_CRAWDAUNT", 32),
+        ("SPECIES_MIGHTYENA", 31), ("SPECIES_GOLDUCK", 32), ("SPECIES_CRAWDAUNT", 32),
         ("SPECIES_SHARPEDO", 33),
     ]),
     "ShellySeafloorCavern": (_VILLAIN_ADMIN_IV, [
-        ("SPECIES_MIGHTYENA", 44), ("SPECIES_CROBAT", 45), ("SPECIES_CRAWDAUNT", 45),
+        ("SPECIES_GOREBYSS", 44), ("SPECIES_HUNTAIL", 45), ("SPECIES_CRAWDAUNT", 45),
         ("SPECIES_SHARPEDO", 46),
     ]),
     "Matt": (_VILLAIN_ADMIN_IV, [
-        ("SPECIES_MIGHTYENA", 38), ("SPECIES_CROBAT", 39), ("SPECIES_CRAWDAUNT", 39),
+        ("SPECIES_MIGHTYENA", 38), ("SPECIES_FERALIGATR", 39), ("SPECIES_CRAWDAUNT", 39),
         ("SPECIES_SHARPEDO", 40),
     ]),
 }
@@ -282,7 +293,7 @@ def _parse_villain_party(text: str, name: str) -> list[tuple[str, int]] | None:
 
 def _buff_grunt_party(name: str, mons: list[tuple[str, int]], evos: dict[str, tuple[int, str]]) -> list[tuple[str, int]]:
     is_magma = any(hint in name for hint in _MAGMA_GRUNT_HINTS)
-    core = _MAGMA_GRUNT_CORE if is_magma else _AQUA_GRUNT_CORE
+    pool = _MAGMA_GRUNT_POOL if is_magma else _AQUA_GRUNT_POOL
 
     out = [(evolve_species_to_level(species, level, evos), level) for species, level in mons]
     if not out:
@@ -294,13 +305,23 @@ def _buff_grunt_party(name: str, mons: list[tuple[str, int]], evos: dict[str, tu
 
     pad_level = max(level for _species, level in out)
     present = {species for species, _level in out}
-    index = 0
-    while len(out) < target:
-        candidate = evolve_species_to_level(core[index % len(core)], pad_level, evos)
-        if candidate not in present or index >= len(core):
+    # Rotate the starting slot per trainer (stable across runs) so different
+    # grunts pad with different species instead of always Poochyena/Zubat.
+    start = zlib.crc32(name.encode("utf-8")) % len(pool)
+
+    for offset in range(len(pool)):
+        if len(out) >= target:
+            break
+        candidate = evolve_species_to_level(pool[(start + offset) % len(pool)], pad_level, evos)
+        if candidate not in present:
             out.append((candidate, pad_level))
             present.add(candidate)
-        index += 1
+
+    offset = 0
+    while len(out) < target:
+        candidate = evolve_species_to_level(pool[(start + offset) % len(pool)], pad_level, evos)
+        out.append((candidate, pad_level))
+        offset += 1
     return out
 
 
