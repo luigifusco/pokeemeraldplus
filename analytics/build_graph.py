@@ -39,6 +39,41 @@ PARTY_BLOCK = re.compile(r"sParty_(\w+)\[\]\s*=\s*\{(.*?)\n\};", re.S)
 SPECIES_REF = re.compile(r"\.species\s*=\s*(SPECIES_[A-Z0-9_]+)")
 NAME_ROW = re.compile(r"\[(SPECIES_[A-Z0-9_]+)\]\s*=\s*_\(\"([^\"]+)\"\)")
 
+_SPRITE_JS = "https://play.pokemonshowdown.com/sprites/gen5/"
+
+_SIDEBAR_JS = (
+    "function pkSprite(slug){return '" + _SPRITE_JS + "'+slug+'.png';}\n"
+    "function pkShow(id){\n"
+    "  var d=POKE_INFO[id]; if(!d) return;\n"
+    "  var h='<div id=\"pkHero\"><img src=\"'+pkSprite(d.slug)+'\">'+\n"
+    "    '<div><h2 style=\"color:'+d.color+'\">'+d.name+'</h2>'+\n"
+    "    '<div class=\"sub\">Community '+d.community+'</div></div></div>';\n"
+    "  h+='<div class=\"stats\">'+\n"
+    "    '<div class=\"stat\"><b>'+d.trainers+'</b><span>trainers field it</span></div>'+\n"
+    "    '<div class=\"stat\"><b>'+d.individuals+'</b><span>total individuals</span></div>'+\n"
+    "    '<div class=\"stat\"><b>'+d.degree+'</b><span>distinct teammates</span></div>'+\n"
+    "    '<div class=\"stat\"><b>'+d.wdegree+'</b><span>weighted degree</span></div></div>';\n"
+    "  h+='<h3>Top connections</h3>';\n"
+    "  d.connections.slice(0,15).forEach(function(c){\n"
+    "    h+='<div class=\"conn\" onclick=\"pkFocus(\\''+c.id+'\\')\">'+\n"
+    "      '<img src=\"'+pkSprite(c.slug)+'\"><span class=\"n\">'+c.name+'</span>'+\n"
+    "      '<span class=\"w\">'+c.weight+'</span></div>';\n"
+    "  });\n"
+    "  if(d.topTrainers.length){ h+='<h3>Fielded by</h3>';\n"
+    "    d.topTrainers.forEach(function(t){h+='<div class=\"tr\">'+t+'</div>';}); }\n"
+    "  document.getElementById('pkBody').innerHTML=h;\n"
+    "  document.getElementById('pkSidebar').classList.add('open');\n"
+    "}\n"
+    "function pkFocus(id){ if(typeof network!=='undefined'&&network){\n"
+    "    network.selectNodes([id]); network.focus(id,{scale:1.1,animation:true}); }\n"
+    "  pkShow(id);\n"
+    "}\n"
+    "(function attach(){\n"
+    "  if(typeof network==='undefined'||!network){return setTimeout(attach,120);}\n"
+    "  network.on('click',function(p){ if(p.nodes.length){pkShow(p.nodes[0]);} });\n"
+    "})();\n"
+)
+
 
 def load_species_names() -> dict[str, str]:
     names: dict[str, str] = {}
@@ -136,7 +171,14 @@ def main() -> None:
     except nx.PowerIterationFailedConvergence:
         eig = {n: 0.0 for n in G}
 
-    write_visualization(G, partition, names)
+    # species -> trainers that field it (deduped, by usage order of appearance)
+    species_to_trainers: dict[str, list[str]] = defaultdict(list)
+    for name, species in rosters:
+        label = labels.get(name, name)
+        for s in set(species):
+            species_to_trainers[s].append(label)
+
+    write_visualization(G, partition, names, species_to_trainers)
     write_report(
         G, names, labels, rosters, trainer_count, individual_count,
         edge_weight, pair_trainers, communities, modularity,
@@ -151,7 +193,7 @@ def community_palette(n: int) -> list[str]:
     return [matplotlib.colors.to_hex(cmap(i % 20)) for i in range(n)]
 
 
-def write_visualization(G, partition, names) -> None:
+def write_visualization(G, partition, names, species_to_trainers) -> None:
     ncomm = max(partition.values()) + 1
     colors = community_palette(ncomm)
     net = Network(
@@ -185,16 +227,73 @@ def write_visualization(G, partition, names) -> None:
     net.toggle_physics(True)
     out = OUT / "cooccurrence_graph.html"
     net.save_graph(str(out))
-    # Make the canvas truly fullscreen: drop default margins, the bootstrap card
-    # border, and the empty header pyvis injects so #mynetwork fills the viewport.
+
+    # Per-node payload for the click-to-open sidebar.
+    node_info = {}
+    for node, d in G.nodes(data=True):
+        conns = sorted(G[node].items(), key=lambda kv: kv[1]["weight"], reverse=True)
+        node_info[node] = {
+            "name": d["label"],
+            "slug": d["slug"],
+            "color": colors[partition[node]],
+            "community": int(partition[node]),
+            "trainers": d["trainers"],
+            "individuals": d["individuals"],
+            "degree": G.degree(node),
+            "wdegree": int(sum(w["weight"] for w in G[node].values())),
+            "connections": [
+                {"id": nb, "name": G.nodes[nb]["label"], "slug": G.nodes[nb]["slug"],
+                 "weight": w["weight"]}
+                for nb, w in conns
+            ],
+            "topTrainers": list(dict.fromkeys(species_to_trainers.get(node, [])))[:10],
+        }
+
     fullscreen_css = (
         "<style>html,body{margin:0;padding:0;height:100%;overflow:hidden;"
-        "background:#11151c;}.card{border:none!important;width:100%!important;"
+        "background:#11151c;font-family:Verdana,Geneva,sans-serif;}"
+        ".card{border:none!important;width:100%!important;"
         "height:100vh!important;margin:0!important;}#mynetwork{height:100vh!important;"
         "border:none!important;}#loadingBar{display:none!important;}"
-        "center{display:none!important;}</style>"
+        "center{display:none!important;}"
+        "#pkSidebar{position:fixed;top:0;right:0;height:100vh;width:330px;"
+        "background:#171c26;color:#e8eef5;box-shadow:-4px 0 18px rgba(0,0,0,.5);"
+        "transform:translateX(100%);transition:transform .25s ease;z-index:1000;"
+        "overflow-y:auto;box-sizing:border-box;padding:18px;}"
+        "#pkSidebar.open{transform:translateX(0);}"
+        "#pkSidebar .close{position:absolute;top:10px;right:14px;cursor:pointer;"
+        "font-size:22px;color:#8aa0bd;border:none;background:none;}"
+        "#pkSidebar h2{margin:6px 0 2px;font-size:22px;}"
+        "#pkSidebar .sub{color:#8aa0bd;font-size:12px;margin-bottom:12px;}"
+        "#pkSidebar .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;}"
+        "#pkSidebar .stat{background:#202736;border-radius:8px;padding:8px 10px;}"
+        "#pkSidebar .stat b{display:block;font-size:20px;}"
+        "#pkSidebar .stat span{font-size:11px;color:#8aa0bd;}"
+        "#pkSidebar h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;"
+        "color:#8aa0bd;margin:18px 0 6px;border-bottom:1px solid #2a3344;padding-bottom:4px;}"
+        "#pkSidebar .conn{display:flex;align-items:center;gap:8px;padding:4px 6px;"
+        "border-radius:6px;cursor:pointer;}"
+        "#pkSidebar .conn:hover{background:#202736;}"
+        "#pkSidebar .conn img{width:40px;height:30px;object-fit:contain;image-rendering:pixelated;}"
+        "#pkSidebar .conn .n{flex:1;font-size:13px;}"
+        "#pkSidebar .conn .w{font-size:12px;color:#7fd1ff;font-weight:bold;}"
+        "#pkSidebar .tr{font-size:12px;color:#cdd8e6;padding:2px 0;}"
+        "#pkHero{display:flex;align-items:center;gap:12px;}"
+        "#pkHero img{width:96px;height:72px;object-fit:contain;image-rendering:pixelated;}"
+        "</style>"
     )
+
+    sidebar_html = (
+        '<div id="pkSidebar">'
+        '<button class="close" onclick="document.getElementById(\'pkSidebar\').'
+        'classList.remove(\'open\')">&times;</button>'
+        '<div id="pkBody"></div></div>'
+        '<script>const POKE_INFO=' + json.dumps(node_info) + ';</script>'
+        '<script>' + _SIDEBAR_JS + '</script>'
+    )
+
     html = out.read_text().replace("</head>", fullscreen_css + "</head>", 1)
+    html = html.replace("</body>", sidebar_html + "</body>", 1)
     out.write_text(html)
     print("wrote", out)
 
