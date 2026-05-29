@@ -233,6 +233,75 @@ _VILLAIN_BOSS_PARTIES: dict[str, tuple[int, list[tuple[str, int]]]] = {
 }
 
 
+# --- Stronger rival -------------------------------------------------------
+# The rival always uses the starter that counters the player's pick. Party
+# labels are suffixed with the *player's* starter, so map that to the rival's
+# starter line; the ace is evolved by level, giving the right stage per battle.
+_RIVAL_STARTER_LINE = {
+    "Treecko": "SPECIES_TORCHIC",
+    "Torchic": "SPECIES_MUDKIP",
+    "Mudkip": "SPECIES_TREECKO",
+}
+
+# Ordered Hoenn support cast (base species, evolved by level). The first N are
+# used in each battle, so the rival's team grows and evolves over the game.
+_RIVAL_SUPPORT_CAST = (
+    "SPECIES_TAILLOW", "SPECIES_SHROOMISH", "SPECIES_ELECTRIKE",
+    "SPECIES_ARON", "SPECIES_TRAPINCH",
+)
+
+# location -> (support_levels, support_iv, ace_level, ace_iv).
+# The first battle (Route 103) is intentionally left untouched.
+_RIVAL_BATTLES: dict[str, tuple[list[int], int, int, int]] = {
+    "Rustboro": ([13, 14], 25, 15, 50),
+    "Route110": ([18, 19, 20], 50, 21, 100),
+    "Route119": ([30, 31, 31, 32], 100, 33, 150),
+    "Lilycove": ([44, 44, 45, 45, 45], 150, 46, 200),
+}
+
+
+def _format_mixed_party(name: str, mons: list[tuple[str, int, int]]) -> str:
+    blocks = [
+        f"    {{\n    .iv = {iv},\n    .lvl = {level},\n    .species = {species},\n    }}"
+        for species, level, iv in mons
+    ]
+    header = f"static const struct TrainerMonNoItemDefaultMoves sParty_{name}[] = {{"
+    return header + "\n" + ",\n".join(blocks) + "\n};"
+
+
+def apply_stronger_rival(parties_text: str, evolution_text: str) -> str:
+    """Greatly strengthen the rival (May/Brendan) past the first battle.
+
+    Route 103 is left as-is; the later battles gain larger Hoenn teams, and the
+    final Lilycove battle becomes a six-Pokemon roster led by the rival's
+    fully-evolved starter above gym-leader level.
+    """
+
+    evos = parse_evolution_levels(evolution_text)
+    label_pattern = re.compile(
+        r"sParty_(?:May|Brendan)(Rustboro|Route110|Route119|Lilycove)(Treecko|Torchic|Mudkip)\[\]"
+    )
+    full_pattern = re.compile(
+        r"sParty_((?:May|Brendan)(?:Rustboro|Route110|Route119|Lilycove)(?:Treecko|Torchic|Mudkip))\[\]"
+    )
+
+    for name in dict.fromkeys(full_pattern.findall(parties_text)):
+        meta = label_pattern.search("sParty_" + name + "[]")
+        location, player_starter = meta.group(1), meta.group(2)
+        support_levels, support_iv, ace_level, ace_iv = _RIVAL_BATTLES[location]
+
+        mons: list[tuple[str, int, int]] = []
+        for index, level in enumerate(support_levels):
+            base = _RIVAL_SUPPORT_CAST[index]
+            mons.append((evolve_species_to_level(base, level, evos), level, support_iv))
+        ace = evolve_species_to_level(_RIVAL_STARTER_LINE[player_starter], ace_level, evos)
+        mons.append((ace, ace_level, ace_iv))
+
+        parties_text = _replace_villain_party(parties_text, name, _format_mixed_party(name, mons))
+
+    return parties_text
+
+
 def parse_evolution_levels(text: str) -> dict[str, tuple[int, str]]:
     """Parse EVO_LEVEL rows from evolution.h into base -> (level, evolved)."""
 
@@ -1528,6 +1597,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--stronger-rival",
+        action="store_true",
+        help=(
+            "Greatly strengthen the rival (May/Brendan) after the first battle: "
+            "larger Hoenn teams that evolve over the game, culminating in a six-Pokemon "
+            "Lilycove roster led by the fully-evolved starter above gym-leader level. "
+            "The Route 103 battle is left unchanged. Applied before species randomization."
+        ),
+    )
+    parser.add_argument(
         "--restore",
         action="store_true",
         help="Restore original (unrandomized) files from randomizer/ templates.",
@@ -1794,6 +1873,7 @@ def main() -> None:
         # level edits on top of the restored (template) files.
         if not selected_any and (
             has_wild_level_change or has_trainer_level_change or args.stronger_villains
+            or args.stronger_rival
         ):
             if has_wild_level_change:
                 encounters_path = repo_root / "src/data/wild_encounters.json"
@@ -1805,12 +1885,15 @@ def main() -> None:
                 )
                 encounters_path.write_text(encounters)
 
-            if has_trainer_level_change or args.stronger_villains:
+            if has_trainer_level_change or args.stronger_villains or args.stronger_rival:
                 parties_path = repo_root / "src/data/trainer_parties.h"
                 parties = parties_path.read_text()
-                if args.stronger_villains:
+                if args.stronger_villains or args.stronger_rival:
                     evolution_text = (repo_root / "src/data/pokemon/evolution.h").read_text()
-                    parties = apply_stronger_villains(parties, evolution_text)
+                    if args.stronger_villains:
+                        parties = apply_stronger_villains(parties, evolution_text)
+                    if args.stronger_rival:
+                        parties = apply_stronger_rival(parties, evolution_text)
                 if has_trainer_level_change:
                     parties = scale_trainer_party_levels(
                         parties,
@@ -1844,11 +1927,14 @@ def main() -> None:
         starter_code = randomize_species_in_text(starter_code, all_species, per_occurrence=args.per_occurrence)
         (repo_root / "src/starter_choose.c").write_text(starter_code)
 
-    if do_trainers or args.stronger_villains:
+    if do_trainers or args.stronger_villains or args.stronger_rival:
         trainer_parties = (randomizer_dir / "trainer_parties.h").read_text()
-        if args.stronger_villains:
+        if args.stronger_villains or args.stronger_rival:
             evolution_text = (repo_root / "src/data/pokemon/evolution.h").read_text()
-            trainer_parties = apply_stronger_villains(trainer_parties, evolution_text)
+            if args.stronger_villains:
+                trainer_parties = apply_stronger_villains(trainer_parties, evolution_text)
+            if args.stronger_rival:
+                trainer_parties = apply_stronger_rival(trainer_parties, evolution_text)
         if do_trainers:
             trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
         trainer_parties = scale_trainer_party_levels(
