@@ -219,9 +219,6 @@ _VILLAIN_BOSS_PARTIES: dict[str, tuple[int, list[tuple[str, int]]]] = {
         ("SPECIES_MIGHTYENA", 38), ("SPECIES_CROBAT", 39), ("SPECIES_CRAWDAUNT", 39),
         ("SPECIES_SHARPEDO", 40),
     ]),
-    "Matthew": (_VILLAIN_ADMIN_IV, [
-        ("SPECIES_MIGHTYENA", 26), ("SPECIES_GOLBAT", 27), ("SPECIES_SHARPEDO", 28),
-    ]),
 }
 
 
