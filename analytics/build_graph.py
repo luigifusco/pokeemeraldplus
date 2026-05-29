@@ -155,7 +155,7 @@ def write_visualization(G, partition, names) -> None:
     ncomm = max(partition.values()) + 1
     colors = community_palette(ncomm)
     net = Network(
-        height="900px", width="100%", bgcolor="#11151c", font_color="#e8eef5",
+        height="100vh", width="100%", bgcolor="#11151c", font_color="#e8eef5",
         notebook=False, cdn_resources="in_line",
     )
     net.barnes_hut(gravity=-8000, central_gravity=0.3, spring_length=120, spring_strength=0.02)
@@ -182,6 +182,17 @@ def write_visualization(G, partition, names) -> None:
     net.toggle_physics(True)
     out = OUT / "cooccurrence_graph.html"
     net.save_graph(str(out))
+    # Make the canvas truly fullscreen: drop default margins, the bootstrap card
+    # border, and the empty header pyvis injects so #mynetwork fills the viewport.
+    fullscreen_css = (
+        "<style>html,body{margin:0;padding:0;height:100%;overflow:hidden;"
+        "background:#11151c;}.card{border:none!important;width:100%!important;"
+        "height:100vh!important;margin:0!important;}#mynetwork{height:100vh!important;"
+        "border:none!important;}#loadingBar{height:100vh!important;}"
+        "center{display:none!important;}</style>"
+    )
+    html = out.read_text().replace("</head>", fullscreen_css + "</head>", 1)
+    out.write_text(html)
     print("wrote", out)
 
 
