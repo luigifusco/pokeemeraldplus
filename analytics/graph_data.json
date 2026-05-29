@@ -1,0 +1,5465 @@
+{
+  "nodes": [
+    {
+      "id": "SPECIES_GEODUDE",
+      "label": "Geodude",
+      "slug": "geodude",
+      "trainers": 17,
+      "individuals": 27,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_POOCHYENA",
+      "label": "Poochyena",
+      "slug": "poochyena",
+      "trainers": 21,
+      "individuals": 21,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_CARVANHA",
+      "label": "Carvanha",
+      "slug": "carvanha",
+      "trainers": 30,
+      "individuals": 31,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_ZUBAT",
+      "label": "Zubat",
+      "slug": "zubat",
+      "trainers": 23,
+      "individuals": 23,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_SEEDOT",
+      "label": "Seedot",
+      "slug": "seedot",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_SKITTY",
+      "label": "Skitty",
+      "slug": "skitty",
+      "trainers": 11,
+      "individuals": 15,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_TAILLOW",
+      "label": "Taillow",
+      "slug": "taillow",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_ZIGZAGOON",
+      "label": "Zigzagoon",
+      "slug": "zigzagoon",
+      "trainers": 23,
+      "individuals": 24,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_LOTAD",
+      "label": "Lotad",
+      "slug": "lotad",
+      "trainers": 9,
+      "individuals": 9,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_SHIFTRY",
+      "label": "Shiftry",
+      "slug": "shiftry",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_MANECTRIC",
+      "label": "Manectric",
+      "slug": "manectric",
+      "trainers": 26,
+      "individuals": 30,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_PELIPPER",
+      "label": "Pelipper",
+      "slug": "pelipper",
+      "trainers": 39,
+      "individuals": 39,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_XATU",
+      "label": "Xatu",
+      "slug": "xatu",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_ZANGOOSE",
+      "label": "Zangoose",
+      "slug": "zangoose",
+      "trainers": 4,
+      "individuals": 4,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_SEVIPER",
+      "label": "Seviper",
+      "slug": "seviper",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_GYARADOS",
+      "label": "Gyarados",
+      "slug": "gyarados",
+      "trainers": 11,
+      "individuals": 19,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_NUMEL",
+      "label": "Numel",
+      "slug": "numel",
+      "trainers": 35,
+      "individuals": 36,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_MACHOKE",
+      "label": "Machoke",
+      "slug": "machoke",
+      "trainers": 23,
+      "individuals": 28,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_MAKUHITA",
+      "label": "Makuhita",
+      "slug": "makuhita",
+      "trainers": 24,
+      "individuals": 24,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_GOLBAT",
+      "label": "Golbat",
+      "slug": "golbat",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_MIGHTYENA",
+      "label": "Mightyena",
+      "slug": "mightyena",
+      "trainers": 28,
+      "individuals": 29,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_HARIYAMA",
+      "label": "Hariyama",
+      "slug": "hariyama",
+      "trainers": 31,
+      "individuals": 31,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_SHARPEDO",
+      "label": "Sharpedo",
+      "slug": "sharpedo",
+      "trainers": 15,
+      "individuals": 15,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_CROBAT",
+      "label": "Crobat",
+      "slug": "crobat",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_SPOINK",
+      "label": "Spoink",
+      "slug": "spoink",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_SHROOMISH",
+      "label": "Shroomish",
+      "slug": "shroomish",
+      "trainers": 26,
+      "individuals": 26,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_ROSELIA",
+      "label": "Roselia",
+      "slug": "roselia",
+      "trainers": 39,
+      "individuals": 40,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_CLAYDOL",
+      "label": "Claydol",
+      "slug": "claydol",
+      "trainers": 9,
+      "individuals": 9,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_MEDICHAM",
+      "label": "Medicham",
+      "slug": "medicham",
+      "trainers": 19,
+      "individuals": 19,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_GLOOM",
+      "label": "Gloom",
+      "slug": "gloom",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_BRELOOM",
+      "label": "Breloom",
+      "slug": "breloom",
+      "trainers": 19,
+      "individuals": 19,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_SANDSLASH",
+      "label": "Sandslash",
+      "slug": "sandslash",
+      "trainers": 12,
+      "individuals": 13,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_SANDSHREW",
+      "label": "Sandshrew",
+      "slug": "sandshrew",
+      "trainers": 17,
+      "individuals": 21,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_BALTOY",
+      "label": "Baltoy",
+      "slug": "baltoy",
+      "trainers": 11,
+      "individuals": 12,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_MAGNEMITE",
+      "label": "Magnemite",
+      "slug": "magnemite",
+      "trainers": 17,
+      "individuals": 21,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_WHISMUR",
+      "label": "Whismur",
+      "slug": "whismur",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_LOUDRED",
+      "label": "Loudred",
+      "slug": "loudred",
+      "trainers": 21,
+      "individuals": 21,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_MAGNETON",
+      "label": "Magneton",
+      "slug": "magneton",
+      "trainers": 22,
+      "individuals": 24,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_EXPLOUD",
+      "label": "Exploud",
+      "slug": "exploud",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_AZURILL",
+      "label": "Azurill",
+      "slug": "azurill",
+      "trainers": 3,
+      "individuals": 4,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_MARILL",
+      "label": "Marill",
+      "slug": "marill",
+      "trainers": 30,
+      "individuals": 33,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_AZUMARILL",
+      "label": "Azumarill",
+      "slug": "azumarill",
+      "trainers": 8,
+      "individuals": 9,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_LINOONE",
+      "label": "Linoone",
+      "slug": "linoone",
+      "trainers": 31,
+      "individuals": 31,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_SWELLOW",
+      "label": "Swellow",
+      "slug": "swellow",
+      "trainers": 25,
+      "individuals": 25,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_SPINDA",
+      "label": "Spinda",
+      "slug": "spinda",
+      "trainers": 11,
+      "individuals": 12,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_SLAKOTH",
+      "label": "Slakoth",
+      "slug": "slakoth",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 15
+    },
+    {
+      "id": "SPECIES_VIGOROTH",
+      "label": "Vigoroth",
+      "slug": "vigoroth",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_WAILMER",
+      "label": "Wailmer",
+      "slug": "wailmer",
+      "trainers": 29,
+      "individuals": 30,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_TRAPINCH",
+      "label": "Trapinch",
+      "slug": "trapinch",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_SABLEYE",
+      "label": "Sableye",
+      "slug": "sableye",
+      "trainers": 10,
+      "individuals": 10,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_STARMIE",
+      "label": "Starmie",
+      "slug": "starmie",
+      "trainers": 8,
+      "individuals": 9,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_MAWILE",
+      "label": "Mawile",
+      "slug": "mawile",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_ELECTRIKE",
+      "label": "Electrike",
+      "slug": "electrike",
+      "trainers": 13,
+      "individuals": 14,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_CACTURNE",
+      "label": "Cacturne",
+      "slug": "cacturne",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_MUK",
+      "label": "Muk",
+      "slug": "muk",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_KADABRA",
+      "label": "Kadabra",
+      "slug": "kadabra",
+      "trainers": 15,
+      "individuals": 15,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_DODRIO",
+      "label": "Dodrio",
+      "slug": "dodrio",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_ELECTRODE",
+      "label": "Electrode",
+      "slug": "electrode",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_GRAVELER",
+      "label": "Graveler",
+      "slug": "graveler",
+      "trainers": 10,
+      "individuals": 15,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_WAILORD",
+      "label": "Wailord",
+      "slug": "wailord",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_KECLEON",
+      "label": "Kecleon",
+      "slug": "kecleon",
+      "trainers": 10,
+      "individuals": 10,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_LUDICOLO",
+      "label": "Ludicolo",
+      "slug": "ludicolo",
+      "trainers": 9,
+      "individuals": 9,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_DELCATTY",
+      "label": "Delcatty",
+      "slug": "delcatty",
+      "trainers": 15,
+      "individuals": 15,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_WIGGLYTUFF",
+      "label": "Wigglytuff",
+      "slug": "wigglytuff",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 17
+    },
+    {
+      "id": "SPECIES_LAIRON",
+      "label": "Lairon",
+      "slug": "lairon",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_WINGULL",
+      "label": "Wingull",
+      "slug": "wingull",
+      "trainers": 38,
+      "individuals": 38,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_TORKOAL",
+      "label": "Torkoal",
+      "slug": "torkoal",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_SKARMORY",
+      "label": "Skarmory",
+      "slug": "skarmory",
+      "trainers": 12,
+      "individuals": 13,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_TROPIUS",
+      "label": "Tropius",
+      "slug": "tropius",
+      "trainers": 18,
+      "individuals": 18,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_NINETALES",
+      "label": "Ninetales",
+      "slug": "ninetales",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_CAMERUPT",
+      "label": "Camerupt",
+      "slug": "camerupt",
+      "trainers": 14,
+      "individuals": 14,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_LUNATONE",
+      "label": "Lunatone",
+      "slug": "lunatone",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_BANETTE",
+      "label": "Banette",
+      "slug": "banette",
+      "trainers": 4,
+      "individuals": 5,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_DUSKULL",
+      "label": "Duskull",
+      "slug": "duskull",
+      "trainers": 4,
+      "individuals": 4,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_SHUPPET",
+      "label": "Shuppet",
+      "slug": "shuppet",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_GRUMPIG",
+      "label": "Grumpig",
+      "slug": "grumpig",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_LUVDISC",
+      "label": "Luvdisc",
+      "slug": "luvdisc",
+      "trainers": 12,
+      "individuals": 16,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_SEAKING",
+      "label": "Seaking",
+      "slug": "seaking",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_GOLDEEN",
+      "label": "Goldeen",
+      "slug": "goldeen",
+      "trainers": 16,
+      "individuals": 17,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_LOMBRE",
+      "label": "Lombre",
+      "slug": "lombre",
+      "trainers": 27,
+      "individuals": 27,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_CORPHISH",
+      "label": "Corphish",
+      "slug": "corphish",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_CLAMPERL",
+      "label": "Clamperl",
+      "slug": "clamperl",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_MEDITITE",
+      "label": "Meditite",
+      "slug": "meditite",
+      "trainers": 23,
+      "individuals": 24,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_WHISCASH",
+      "label": "Whiscash",
+      "slug": "whiscash",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_ARON",
+      "label": "Aron",
+      "slug": "aron",
+      "trainers": 9,
+      "individuals": 10,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_HORSEA",
+      "label": "Horsea",
+      "slug": "horsea",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_RHYHORN",
+      "label": "Rhyhorn",
+      "slug": "rhyhorn",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_RHYDON",
+      "label": "Rhydon",
+      "slug": "rhydon",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_AGGRON",
+      "label": "Aggron",
+      "slug": "aggron",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_TENTACOOL",
+      "label": "Tentacool",
+      "slug": "tentacool",
+      "trainers": 28,
+      "individuals": 33,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_TENTACRUEL",
+      "label": "Tentacruel",
+      "slug": "tentacruel",
+      "trainers": 15,
+      "individuals": 15,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_SEALEO",
+      "label": "Sealeo",
+      "slug": "sealeo",
+      "trainers": 3,
+      "individuals": 4,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_SPHEAL",
+      "label": "Spheal",
+      "slug": "spheal",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_STARYU",
+      "label": "Staryu",
+      "slug": "staryu",
+      "trainers": 20,
+      "individuals": 25,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_MACHOP",
+      "label": "Machop",
+      "slug": "machop",
+      "trainers": 23,
+      "individuals": 23,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_MACHAMP",
+      "label": "Machamp",
+      "slug": "machamp",
+      "trainers": 7,
+      "individuals": 8,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_VOLTORB",
+      "label": "Voltorb",
+      "slug": "voltorb",
+      "trainers": 7,
+      "individuals": 8,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_SLUGMA",
+      "label": "Slugma",
+      "slug": "slugma",
+      "trainers": 23,
+      "individuals": 24,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_MAGCARGO",
+      "label": "Magcargo",
+      "slug": "magcargo",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_NUZLEAF",
+      "label": "Nuzleaf",
+      "slug": "nuzleaf",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_SURSKIT",
+      "label": "Surskit",
+      "slug": "surskit",
+      "trainers": 8,
+      "individuals": 15,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_BEAUTIFLY",
+      "label": "Beautifly",
+      "slug": "beautifly",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_SILCOON",
+      "label": "Silcoon",
+      "slug": "silcoon",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_WURMPLE",
+      "label": "Wurmple",
+      "slug": "wurmple",
+      "trainers": 6,
+      "individuals": 10,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_DUSTOX",
+      "label": "Dustox",
+      "slug": "dustox",
+      "trainers": 9,
+      "individuals": 9,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_CASCOON",
+      "label": "Cascoon",
+      "slug": "cascoon",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_MASQUERAIN",
+      "label": "Masquerain",
+      "slug": "masquerain",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_ABRA",
+      "label": "Abra",
+      "slug": "abra",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 13
+    },
+    {
+      "id": "SPECIES_KIRLIA",
+      "label": "Kirlia",
+      "slug": "kirlia",
+      "trainers": 8,
+      "individuals": 8,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_RALTS",
+      "label": "Ralts",
+      "slug": "ralts",
+      "trainers": 7,
+      "individuals": 8,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_GIRAFARIG",
+      "label": "Girafarig",
+      "slug": "girafarig",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 14
+    },
+    {
+      "id": "SPECIES_SOLROCK",
+      "label": "Solrock",
+      "slug": "solrock",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_ALAKAZAM",
+      "label": "Alakazam",
+      "slug": "alakazam",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_WOBBUFFET",
+      "label": "Wobbuffet",
+      "slug": "wobbuffet",
+      "trainers": 4,
+      "individuals": 4,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_NATU",
+      "label": "Natu",
+      "slug": "natu",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_GOLDUCK",
+      "label": "Golduck",
+      "slug": "golduck",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_ABSOL",
+      "label": "Absol",
+      "slug": "absol",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_CRAWDAUNT",
+      "label": "Crawdaunt",
+      "slug": "crawdaunt",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_DUSCLOPS",
+      "label": "Dusclops",
+      "slug": "dusclops",
+      "trainers": 2,
+      "individuals": 3,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_WALREIN",
+      "label": "Walrein",
+      "slug": "walrein",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_GLALIE",
+      "label": "Glalie",
+      "slug": "glalie",
+      "trainers": 1,
+      "individuals": 2,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_FLYGON",
+      "label": "Flygon",
+      "slug": "flygon",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_KINGDRA",
+      "label": "Kingdra",
+      "slug": "kingdra",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_SALAMENCE",
+      "label": "Salamence",
+      "slug": "salamence",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_ALTARIA",
+      "label": "Altaria",
+      "slug": "altaria",
+      "trainers": 20,
+      "individuals": 25,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_SHELGON",
+      "label": "Shelgon",
+      "slug": "shelgon",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_NOSEPASS",
+      "label": "Nosepass",
+      "slug": "nosepass",
+      "trainers": 10,
+      "individuals": 10,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_SLAKING",
+      "label": "Slaking",
+      "slug": "slaking",
+      "trainers": 9,
+      "individuals": 13,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_SWABLU",
+      "label": "Swablu",
+      "slug": "swablu",
+      "trainers": 11,
+      "individuals": 13,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_ODDISH",
+      "label": "Oddish",
+      "slug": "oddish",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_PIKACHU",
+      "label": "Pikachu",
+      "slug": "pikachu",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_MINUN",
+      "label": "Minun",
+      "slug": "minun",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 21
+    },
+    {
+      "id": "SPECIES_PLUSLE",
+      "label": "Plusle",
+      "slug": "plusle",
+      "trainers": 12,
+      "individuals": 12,
+      "community": 21
+    },
+    {
+      "id": "SPECIES_GULPIN",
+      "label": "Gulpin",
+      "slug": "gulpin",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_GARDEVOIR",
+      "label": "Gardevoir",
+      "slug": "gardevoir",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_MILOTIC",
+      "label": "Milotic",
+      "slug": "milotic",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_MAGIKARP",
+      "label": "Magikarp",
+      "slug": "magikarp",
+      "trainers": 8,
+      "individuals": 13,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_BARBOACH",
+      "label": "Barboach",
+      "slug": "barboach",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_DODUO",
+      "label": "Doduo",
+      "slug": "doduo",
+      "trainers": 10,
+      "individuals": 10,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_BAGON",
+      "label": "Bagon",
+      "slug": "bagon",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_NINJASK",
+      "label": "Ninjask",
+      "slug": "ninjask",
+      "trainers": 11,
+      "individuals": 12,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_KOFFING",
+      "label": "Koffing",
+      "slug": "koffing",
+      "trainers": 11,
+      "individuals": 25,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_LANTURN",
+      "label": "Lanturn",
+      "slug": "lanturn",
+      "trainers": 5,
+      "individuals": 5,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_WEEZING",
+      "label": "Weezing",
+      "slug": "weezing",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_CASTFORM",
+      "label": "Castform",
+      "slug": "castform",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 24
+    },
+    {
+      "id": "SPECIES_SEADRA",
+      "label": "Seadra",
+      "slug": "seadra",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_VILEPLUME",
+      "label": "Vileplume",
+      "slug": "vileplume",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_FEEBAS",
+      "label": "Feebas",
+      "slug": "feebas",
+      "trainers": 2,
+      "individuals": 3,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_CHINCHOU",
+      "label": "Chinchou",
+      "slug": "chinchou",
+      "trainers": 4,
+      "individuals": 4,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_TREECKO",
+      "label": "Treecko",
+      "slug": "treecko",
+      "trainers": 4,
+      "individuals": 4,
+      "community": 9
+    },
+    {
+      "id": "SPECIES_GROVYLE",
+      "label": "Grovyle",
+      "slug": "grovyle",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_TORCHIC",
+      "label": "Torchic",
+      "slug": "torchic",
+      "trainers": 4,
+      "individuals": 4,
+      "community": 1
+    },
+    {
+      "id": "SPECIES_COMBUSKEN",
+      "label": "Combusken",
+      "slug": "combusken",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_MUDKIP",
+      "label": "Mudkip",
+      "slug": "mudkip",
+      "trainers": 4,
+      "individuals": 4,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_MARSHTOMP",
+      "label": "Marshtomp",
+      "slug": "marshtomp",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_PINSIR",
+      "label": "Pinsir",
+      "slug": "pinsir",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 2
+    },
+    {
+      "id": "SPECIES_BELLOSSOM",
+      "label": "Bellossom",
+      "slug": "bellossom",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 8
+    },
+    {
+      "id": "SPECIES_NINCADA",
+      "label": "Nincada",
+      "slug": "nincada",
+      "trainers": 4,
+      "individuals": 5,
+      "community": 23
+    },
+    {
+      "id": "SPECIES_VOLBEAT",
+      "label": "Volbeat",
+      "slug": "volbeat",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 4
+    },
+    {
+      "id": "SPECIES_ILLUMISE",
+      "label": "Illumise",
+      "slug": "illumise",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 4
+    },
+    {
+      "id": "SPECIES_GOLEM",
+      "label": "Golem",
+      "slug": "golem",
+      "trainers": 6,
+      "individuals": 6,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_KABUTO",
+      "label": "Kabuto",
+      "slug": "kabuto",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_ONIX",
+      "label": "Onix",
+      "slug": "onix",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_OMANYTE",
+      "label": "Omanyte",
+      "slug": "omanyte",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_KABUTOPS",
+      "label": "Kabutops",
+      "slug": "kabutops",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_OMASTAR",
+      "label": "Omastar",
+      "slug": "omastar",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_AERODACTYL",
+      "label": "Aerodactyl",
+      "slug": "aerodactyl",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_STEELIX",
+      "label": "Steelix",
+      "slug": "steelix",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 0
+    },
+    {
+      "id": "SPECIES_HITMONTOP",
+      "label": "Hitmontop",
+      "slug": "hitmontop",
+      "trainers": 4,
+      "individuals": 4,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_HITMONCHAN",
+      "label": "Hitmonchan",
+      "slug": "hitmonchan",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_HITMONLEE",
+      "label": "Hitmonlee",
+      "slug": "hitmonlee",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 19
+    },
+    {
+      "id": "SPECIES_MAREEP",
+      "label": "Mareep",
+      "slug": "mareep",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_FLAAFFY",
+      "label": "Flaaffy",
+      "slug": "flaaffy",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_RAICHU",
+      "label": "Raichu",
+      "slug": "raichu",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_AMPHAROS",
+      "label": "Ampharos",
+      "slug": "ampharos",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_ELECTABUZZ",
+      "label": "Electabuzz",
+      "slug": "electabuzz",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_PONYTA",
+      "label": "Ponyta",
+      "slug": "ponyta",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_GROWLITHE",
+      "label": "Growlithe",
+      "slug": "growlithe",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_HOUNDOUR",
+      "label": "Houndour",
+      "slug": "houndour",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_RAPIDASH",
+      "label": "Rapidash",
+      "slug": "rapidash",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_ARCANINE",
+      "label": "Arcanine",
+      "slug": "arcanine",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_HOUNDOOM",
+      "label": "Houndoom",
+      "slug": "houndoom",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 18
+    },
+    {
+      "id": "SPECIES_CHANSEY",
+      "label": "Chansey",
+      "slug": "chansey",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_KANGASKHAN",
+      "label": "Kangaskhan",
+      "slug": "kangaskhan",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_BLISSEY",
+      "label": "Blissey",
+      "slug": "blissey",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_TAUROS",
+      "label": "Tauros",
+      "slug": "tauros",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 3
+    },
+    {
+      "id": "SPECIES_DRATINI",
+      "label": "Dratini",
+      "slug": "dratini",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_DRAGONAIR",
+      "label": "Dragonair",
+      "slug": "dragonair",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_HOOTHOOT",
+      "label": "Hoothoot",
+      "slug": "hoothoot",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_NOCTOWL",
+      "label": "Noctowl",
+      "slug": "noctowl",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_DRAGONITE",
+      "label": "Dragonite",
+      "slug": "dragonite",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 20
+    },
+    {
+      "id": "SPECIES_SLOWPOKE",
+      "label": "Slowpoke",
+      "slug": "slowpoke",
+      "trainers": 3,
+      "individuals": 3,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_DROWZEE",
+      "label": "Drowzee",
+      "slug": "drowzee",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_HYPNO",
+      "label": "Hypno",
+      "slug": "hypno",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_SLOWKING",
+      "label": "Slowking",
+      "slug": "slowking",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_POLIWAG",
+      "label": "Poliwag",
+      "slug": "poliwag",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_POLIWHIRL",
+      "label": "Poliwhirl",
+      "slug": "poliwhirl",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_LAPRAS",
+      "label": "Lapras",
+      "slug": "lapras",
+      "trainers": 2,
+      "individuals": 2,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_POLITOED",
+      "label": "Politoed",
+      "slug": "politoed",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 16
+    },
+    {
+      "id": "SPECIES_METAGROSS",
+      "label": "Metagross",
+      "slug": "metagross",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_ARMALDO",
+      "label": "Armaldo",
+      "slug": "armaldo",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_CRADILY",
+      "label": "Cradily",
+      "slug": "cradily",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 22
+    },
+    {
+      "id": "SPECIES_BELDUM",
+      "label": "Beldum",
+      "slug": "beldum",
+      "trainers": 7,
+      "individuals": 7,
+      "community": 5
+    },
+    {
+      "id": "SPECIES_CHIMECHO",
+      "label": "Chimecho",
+      "slug": "chimecho",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 6
+    },
+    {
+      "id": "SPECIES_CHARMANDER",
+      "label": "Charmander",
+      "slug": "charmander",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 7
+    },
+    {
+      "id": "SPECIES_BULBASAUR",
+      "label": "Bulbasaur",
+      "slug": "bulbasaur",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 10
+    },
+    {
+      "id": "SPECIES_GROUDON",
+      "label": "Groudon",
+      "slug": "groudon",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 11
+    },
+    {
+      "id": "SPECIES_KYOGRE",
+      "label": "Kyogre",
+      "slug": "kyogre",
+      "trainers": 1,
+      "individuals": 1,
+      "community": 12
+    }
+  ],
+  "edges": [
+    {
+      "source": "SPECIES_GEODUDE",
+      "target": "SPECIES_NOSEPASS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_GEODUDE",
+      "target": "SPECIES_MACHOP",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_GEODUDE",
+      "target": "SPECIES_NUMEL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_GEODUDE",
+      "target": "SPECIES_GRAVELER",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_GEODUDE",
+      "target": "SPECIES_BALTOY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_LOTAD",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_SEEDOT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_SKITTY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_TAILLOW",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_ZIGZAGOON",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_ZUBAT",
+      "weight": 6
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_CARVANHA",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_ARON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_MAKUHITA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_WHISMUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_NUMEL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_PELIPPER",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_GULPIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_MARILL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_SANDSHREW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POOCHYENA",
+      "target": "SPECIES_SHROOMISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_ZUBAT",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_SHARPEDO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_TENTACOOL",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_WINGULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_GYARADOS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_CHINCHOU",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_LANTURN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_FEEBAS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CARVANHA",
+      "target": "SPECIES_MAGIKARP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_WAILMER",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_NUMEL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZUBAT",
+      "target": "SPECIES_BALTOY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_LOTAD",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_SKITTY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_TAILLOW",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_ZIGZAGOON",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_LOMBRE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SEEDOT",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_LOTAD",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_TAILLOW",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_ZIGZAGOON",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_DELCATTY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_SWABLU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_MARILL",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_ROSELIA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_SHROOMISH",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_WINGULL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_LINOONE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_LOMBRE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKITTY",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_LOTAD",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_ZIGZAGOON",
+      "weight": 7
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_SWELLOW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_LOMBRE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_ARON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_MAKUHITA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_WHISMUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_WINGULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TAILLOW",
+      "target": "SPECIES_LINOONE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_LOTAD",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_MAKUHITA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_GULPIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_ARON",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_WHISMUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_SHROOMISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_NUMEL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_TROPIUS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_WINGULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZIGZAGOON",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOTAD",
+      "target": "SPECIES_LOMBRE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOTAD",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOTAD",
+      "target": "SPECIES_TORCHIC",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LOTAD",
+      "target": "SPECIES_SHROOMISH",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LOTAD",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_MANECTRIC",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_MAGNETON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_SWELLOW",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_TRAPINCH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_WAILMER",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_DODRIO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_ELECTRODE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_KADABRA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_ABSOL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_CACTURNE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_CRAWDAUNT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_NOSEPASS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_DELCATTY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHIFTRY",
+      "target": "SPECIES_LINOONE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_MAKUHITA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_WAILMER",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_HARIYAMA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_LAIRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_LINOONE",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_GOLDUCK",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_MAGNETON",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_VOLTORB",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_MACHAMP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_DELCATTY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_SWELLOW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_ELECTRODE",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_MAREEP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_FLAAFFY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_PIKACHU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_AMPHAROS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_RAICHU",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_ELECTABUZZ",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_LOUDRED",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MANECTRIC",
+      "target": "SPECIES_EXPLOUD",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_XATU",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_CACTURNE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_MAWILE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_ROSELIA",
+      "weight": 7
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_NUMEL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_SLUGMA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_MAGCARGO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_ALTARIA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_SKARMORY",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_SWABLU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_TROPIUS",
+      "weight": 9
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_DODUO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_SWELLOW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_LANTURN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_MACHOKE",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_MACHOP",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_TENTACOOL",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_GROVYLE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_COMBUSKEN",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_LOMBRE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_BRELOOM",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_DELCATTY",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_MARILL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_AZUMARILL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_SEAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_DRATINI",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_DRAGONAIR",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_HOOTHOOT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_NOCTOWL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_DRAGONITE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_STARYU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PELIPPER",
+      "target": "SPECIES_STARMIE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_KIRLIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_CLAYDOL",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_LUNATONE",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_SOLROCK",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_TROPIUS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_SWELLOW",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_ALTARIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_SLOWPOKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_DROWZEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_HYPNO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_XATU",
+      "target": "SPECIES_SLOWKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ZANGOOSE",
+      "target": "SPECIES_SEVIPER",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SEVIPER",
+      "target": "SPECIES_KECLEON",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_GYARADOS",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GYARADOS",
+      "target": "SPECIES_MILOTIC",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GYARADOS",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_GYARADOS",
+      "target": "SPECIES_WAILORD",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GYARADOS",
+      "target": "SPECIES_WHISCASH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GYARADOS",
+      "target": "SPECIES_TENTACOOL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_GYARADOS",
+      "target": "SPECIES_SHARPEDO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GYARADOS",
+      "target": "SPECIES_MAGIKARP",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_ROSELIA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_WINGULL",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_SLUGMA",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_TORKOAL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_ODDISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_MARILL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_SHROOMISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_MACHOP",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_SWABLU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_BALTOY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_MAKUHITA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_TROPIUS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NUMEL",
+      "target": "SPECIES_GRAVELER",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_MAKUHITA",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_MACHOP",
+      "weight": 6
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_MACHAMP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_WINGULL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_SPHEAL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_TENTACOOL",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_HARIYAMA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MACHOKE",
+      "target": "SPECIES_GOLEM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_WAILMER",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_MACHOP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_MEDITITE",
+      "weight": 8
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_LINOONE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_ARON",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_WHISMUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_LOUDRED",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_SWELLOW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_TROPIUS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAKUHITA",
+      "target": "SPECIES_WINGULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GOLBAT",
+      "target": "SPECIES_MIGHTYENA",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_GOLBAT",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_SHARPEDO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_CROBAT",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_ABSOL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_CACTURNE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_CRAWDAUNT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_SWELLOW",
+      "weight": 9
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_LINOONE",
+      "weight": 9
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_ARON",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_LOUDRED",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_HARIYAMA",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_LAIRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_LOMBRE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_DELCATTY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MIGHTYENA",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_WAILMER",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_LINOONE",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_MEDICHAM",
+      "weight": 13
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_MEDITITE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_CHINCHOU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_ARON",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_LOUDRED",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_SWELLOW",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_LAIRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_HITMONTOP",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_MACHAMP",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_HITMONCHAN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_HARIYAMA",
+      "target": "SPECIES_HITMONLEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_CROBAT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_MEDICHAM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_SABLEYE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_STARYU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_STARMIE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_TENTACOOL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_WAILMER",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_SPHEAL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHARPEDO",
+      "target": "SPECIES_LANTURN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CROBAT",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SPOINK",
+      "target": "SPECIES_SABLEYE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SPOINK",
+      "target": "SPECIES_MEDITITE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_ROSELIA",
+      "weight": 8
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_GLOOM",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_BEAUTIFLY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_WHISMUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_LOUDRED",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_ODDISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_SWABLU",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_MARILL",
+      "weight": 6
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_DUSKULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_WINGULL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_LOMBRE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_GULPIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SHROOMISH",
+      "target": "SPECIES_SANDSHREW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_GLOOM",
+      "weight": 8
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_BRELOOM",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_MAWILE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_WINGULL",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_WAILMER",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_ALTARIA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_DELCATTY",
+      "weight": 8
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_GARDEVOIR",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_MAGNETON",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_MARILL",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_AZUMARILL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_SEAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_SWABLU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_BELLOSSOM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_GRAVELER",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ROSELIA",
+      "target": "SPECIES_MEDICHAM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_MEDICHAM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_LUNATONE",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_SOLROCK",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_LANTURN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_SLOWPOKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_DROWZEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_HYPNO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_SLOWKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_AGGRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_ARMALDO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_CRADILY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_METAGROSS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CLAYDOL",
+      "target": "SPECIES_SKARMORY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_SABLEYE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_TORKOAL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_KIRLIA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_BANETTE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_HITMONTOP",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_MACHAMP",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_HITMONCHAN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MEDICHAM",
+      "target": "SPECIES_HITMONLEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GLOOM",
+      "target": "SPECIES_BRELOOM",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_GLOOM",
+      "target": "SPECIES_SWABLU",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_GLOOM",
+      "target": "SPECIES_AZUMARILL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_LOUDRED",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_EXPLOUD",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_SWABLU",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_ALTARIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_VILEPLUME",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_DELCATTY",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_MARILL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_AZUMARILL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_SEAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_KECLEON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_SWELLOW",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_BRELOOM",
+      "target": "SPECIES_LOMBRE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SANDSLASH",
+      "target": "SPECIES_BALTOY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSLASH",
+      "target": "SPECIES_SANDSHREW",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SANDSLASH",
+      "target": "SPECIES_NINETALES",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSLASH",
+      "target": "SPECIES_TROPIUS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSLASH",
+      "target": "SPECIES_LINOONE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSLASH",
+      "target": "SPECIES_SWELLOW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSLASH",
+      "target": "SPECIES_NOSEPASS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSHREW",
+      "target": "SPECIES_BALTOY",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_SANDSHREW",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSHREW",
+      "target": "SPECIES_LINOONE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSHREW",
+      "target": "SPECIES_SWELLOW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSHREW",
+      "target": "SPECIES_MARILL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SANDSHREW",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSHREW",
+      "target": "SPECIES_GULPIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SANDSHREW",
+      "target": "SPECIES_NOSEPASS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGNEMITE",
+      "target": "SPECIES_WHISMUR",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_MAGNEMITE",
+      "target": "SPECIES_LOUDRED",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGNEMITE",
+      "target": "SPECIES_VOLTORB",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_WHISMUR",
+      "target": "SPECIES_ARON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_MAGNETON",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_ARON",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_LINOONE",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_SWELLOW",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_LAIRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_KECLEON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_VIGOROTH",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_LOUDRED",
+      "target": "SPECIES_SPINDA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_EXPLOUD",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_SWELLOW",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_TRAPINCH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_WAILMER",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_MUK",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_VOLTORB",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_ALTARIA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_DELCATTY",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_GARDEVOIR",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_ELECTRODE",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_MAREEP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_FLAAFFY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_PIKACHU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_AMPHAROS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_RAICHU",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGNETON",
+      "target": "SPECIES_ELECTABUZZ",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_EXPLOUD",
+      "target": "SPECIES_SLAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_EXPLOUD",
+      "target": "SPECIES_SPINDA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AZURILL",
+      "target": "SPECIES_MARILL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_AZURILL",
+      "target": "SPECIES_AZUMARILL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_AZUMARILL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_HORSEA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_SPHEAL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_LOMBRE",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_WINGULL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_DELCATTY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MARILL",
+      "target": "SPECIES_GULPIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AZUMARILL",
+      "target": "SPECIES_DELCATTY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AZUMARILL",
+      "target": "SPECIES_SEAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AZUMARILL",
+      "target": "SPECIES_WINGULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_SWELLOW",
+      "weight": 11
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_GOLDUCK",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_SLAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_SPINDA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_VIGOROTH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_ARON",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_LAIRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_LOMBRE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_DELCATTY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LINOONE",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_TRAPINCH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_WAILMER",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_KADABRA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_MAWILE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_NATU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_ARON",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_LAIRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_LOMBRE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_SKARMORY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_DELCATTY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWELLOW",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SPINDA",
+      "target": "SPECIES_SLAKING",
+      "weight": 7
+    },
+    {
+      "source": "SPECIES_SPINDA",
+      "target": "SPECIES_VIGOROTH",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SPINDA",
+      "target": "SPECIES_CHANSEY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SPINDA",
+      "target": "SPECIES_KANGASKHAN",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SPINDA",
+      "target": "SPECIES_BLISSEY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SPINDA",
+      "target": "SPECIES_TAUROS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_VIGOROTH",
+      "target": "SPECIES_SLAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_TRAPINCH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_ELECTRIKE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_HORSEA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_TENTACOOL",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_WINGULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_STARYU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_LUVDISC",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_STARMIE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILMER",
+      "target": "SPECIES_SEADRA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SABLEYE",
+      "target": "SPECIES_SKARMORY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SABLEYE",
+      "target": "SPECIES_DUSKULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SABLEYE",
+      "target": "SPECIES_GRUMPIG",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SABLEYE",
+      "target": "SPECIES_BANETTE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SABLEYE",
+      "target": "SPECIES_DUSCLOPS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SABLEYE",
+      "target": "SPECIES_ABSOL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_STARMIE",
+      "target": "SPECIES_MAWILE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_STARMIE",
+      "target": "SPECIES_LUVDISC",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAWILE",
+      "target": "SPECIES_KADABRA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ELECTRIKE",
+      "target": "SPECIES_VOLTORB",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_ELECTRIKE",
+      "target": "SPECIES_ARON",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ELECTRIKE",
+      "target": "SPECIES_TROPIUS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ELECTRIKE",
+      "target": "SPECIES_WINGULL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ELECTRIKE",
+      "target": "SPECIES_GULPIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CACTURNE",
+      "target": "SPECIES_ABSOL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CACTURNE",
+      "target": "SPECIES_CRAWDAUNT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KADABRA",
+      "target": "SPECIES_DODRIO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KADABRA",
+      "target": "SPECIES_ELECTRODE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KADABRA",
+      "target": "SPECIES_SOLROCK",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_KADABRA",
+      "target": "SPECIES_NATU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KADABRA",
+      "target": "SPECIES_WOBBUFFET",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KADABRA",
+      "target": "SPECIES_LUNATONE",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_KADABRA",
+      "target": "SPECIES_KIRLIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KADABRA",
+      "target": "SPECIES_BANETTE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DODRIO",
+      "target": "SPECIES_ELECTRODE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DODRIO",
+      "target": "SPECIES_DODUO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ELECTRODE",
+      "target": "SPECIES_MAREEP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ELECTRODE",
+      "target": "SPECIES_FLAAFFY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ELECTRODE",
+      "target": "SPECIES_PIKACHU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ELECTRODE",
+      "target": "SPECIES_AMPHAROS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ELECTRODE",
+      "target": "SPECIES_RAICHU",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ELECTRODE",
+      "target": "SPECIES_ELECTABUZZ",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GRAVELER",
+      "target": "SPECIES_KECLEON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GRAVELER",
+      "target": "SPECIES_WAILORD",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GRAVELER",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GRAVELER",
+      "target": "SPECIES_NOSEPASS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GRAVELER",
+      "target": "SPECIES_GOLEM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GRAVELER",
+      "target": "SPECIES_MACHOP",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WAILORD",
+      "target": "SPECIES_KECLEON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILORD",
+      "target": "SPECIES_LUDICOLO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILORD",
+      "target": "SPECIES_MILOTIC",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILORD",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILORD",
+      "target": "SPECIES_WHISCASH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILORD",
+      "target": "SPECIES_KINGDRA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WAILORD",
+      "target": "SPECIES_LUVDISC",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_TORKOAL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_MILOTIC",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_WHISCASH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_COMBUSKEN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_TROPIUS",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_MARSHTOMP",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_SLUGMA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LUDICOLO",
+      "target": "SPECIES_DELCATTY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DELCATTY",
+      "target": "SPECIES_ALTARIA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_DELCATTY",
+      "target": "SPECIES_GARDEVOIR",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_DELCATTY",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_DELCATTY",
+      "target": "SPECIES_SEAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DELCATTY",
+      "target": "SPECIES_LOMBRE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DELCATTY",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LAIRON",
+      "target": "SPECIES_RHYHORN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_TENTACOOL",
+      "weight": 7
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_SLUGMA",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_ODDISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_STARYU",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_TROPIUS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_NATU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_GOLDEEN",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_MACHOP",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_GROVYLE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_COMBUSKEN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_LOMBRE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WINGULL",
+      "target": "SPECIES_TREECKO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_CAMERUPT",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_SLUGMA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_MUDKIP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_MAGCARGO",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_PONYTA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_GROWLITHE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_HOUNDOUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_RAPIDASH",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_ARCANINE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TORKOAL",
+      "target": "SPECIES_HOUNDOOM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_ALTARIA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_SWABLU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_TROPIUS",
+      "weight": 6
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_DODUO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_DRATINI",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_DRAGONAIR",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_HOOTHOOT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_NOCTOWL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_DRAGONITE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_AGGRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_ARMALDO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_CRADILY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SKARMORY",
+      "target": "SPECIES_METAGROSS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_NINETALES",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_ALTARIA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_SWABLU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_DODUO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_GROVYLE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_SLUGMA",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_COMBUSKEN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_MARSHTOMP",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_DRATINI",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_DRAGONAIR",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_HOOTHOOT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_NOCTOWL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_TROPIUS",
+      "target": "SPECIES_DRAGONITE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_SLUGMA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_MAGCARGO",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_PONYTA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_GROWLITHE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_HOUNDOUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_RAPIDASH",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_ARCANINE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_HOUNDOOM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CAMERUPT",
+      "target": "SPECIES_GOLEM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUNATONE",
+      "target": "SPECIES_BANETTE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUNATONE",
+      "target": "SPECIES_ALAKAZAM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUNATONE",
+      "target": "SPECIES_SOLROCK",
+      "weight": 6
+    },
+    {
+      "source": "SPECIES_LUNATONE",
+      "target": "SPECIES_SLOWPOKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_LUNATONE",
+      "target": "SPECIES_DROWZEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUNATONE",
+      "target": "SPECIES_HYPNO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LUNATONE",
+      "target": "SPECIES_SLOWKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BANETTE",
+      "target": "SPECIES_DUSCLOPS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BANETTE",
+      "target": "SPECIES_KIRLIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DUSKULL",
+      "target": "SPECIES_SHUPPET",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_DUSKULL",
+      "target": "SPECIES_GRUMPIG",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUVDISC",
+      "target": "SPECIES_CRAWDAUNT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUVDISC",
+      "target": "SPECIES_KINGDRA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_LUVDISC",
+      "target": "SPECIES_SEALEO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUVDISC",
+      "target": "SPECIES_WHISCASH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LUVDISC",
+      "target": "SPECIES_SEADRA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_GOLDEEN",
+      "target": "SPECIES_BARBOACH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GOLDEEN",
+      "target": "SPECIES_MAGIKARP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GOLDEEN",
+      "target": "SPECIES_SPHEAL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GOLDEEN",
+      "target": "SPECIES_TENTACOOL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOMBRE",
+      "target": "SPECIES_CLAMPERL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOMBRE",
+      "target": "SPECIES_CORPHISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LOMBRE",
+      "target": "SPECIES_NUZLEAF",
+      "weight": 8
+    },
+    {
+      "source": "SPECIES_LOMBRE",
+      "target": "SPECIES_COMBUSKEN",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_LOMBRE",
+      "target": "SPECIES_MARSHTOMP",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_LOMBRE",
+      "target": "SPECIES_SLUGMA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_LOMBRE",
+      "target": "SPECIES_GROVYLE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CORPHISH",
+      "target": "SPECIES_CLAMPERL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDITITE",
+      "target": "SPECIES_WHISCASH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDITITE",
+      "target": "SPECIES_MACHOP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDITITE",
+      "target": "SPECIES_RALTS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDITITE",
+      "target": "SPECIES_KIRLIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDITITE",
+      "target": "SPECIES_HITMONTOP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MEDITITE",
+      "target": "SPECIES_MACHAMP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_CRAWDAUNT",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_KINGDRA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_SEALEO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_MILOTIC",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_POLIWAG",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_WALREIN",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_POLIWHIRL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_LAPRAS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WHISCASH",
+      "target": "SPECIES_POLITOED",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HORSEA",
+      "target": "SPECIES_SEADRA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_RHYDON",
+      "target": "SPECIES_AGGRON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AGGRON",
+      "target": "SPECIES_ARMALDO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AGGRON",
+      "target": "SPECIES_CRADILY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AGGRON",
+      "target": "SPECIES_METAGROSS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TENTACOOL",
+      "target": "SPECIES_TENTACRUEL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TENTACOOL",
+      "target": "SPECIES_MAGIKARP",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_TENTACOOL",
+      "target": "SPECIES_MACHOP",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_TENTACOOL",
+      "target": "SPECIES_FEEBAS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TENTACRUEL",
+      "target": "SPECIES_MILOTIC",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_TENTACRUEL",
+      "target": "SPECIES_MACHOP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SEALEO",
+      "target": "SPECIES_GLALIE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SEALEO",
+      "target": "SPECIES_WALREIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SEALEO",
+      "target": "SPECIES_CRAWDAUNT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SEALEO",
+      "target": "SPECIES_KINGDRA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MACHOP",
+      "target": "SPECIES_MACHAMP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MACHAMP",
+      "target": "SPECIES_HITMONTOP",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_MACHAMP",
+      "target": "SPECIES_HITMONCHAN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MACHAMP",
+      "target": "SPECIES_HITMONLEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SLUGMA",
+      "target": "SPECIES_GROVYLE",
+      "weight": 6
+    },
+    {
+      "source": "SPECIES_SLUGMA",
+      "target": "SPECIES_MARSHTOMP",
+      "weight": 6
+    },
+    {
+      "source": "SPECIES_SLUGMA",
+      "target": "SPECIES_MUDKIP",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGCARGO",
+      "target": "SPECIES_PONYTA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGCARGO",
+      "target": "SPECIES_GROWLITHE",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGCARGO",
+      "target": "SPECIES_HOUNDOUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGCARGO",
+      "target": "SPECIES_RAPIDASH",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_MAGCARGO",
+      "target": "SPECIES_ARCANINE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGCARGO",
+      "target": "SPECIES_HOUNDOOM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SURSKIT",
+      "target": "SPECIES_MASQUERAIN",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SURSKIT",
+      "target": "SPECIES_WURMPLE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SURSKIT",
+      "target": "SPECIES_BEAUTIFLY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SURSKIT",
+      "target": "SPECIES_DUSTOX",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SURSKIT",
+      "target": "SPECIES_NINJASK",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_BEAUTIFLY",
+      "target": "SPECIES_SILCOON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BEAUTIFLY",
+      "target": "SPECIES_WURMPLE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BEAUTIFLY",
+      "target": "SPECIES_DUSTOX",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_BEAUTIFLY",
+      "target": "SPECIES_MASQUERAIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SILCOON",
+      "target": "SPECIES_WURMPLE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WURMPLE",
+      "target": "SPECIES_CASCOON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WURMPLE",
+      "target": "SPECIES_DUSTOX",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WURMPLE",
+      "target": "SPECIES_MASQUERAIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WURMPLE",
+      "target": "SPECIES_NINCADA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DUSTOX",
+      "target": "SPECIES_CASCOON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DUSTOX",
+      "target": "SPECIES_MASQUERAIN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DUSTOX",
+      "target": "SPECIES_NINJASK",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_KIRLIA",
+      "target": "SPECIES_RALTS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SOLROCK",
+      "target": "SPECIES_ALAKAZAM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SOLROCK",
+      "target": "SPECIES_SLOWPOKE",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SOLROCK",
+      "target": "SPECIES_DROWZEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SOLROCK",
+      "target": "SPECIES_HYPNO",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SOLROCK",
+      "target": "SPECIES_SLOWKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WOBBUFFET",
+      "target": "SPECIES_NATU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NATU",
+      "target": "SPECIES_SWABLU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NATU",
+      "target": "SPECIES_ALTARIA",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ABSOL",
+      "target": "SPECIES_CRAWDAUNT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CRAWDAUNT",
+      "target": "SPECIES_KINGDRA",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_CRAWDAUNT",
+      "target": "SPECIES_POLIWAG",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CRAWDAUNT",
+      "target": "SPECIES_WALREIN",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_CRAWDAUNT",
+      "target": "SPECIES_POLIWHIRL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CRAWDAUNT",
+      "target": "SPECIES_LAPRAS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_CRAWDAUNT",
+      "target": "SPECIES_POLITOED",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DUSCLOPS",
+      "target": "SPECIES_SLAKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WALREIN",
+      "target": "SPECIES_GLALIE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WALREIN",
+      "target": "SPECIES_KINGDRA",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_WALREIN",
+      "target": "SPECIES_POLIWAG",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_WALREIN",
+      "target": "SPECIES_POLIWHIRL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WALREIN",
+      "target": "SPECIES_LAPRAS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_WALREIN",
+      "target": "SPECIES_POLITOED",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_FLYGON",
+      "target": "SPECIES_ALTARIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_FLYGON",
+      "target": "SPECIES_KINGDRA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_FLYGON",
+      "target": "SPECIES_SALAMENCE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_FLYGON",
+      "target": "SPECIES_SHELGON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KINGDRA",
+      "target": "SPECIES_ALTARIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KINGDRA",
+      "target": "SPECIES_SALAMENCE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KINGDRA",
+      "target": "SPECIES_SHELGON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KINGDRA",
+      "target": "SPECIES_POLIWAG",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KINGDRA",
+      "target": "SPECIES_POLIWHIRL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_KINGDRA",
+      "target": "SPECIES_LAPRAS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_KINGDRA",
+      "target": "SPECIES_POLITOED",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SALAMENCE",
+      "target": "SPECIES_ALTARIA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SALAMENCE",
+      "target": "SPECIES_SHELGON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_SHELGON",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_SWABLU",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_BAGON",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_VILEPLUME",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_GARDEVOIR",
+      "weight": 5
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_DRATINI",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_DRAGONAIR",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_HOOTHOOT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_NOCTOWL",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ALTARIA",
+      "target": "SPECIES_DRAGONITE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NOSEPASS",
+      "target": "SPECIES_GOLEM",
+      "weight": 4
+    },
+    {
+      "source": "SPECIES_NOSEPASS",
+      "target": "SPECIES_KABUTO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NOSEPASS",
+      "target": "SPECIES_ONIX",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_NOSEPASS",
+      "target": "SPECIES_KABUTOPS",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_NOSEPASS",
+      "target": "SPECIES_OMANYTE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NOSEPASS",
+      "target": "SPECIES_OMASTAR",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_NOSEPASS",
+      "target": "SPECIES_AERODACTYL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NOSEPASS",
+      "target": "SPECIES_STEELIX",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SLAKING",
+      "target": "SPECIES_GARDEVOIR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SLAKING",
+      "target": "SPECIES_CHANSEY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SLAKING",
+      "target": "SPECIES_KANGASKHAN",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_SLAKING",
+      "target": "SPECIES_BLISSEY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_SLAKING",
+      "target": "SPECIES_TAUROS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SWABLU",
+      "target": "SPECIES_ODDISH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PIKACHU",
+      "target": "SPECIES_FLAAFFY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MINUN",
+      "target": "SPECIES_PLUSLE",
+      "weight": 12
+    },
+    {
+      "source": "SPECIES_GULPIN",
+      "target": "SPECIES_NINJASK",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGIKARP",
+      "target": "SPECIES_BARBOACH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_MAGIKARP",
+      "target": "SPECIES_FEEBAS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NINJASK",
+      "target": "SPECIES_KOFFING",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_NINJASK",
+      "target": "SPECIES_NINCADA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KOFFING",
+      "target": "SPECIES_WEEZING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KOFFING",
+      "target": "SPECIES_NINCADA",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_VOLBEAT",
+      "target": "SPECIES_ILLUMISE",
+      "weight": 7
+    },
+    {
+      "source": "SPECIES_GOLEM",
+      "target": "SPECIES_KABUTO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GOLEM",
+      "target": "SPECIES_ONIX",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_GOLEM",
+      "target": "SPECIES_KABUTOPS",
+      "weight": 3
+    },
+    {
+      "source": "SPECIES_GOLEM",
+      "target": "SPECIES_OMANYTE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GOLEM",
+      "target": "SPECIES_OMASTAR",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_GOLEM",
+      "target": "SPECIES_AERODACTYL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GOLEM",
+      "target": "SPECIES_STEELIX",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KABUTO",
+      "target": "SPECIES_ONIX",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ONIX",
+      "target": "SPECIES_KABUTOPS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_ONIX",
+      "target": "SPECIES_OMANYTE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ONIX",
+      "target": "SPECIES_OMASTAR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_OMANYTE",
+      "target": "SPECIES_KABUTOPS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KABUTOPS",
+      "target": "SPECIES_OMASTAR",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_KABUTOPS",
+      "target": "SPECIES_AERODACTYL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KABUTOPS",
+      "target": "SPECIES_STEELIX",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_OMASTAR",
+      "target": "SPECIES_AERODACTYL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_OMASTAR",
+      "target": "SPECIES_STEELIX",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AERODACTYL",
+      "target": "SPECIES_STEELIX",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HITMONTOP",
+      "target": "SPECIES_HITMONCHAN",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_HITMONTOP",
+      "target": "SPECIES_HITMONLEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HITMONCHAN",
+      "target": "SPECIES_HITMONLEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_RAICHU",
+      "target": "SPECIES_AMPHAROS",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_RAICHU",
+      "target": "SPECIES_ELECTABUZZ",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_AMPHAROS",
+      "target": "SPECIES_ELECTABUZZ",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_PONYTA",
+      "target": "SPECIES_GROWLITHE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GROWLITHE",
+      "target": "SPECIES_HOUNDOUR",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_GROWLITHE",
+      "target": "SPECIES_RAPIDASH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HOUNDOUR",
+      "target": "SPECIES_RAPIDASH",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_RAPIDASH",
+      "target": "SPECIES_ARCANINE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_RAPIDASH",
+      "target": "SPECIES_HOUNDOOM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ARCANINE",
+      "target": "SPECIES_HOUNDOOM",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_CHANSEY",
+      "target": "SPECIES_KANGASKHAN",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_KANGASKHAN",
+      "target": "SPECIES_BLISSEY",
+      "weight": 2
+    },
+    {
+      "source": "SPECIES_KANGASKHAN",
+      "target": "SPECIES_TAUROS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_BLISSEY",
+      "target": "SPECIES_TAUROS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DRAGONAIR",
+      "target": "SPECIES_HOOTHOOT",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_DRAGONAIR",
+      "target": "SPECIES_NOCTOWL",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_NOCTOWL",
+      "target": "SPECIES_DRAGONITE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SLOWPOKE",
+      "target": "SPECIES_DROWZEE",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_SLOWPOKE",
+      "target": "SPECIES_HYPNO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_HYPNO",
+      "target": "SPECIES_SLOWKING",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_POLIWHIRL",
+      "target": "SPECIES_LAPRAS",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_LAPRAS",
+      "target": "SPECIES_POLITOED",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_METAGROSS",
+      "target": "SPECIES_ARMALDO",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_METAGROSS",
+      "target": "SPECIES_CRADILY",
+      "weight": 1
+    },
+    {
+      "source": "SPECIES_ARMALDO",
+      "target": "SPECIES_CRADILY",
+      "weight": 1
+    }
+  ]
+}
