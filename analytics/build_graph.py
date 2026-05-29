@@ -159,6 +159,9 @@ def write_visualization(G, partition, names) -> None:
         notebook=False, cdn_resources="in_line",
     )
     net.barnes_hut(gravity=-8000, central_gravity=0.3, spring_length=120, spring_strength=0.02)
+    # Skip the upfront stabilization pass so the graph appears immediately and
+    # you can watch the force-directed layout settle live.
+    net.options.physics.toggle_stabilization(False)
     maxt = max(d["trainers"] for _, d in G.nodes(data=True))
     for node, d in G.nodes(data=True):
         size = 18 + 42 * (d["trainers"] / maxt)
