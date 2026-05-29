@@ -63,6 +63,23 @@ class RandomizeArgsTest(unittest.TestCase):
         self.assertIn("--per-map-consistent", args)
         self.assertNotIn("--per-occurrence", args)
 
+    def test_stronger_villains_with_restore(self) -> None:
+        cfg = BuildConfig(stronger_villains=True)
+        args = to_randomize_args(cfg, python_executable="py")
+        self.assertIn("--restore", args)
+        self.assertIn("--stronger-villains", args)
+
+    def test_stronger_villains_off_by_default(self) -> None:
+        args = to_randomize_args(BuildConfig(), python_executable="py")
+        self.assertNotIn("--stronger-villains", args)
+
+    def test_stronger_villains_with_trainer_target(self) -> None:
+        cfg = BuildConfig(randomize_trainers=True, stronger_villains=True)
+        args = to_randomize_args(cfg, python_executable="py")
+        self.assertIn("--trainers", args)
+        self.assertIn("--stronger-villains", args)
+        self.assertNotIn("--restore", args)
+
     def test_level_scaling_without_targets(self) -> None:
         cfg = BuildConfig(level_scale=LevelScale(wild_percent=25, trainer_percent=-10))
         args = to_randomize_args(cfg, python_executable="py")

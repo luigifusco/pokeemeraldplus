@@ -140,6 +140,196 @@ def convert_trainers_to_default_moves(text: str) -> str:
     return text
 
 
+# ---------------------------------------------------------------------------
+# Stronger villains preprocessing
+# ---------------------------------------------------------------------------
+#
+# Rewrites Team Aqua / Team Magma party arrays in trainer_parties.h to make the
+# evil teams a real threat:
+#   * Grunts keep their vanilla levels but every mon is evolved to whatever it
+#     would be at that level, every grunt has at least two Pokemon, and the
+#     late-game base grunts (Aqua/Magma Hideout, Seafloor Cavern, Space Center)
+#     field three.
+#   * Bosses (Archie, the three Maxie fights) and minibosses (Matt, Matthew, the
+#     two Shelly fights, the three Tabitha fights) get curated, mostly-evolved
+#     teams whose ace sits at the level of the gym leader for their area.
+#
+# This runs as a text transform on the same template that the species/level
+# randomizers consume, so it composes with them (when trainers are randomized
+# the buffed levels and party sizes survive while the species get shuffled).
+
+EVO_LEVEL_ENTRY_PATTERN = re.compile(
+    r"\[(SPECIES_[A-Z0-9_]+)\]\s*=\s*\{\{EVO_LEVEL,\s*(\d+),\s*(SPECIES_[A-Z0-9_]+)\}"
+)
+
+# Core evolution lines used to pad grunt teams (base species, evolved by level).
+_AQUA_GRUNT_CORE = ("SPECIES_POOCHYENA", "SPECIES_ZUBAT", "SPECIES_CARVANHA", "SPECIES_WAILMER")
+_MAGMA_GRUNT_CORE = ("SPECIES_POOCHYENA", "SPECIES_ZUBAT", "SPECIES_NUMEL", "SPECIES_BALTOY")
+
+# Substrings that mark a grunt party as Team Magma; everything else is Team Aqua.
+_MAGMA_GRUNT_HINTS = ("Magma", "SpaceCenter", "MtChimney", "JaggedPass")
+# Substrings that mark a late-game "base" grunt who should field three Pokemon.
+_BASE_GRUNT_HINTS = ("Hideout", "SeafloorCavern", "SpaceCenter")
+
+_VILLAIN_LEADER_IV = 200
+_VILLAIN_ADMIN_IV = 150
+
+# Curated boss/miniboss rosters: name -> (iv, [(species, level), ...]).
+# Ace level matches the gym leader for the encounter's area.
+_VILLAIN_BOSS_PARTIES: dict[str, tuple[int, list[tuple[str, int]]]] = {
+    # --- Leaders (ace at area gym-leader level) ---
+    "MaxieMtChimney": (_VILLAIN_LEADER_IV, [
+        ("SPECIES_MIGHTYENA", 26), ("SPECIES_GOLBAT", 27), ("SPECIES_HOUNDOOM", 28),
+        ("SPECIES_WEEZING", 28), ("SPECIES_CAMERUPT", 29),
+    ]),
+    "MaxieMagmaHideout": (_VILLAIN_LEADER_IV, [
+        ("SPECIES_MIGHTYENA", 37), ("SPECIES_CROBAT", 38), ("SPECIES_CLAYDOL", 38),
+        ("SPECIES_HOUNDOOM", 39), ("SPECIES_WEEZING", 39), ("SPECIES_CAMERUPT", 40),
+    ]),
+    "MaxieMossdeep": (_VILLAIN_LEADER_IV, [
+        ("SPECIES_MIGHTYENA", 43), ("SPECIES_CROBAT", 44), ("SPECIES_CLAYDOL", 44),
+        ("SPECIES_MAGCARGO", 45), ("SPECIES_HOUNDOOM", 45), ("SPECIES_CAMERUPT", 46),
+    ]),
+    "Archie": (_VILLAIN_LEADER_IV, [
+        ("SPECIES_MIGHTYENA", 43), ("SPECIES_CROBAT", 44), ("SPECIES_TENTACRUEL", 44),
+        ("SPECIES_CRAWDAUNT", 45), ("SPECIES_WALREIN", 45), ("SPECIES_SHARPEDO", 46),
+    ]),
+    # --- Minibosses / admins (ace at area gym-leader level) ---
+    "TabithaMtChimney": (_VILLAIN_ADMIN_IV, [
+        ("SPECIES_MIGHTYENA", 27), ("SPECIES_GOLBAT", 28), ("SPECIES_WEEZING", 28),
+        ("SPECIES_CAMERUPT", 29),
+    ]),
+    "TabithaMagmaHideout": (_VILLAIN_ADMIN_IV, [
+        ("SPECIES_MIGHTYENA", 38), ("SPECIES_CROBAT", 39), ("SPECIES_CLAYDOL", 39),
+        ("SPECIES_CAMERUPT", 40),
+    ]),
+    "TabithaMossdeep": (_VILLAIN_ADMIN_IV, [
+        ("SPECIES_MIGHTYENA", 44), ("SPECIES_CROBAT", 45), ("SPECIES_MAGCARGO", 45),
+        ("SPECIES_CAMERUPT", 46),
+    ]),
+    "ShellyWeatherInstitute": (_VILLAIN_ADMIN_IV, [
+        ("SPECIES_MIGHTYENA", 31), ("SPECIES_GOLBAT", 32), ("SPECIES_CRAWDAUNT", 32),
+        ("SPECIES_SHARPEDO", 33),
+    ]),
+    "ShellySeafloorCavern": (_VILLAIN_ADMIN_IV, [
+        ("SPECIES_MIGHTYENA", 44), ("SPECIES_CROBAT", 45), ("SPECIES_CRAWDAUNT", 45),
+        ("SPECIES_SHARPEDO", 46),
+    ]),
+    "Matt": (_VILLAIN_ADMIN_IV, [
+        ("SPECIES_MIGHTYENA", 38), ("SPECIES_CROBAT", 39), ("SPECIES_CRAWDAUNT", 39),
+        ("SPECIES_SHARPEDO", 40),
+    ]),
+    "Matthew": (_VILLAIN_ADMIN_IV, [
+        ("SPECIES_MIGHTYENA", 26), ("SPECIES_GOLBAT", 27), ("SPECIES_SHARPEDO", 28),
+    ]),
+}
+
+
+def parse_evolution_levels(text: str) -> dict[str, tuple[int, str]]:
+    """Parse EVO_LEVEL rows from evolution.h into base -> (level, evolved)."""
+
+    evos: dict[str, tuple[int, str]] = {}
+    for m in EVO_LEVEL_ENTRY_PATTERN.finditer(text):
+        evos[m.group(1)] = (int(m.group(2)), m.group(3))
+    return evos
+
+
+def evolve_species_to_level(species: str, level: int, evos: dict[str, tuple[int, str]]) -> str:
+    """Follow the level-up evolution chain as far as ``level`` allows."""
+
+    current = species
+    seen = {current}
+    while current in evos:
+        evo_level, evolved = evos[current]
+        if level < evo_level or evolved in seen:
+            break
+        current = evolved
+        seen.add(current)
+    return current
+
+
+def _format_villain_party(name: str, mons: list[tuple[str, int]], iv: int) -> str:
+    blocks = [
+        f"    {{\n    .iv = {iv},\n    .lvl = {level},\n    .species = {species},\n    }}"
+        for species, level in mons
+    ]
+    header = f"static const struct TrainerMonNoItemDefaultMoves sParty_{name}[] = {{"
+    return header + "\n" + ",\n".join(blocks) + "\n};"
+
+
+def _replace_villain_party(text: str, name: str, block: str) -> str:
+    pattern = re.compile(
+        r"static const struct TrainerMonNoItemDefaultMoves sParty_"
+        + re.escape(name)
+        + r"\[\] = \{.*?\n\};",
+        re.DOTALL,
+    )
+    return pattern.sub(lambda _match: block, text, count=1)
+
+
+def _parse_villain_party(text: str, name: str) -> list[tuple[str, int]] | None:
+    match = re.search(
+        r"sParty_" + re.escape(name) + r"\[\] = \{(.*?)\n\};", text, re.DOTALL
+    )
+    if match is None:
+        return None
+    mons: list[tuple[str, int]] = []
+    for block in re.finditer(r"\{(.*?)\}", match.group(1), re.DOTALL):
+        body = block.group(1)
+        species = re.search(r"\.species\s*=\s*(SPECIES_[A-Z0-9_]+)", body)
+        level = re.search(r"\.lvl\s*=\s*(\d+)", body)
+        if species and level:
+            mons.append((species.group(1), int(level.group(1))))
+    return mons
+
+
+def _buff_grunt_party(name: str, mons: list[tuple[str, int]], evos: dict[str, tuple[int, str]]) -> list[tuple[str, int]]:
+    is_magma = any(hint in name for hint in _MAGMA_GRUNT_HINTS)
+    core = _MAGMA_GRUNT_CORE if is_magma else _AQUA_GRUNT_CORE
+
+    out = [(evolve_species_to_level(species, level, evos), level) for species, level in mons]
+    if not out:
+        return out
+
+    target = 3 if any(hint in name for hint in _BASE_GRUNT_HINTS) else 2
+    if len(out) >= target:
+        return out
+
+    pad_level = max(level for _species, level in out)
+    present = {species for species, _level in out}
+    index = 0
+    while len(out) < target:
+        candidate = evolve_species_to_level(core[index % len(core)], pad_level, evos)
+        if candidate not in present or index >= len(core):
+            out.append((candidate, pad_level))
+            present.add(candidate)
+        index += 1
+    return out
+
+
+def apply_stronger_villains(parties_text: str, evolution_text: str) -> str:
+    """Rewrite Team Aqua / Team Magma parties to be substantially stronger."""
+
+    evos = parse_evolution_levels(evolution_text)
+
+    for name, (iv, mons) in _VILLAIN_BOSS_PARTIES.items():
+        if re.search(r"sParty_" + re.escape(name) + r"\[\]", parties_text):
+            parties_text = _replace_villain_party(
+                parties_text, name, _format_villain_party(name, mons, iv)
+            )
+
+    for name in re.findall(r"sParty_(Grunt[A-Za-z0-9_]+)\[\]", parties_text):
+        mons = _parse_villain_party(parties_text, name)
+        if not mons:
+            continue
+        buffed = _buff_grunt_party(name, mons, evos)
+        parties_text = _replace_villain_party(
+            parties_text, name, _format_villain_party(name, buffed, 0)
+        )
+
+    return parties_text
+
+
 def _field_value(block: str, field: str) -> str | None:
     match = re.search(rf"\.{field}\s*=\s*([^,\n}}]+)", block)
     return match.group(1).strip() if match else None
@@ -1310,6 +1500,16 @@ def parse_args() -> argparse.Namespace:
         help="Randomize wilds, starters, and trainers (default if no flags are given).",
     )
     parser.add_argument(
+        "--stronger-villains",
+        action="store_true",
+        help=(
+            "Make Team Aqua and Team Magma stronger: bosses and minibosses get curated "
+            "teams whose ace is at the gym-leader level for their area, and grunts keep "
+            "their levels but are evolved and given more Pokemon (three for late-game "
+            "base grunts). Applied before species randomization so it composes with it."
+        ),
+    )
+    parser.add_argument(
         "--restore",
         action="store_true",
         help="Restore original (unrandomized) files from randomizer/ templates.",
@@ -1574,7 +1774,9 @@ def main() -> None:
         # Allow "restore + level changes" as a convenience mode (used by the GUI):
         # when no randomization targets are selected, apply only the requested
         # level edits on top of the restored (template) files.
-        if not selected_any and (has_wild_level_change or has_trainer_level_change):
+        if not selected_any and (
+            has_wild_level_change or has_trainer_level_change or args.stronger_villains
+        ):
             if has_wild_level_change:
                 encounters_path = repo_root / "src/data/wild_encounters.json"
                 encounters = encounters_path.read_text()
@@ -1585,14 +1787,18 @@ def main() -> None:
                 )
                 encounters_path.write_text(encounters)
 
-            if has_trainer_level_change:
+            if has_trainer_level_change or args.stronger_villains:
                 parties_path = repo_root / "src/data/trainer_parties.h"
                 parties = parties_path.read_text()
-                parties = scale_trainer_party_levels(
-                    parties,
-                    trainer_level_percent,
-                    fixed_level=trainer_fixed_level,
-                )
+                if args.stronger_villains:
+                    evolution_text = (repo_root / "src/data/pokemon/evolution.h").read_text()
+                    parties = apply_stronger_villains(parties, evolution_text)
+                if has_trainer_level_change:
+                    parties = scale_trainer_party_levels(
+                        parties,
+                        trainer_level_percent,
+                        fixed_level=trainer_fixed_level,
+                    )
                 parties_path.write_text(parties)
             write_run_metadata(randomizer_dir, args)
         return
@@ -1620,9 +1826,13 @@ def main() -> None:
         starter_code = randomize_species_in_text(starter_code, all_species, per_occurrence=args.per_occurrence)
         (repo_root / "src/starter_choose.c").write_text(starter_code)
 
-    if do_trainers:
+    if do_trainers or args.stronger_villains:
         trainer_parties = (randomizer_dir / "trainer_parties.h").read_text()
-        trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
+        if args.stronger_villains:
+            evolution_text = (repo_root / "src/data/pokemon/evolution.h").read_text()
+            trainer_parties = apply_stronger_villains(trainer_parties, evolution_text)
+        if do_trainers:
+            trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
         trainer_parties = scale_trainer_party_levels(
             trainer_parties,
             trainer_level_percent,

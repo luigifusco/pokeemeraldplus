@@ -84,6 +84,7 @@ class BuildConfig:
     randomize_starters: bool = False
     randomize_trainers: bool = False
     random_mode: str = RandomMode.GLOBAL
+    stronger_villains: bool = False
     level_scale: LevelScale = field(default_factory=LevelScale)
     randomize_level_up_moves: bool = False
     randomize_egg_moves: bool = False
@@ -237,6 +238,9 @@ def to_randomize_args(
             "--guaranteed-starting-moves",
             str(_clamp(cfg.guaranteed_starting_moves, 0, 4)),
         ])
+
+    if cfg.stronger_villains:
+        argv.append("--stronger-villains")
 
     if cfg.evo_mode == EvoMode.HARDCODED:
         argv.append("--hardcoded-random-evos")
