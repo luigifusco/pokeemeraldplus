@@ -244,6 +244,9 @@ class MakeArgsTest(unittest.TestCase):
             "FAST_INTRO=0",
             "FORCE_DOUBLE_BATTLES=0",
             "NO_EXP=0",
+            "NO_EXP_WILD=0",
+            "NO_EXP_TRAINER=0",
+            "NO_BATTLE_ITEMS=0",
             "FIRST_SHOP_POKEBALLS=0",
             "RANDOM_EVOLUTIONS=0",
             "HARDCODED_RANDOM_EVOLUTIONS=0",
@@ -312,6 +315,16 @@ class MakeArgsTest(unittest.TestCase):
         self.assertIn("PREVENT_EVOLUTION_CANCEL=1", on)
         off = to_make_args(BuildConfig(prevent_evolution_cancel=False), jobs=1)
         self.assertIn("PREVENT_EVOLUTION_CANCEL=0", off)
+
+    def test_no_exp_wild_and_trainer_toggles(self) -> None:
+        self.assertIn("NO_EXP_WILD=1", to_make_args(BuildConfig(no_exp_wild=True), jobs=1))
+        self.assertIn("NO_EXP_WILD=0", to_make_args(BuildConfig(no_exp_wild=False), jobs=1))
+        self.assertIn("NO_EXP_TRAINER=1", to_make_args(BuildConfig(no_exp_trainer=True), jobs=1))
+        self.assertIn("NO_EXP_TRAINER=0", to_make_args(BuildConfig(no_exp_trainer=False), jobs=1))
+
+    def test_no_battle_items_toggle(self) -> None:
+        self.assertIn("NO_BATTLE_ITEMS=1", to_make_args(BuildConfig(no_battle_items=True), jobs=1))
+        self.assertIn("NO_BATTLE_ITEMS=0", to_make_args(BuildConfig(no_battle_items=False), jobs=1))
 
 
 class ReportArgsTest(unittest.TestCase):

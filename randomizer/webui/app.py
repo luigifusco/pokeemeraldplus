@@ -83,8 +83,11 @@ class BuildConfigModel(BaseModel):
     force_doubles: bool = False
     steal_trainer_team: bool = False
     no_exp: bool = False
+    no_exp_wild: bool = False
+    no_exp_trainer: bool = False
     negative_exp: bool = False
     no_pokeballs: bool = False
+    no_battle_items: bool = False
     first_shop_pokeballs: bool = False
     money_for_moves: bool = False
     start_with_super_rare_candy: bool = False

@@ -3341,6 +3341,24 @@ static void Cmd_jumpiftype(void)
         gBattlescriptCurrInstr += 7;
 }
 
+#ifndef NO_EXP
+static bool32 NoExpForCurrentBattle(void)
+{
+    // Build-time toggles that suppress EXP gain for a specific battle type.
+    // NO_EXP_WILD / NO_EXP_TRAINER suppress it only for the matching battle type.
+    bool32 noExp = FALSE;
+#ifdef NO_EXP_TRAINER
+    if (gBattleTypeFlags & BATTLE_TYPE_TRAINER)
+        noExp = TRUE;
+#endif
+#ifdef NO_EXP_WILD
+    if (!(gBattleTypeFlags & BATTLE_TYPE_TRAINER))
+        noExp = TRUE;
+#endif
+    return noExp;
+}
+#endif
+
 static void Cmd_getexp(void)
 {
     u16 item;
@@ -3523,13 +3541,23 @@ static void Cmd_getexp(void)
                     MonGainEVs(&gPlayerParty[gBattleStruct->expGetterMonId], gBattleMons[gBattlerFainted].species);
                     gBattleMoveDamage = 0;
 #else
-                    PREPARE_MON_NICK_WITH_PREFIX_BUFFER(gBattleTextBuff1, gBattleStruct->expGetterBattlerId, gBattleStruct->expGetterMonId);
-                    // buffer 'gained' or 'gained a boosted'
-                    PREPARE_STRING_BUFFER(gBattleTextBuff2, i);
-                    PREPARE_WORD_NUMBER_BUFFER(gBattleTextBuff3, 5, gBattleMoveDamage);
+                    if (NoExpForCurrentBattle())
+                    {
+                        // Build-time toggle (wild/trainer specific): prevent EXP gain.
+                        // Keep original EV-gain behavior for mons that would have received EXP.
+                        MonGainEVs(&gPlayerParty[gBattleStruct->expGetterMonId], gBattleMons[gBattlerFainted].species);
+                        gBattleMoveDamage = 0;
+                    }
+                    else
+                    {
+                        PREPARE_MON_NICK_WITH_PREFIX_BUFFER(gBattleTextBuff1, gBattleStruct->expGetterBattlerId, gBattleStruct->expGetterMonId);
+                        // buffer 'gained' or 'gained a boosted'
+                        PREPARE_STRING_BUFFER(gBattleTextBuff2, i);
+                        PREPARE_WORD_NUMBER_BUFFER(gBattleTextBuff3, 5, gBattleMoveDamage);
 
-                    PrepareStringBattle(STRINGID_PKMNGAINEDEXP, gBattleStruct->expGetterBattlerId);
-                    MonGainEVs(&gPlayerParty[gBattleStruct->expGetterMonId], gBattleMons[gBattlerFainted].species);
+                        PrepareStringBattle(STRINGID_PKMNGAINEDEXP, gBattleStruct->expGetterBattlerId);
+                        MonGainEVs(&gPlayerParty[gBattleStruct->expGetterMonId], gBattleMons[gBattlerFainted].species);
+                    }
 #endif
                 }
                 gBattleStruct->sentInPokes >>= 1;

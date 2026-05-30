@@ -993,6 +993,10 @@ static void Task_UseStatIncreaseItem(u8 taskId)
 // e.g. X Attack, Guard Spec
 void ItemUseInBattle_StatIncrease(u8 taskId)
 {
+#ifdef NO_BATTLE_ITEMS
+    // Build-time toggle: prevent using bag items/berries in battle (balls still allowed).
+    DisplayDadsAdviceCannotUseItemMessage(taskId, gTasks[taskId].tUsingRegisteredKeyItem);
+#else
     u16 partyId = gBattlerPartyIndexes[gBattlerInMenuId];
 
     if (ExecuteTableBasedItemEffect(&gPlayerParty[partyId], gSpecialVar_ItemId, partyId, 0) != FALSE)
@@ -1007,6 +1011,7 @@ void ItemUseInBattle_StatIncrease(u8 taskId)
         gTasks[taskId].func = Task_UseStatIncreaseItem;
         gTasks[taskId].data[8] = 0;
     }
+#endif
 }
 
 static void ItemUseInBattle_ShowPartyMenu(u8 taskId)
@@ -1025,6 +1030,11 @@ static void ItemUseInBattle_ShowPartyMenu(u8 taskId)
 
 void ItemUseInBattle_Medicine(u8 taskId)
 {
+#ifdef NO_BATTLE_ITEMS
+    // Build-time toggle: prevent using bag items/berries in battle (balls still allowed).
+    DisplayDadsAdviceCannotUseItemMessage(taskId, gTasks[taskId].tUsingRegisteredKeyItem);
+    return;
+#endif
     gItemUseCB = ItemUseCB_Medicine;
     ItemUseInBattle_ShowPartyMenu(taskId);
 }
@@ -1038,6 +1048,11 @@ void ItemUseInBattle_SacredAsh(u8 taskId)
 
 void ItemUseInBattle_PPRecovery(u8 taskId)
 {
+#ifdef NO_BATTLE_ITEMS
+    // Build-time toggle: prevent using bag items/berries in battle (balls still allowed).
+    DisplayDadsAdviceCannotUseItemMessage(taskId, gTasks[taskId].tUsingRegisteredKeyItem);
+    return;
+#endif
     gItemUseCB = ItemUseCB_PPRecovery;
     ItemUseInBattle_ShowPartyMenu(taskId);
 }

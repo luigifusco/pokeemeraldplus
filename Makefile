@@ -226,6 +226,20 @@ ifeq ($(NO_EXP),1)
 	CPPFLAGS += -DNO_EXP
 endif
 
+# Compile-time toggle: wild Pokémon give no experience (trainer battles still do).
+# Usage: make NO_EXP_WILD=1
+NO_EXP_WILD ?= 0
+ifeq ($(NO_EXP_WILD),1)
+	CPPFLAGS += -DNO_EXP_WILD
+endif
+
+# Compile-time toggle: trainer Pokémon give no experience (wild battles still do).
+# Usage: make NO_EXP_TRAINER=1
+NO_EXP_TRAINER ?= 0
+ifeq ($(NO_EXP_TRAINER),1)
+	CPPFLAGS += -DNO_EXP_TRAINER
+endif
+
 # Compile-time toggle: start the game with the Super Rare Candy key item.
 # Usage: make START_WITH_SUPER_RARE_CANDY=1
 START_WITH_SUPER_RARE_CANDY ?= 0
@@ -245,6 +259,14 @@ endif
 NO_POKEBALLS ?= 0
 ifeq ($(NO_POKEBALLS),1)
 	CPPFLAGS += -DNO_POKEBALLS
+endif
+
+# Compile-time toggle: prevent using bag items and berries in battle.
+# Poké Balls (and escape items) are still allowed.
+# Usage: make NO_BATTLE_ITEMS=1
+NO_BATTLE_ITEMS ?= 0
+ifeq ($(NO_BATTLE_ITEMS),1)
+	CPPFLAGS += -DNO_BATTLE_ITEMS
 endif
 
 # Compile-time toggle: stock Poké Balls in Oldale Mart before the first rival fight.
