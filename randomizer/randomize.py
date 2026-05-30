@@ -401,40 +401,43 @@ def apply_stronger_wally_trainers(trainers_text: str) -> str:
 # trainers are also randomized, the conversion to default-move structs drops
 # the moves uniformly, so the mon simply uses its level-up moveset instead.
 
-# sParty_<Leader>1 -> (species, level, heldItem, (move, move, move, move)).
+# sParty_<Leader>1 -> list of (species, level, heldItem, (move, move, move, move))
+# Pokemon appended to that leader's first-battle roster.
 _STRONGER_GYM_LEADER_ADDS = {
-    "Roxanne1": (
-        "SPECIES_ONIX", 16, "ITEM_SITRUS_BERRY",
-        ("MOVE_ROCK_TOMB", "MOVE_ROCK_THROW", "MOVE_SCREECH", "MOVE_BIND"),
-    ),
-    "Brawly1": (
-        "SPECIES_HITMONTOP", 20, "ITEM_SITRUS_BERRY",
-        ("MOVE_TRIPLE_KICK", "MOVE_ROLLING_KICK", "MOVE_REVENGE", "MOVE_DETECT"),
-    ),
-    "Wattson1": (
-        "SPECIES_MAREEP", 25, "ITEM_SITRUS_BERRY",
-        ("MOVE_SHOCK_WAVE", "MOVE_THUNDER_WAVE", "MOVE_COTTON_SPORE", "MOVE_TAKE_DOWN"),
-    ),
-    "Flannery1": (
-        "SPECIES_PONYTA", 30, "ITEM_SITRUS_BERRY",
-        ("MOVE_FLAME_WHEEL", "MOVE_STOMP", "MOVE_TAKE_DOWN", "MOVE_AGILITY"),
-    ),
-    "Norman1": (
-        "SPECIES_CHANSEY", 32, "ITEM_SITRUS_BERRY",
-        ("MOVE_SEISMIC_TOSS", "MOVE_SOFT_BOILED", "MOVE_LIGHT_SCREEN", "MOVE_DOUBLE_TEAM"),
-    ),
-    "Winona1": (
-        "SPECIES_SWELLOW", 34, "ITEM_SITRUS_BERRY",
-        ("MOVE_AERIAL_ACE", "MOVE_QUICK_ATTACK", "MOVE_FACADE", "MOVE_DOUBLE_TEAM"),
-    ),
-    "TateAndLiza1": (
-        "SPECIES_SLOWKING", 43, "ITEM_SITRUS_BERRY",
-        ("MOVE_PSYCHIC", "MOVE_SURF", "MOVE_CALM_MIND", "MOVE_YAWN"),
-    ),
-    "Juan1": (
-        "SPECIES_STARMIE", 47, "ITEM_SITRUS_BERRY",
-        ("MOVE_SURF", "MOVE_PSYCHIC", "MOVE_ICE_BEAM", "MOVE_RECOVER"),
-    ),
+    "Roxanne1": [
+        ("SPECIES_ONIX", 16, "ITEM_SITRUS_BERRY",
+         ("MOVE_ROCK_TOMB", "MOVE_ROCK_THROW", "MOVE_SCREECH", "MOVE_BIND")),
+    ],
+    "Brawly1": [
+        ("SPECIES_HITMONTOP", 20, "ITEM_SITRUS_BERRY",
+         ("MOVE_TRIPLE_KICK", "MOVE_ROLLING_KICK", "MOVE_REVENGE", "MOVE_DETECT")),
+    ],
+    "Wattson1": [
+        ("SPECIES_MAREEP", 25, "ITEM_SITRUS_BERRY",
+         ("MOVE_SHOCK_WAVE", "MOVE_THUNDER_WAVE", "MOVE_COTTON_SPORE", "MOVE_TAKE_DOWN")),
+    ],
+    "Flannery1": [
+        ("SPECIES_PONYTA", 30, "ITEM_SITRUS_BERRY",
+         ("MOVE_FLAME_WHEEL", "MOVE_STOMP", "MOVE_TAKE_DOWN", "MOVE_AGILITY")),
+    ],
+    "Norman1": [
+        ("SPECIES_CHANSEY", 32, "ITEM_SITRUS_BERRY",
+         ("MOVE_SEISMIC_TOSS", "MOVE_SOFT_BOILED", "MOVE_LIGHT_SCREEN", "MOVE_DOUBLE_TEAM")),
+    ],
+    "Winona1": [
+        ("SPECIES_SWELLOW", 34, "ITEM_SITRUS_BERRY",
+         ("MOVE_AERIAL_ACE", "MOVE_QUICK_ATTACK", "MOVE_FACADE", "MOVE_DOUBLE_TEAM")),
+    ],
+    "TateAndLiza1": [
+        ("SPECIES_SLOWKING", 43, "ITEM_SITRUS_BERRY",
+         ("MOVE_PSYCHIC", "MOVE_SURF", "MOVE_CALM_MIND", "MOVE_YAWN")),
+        ("SPECIES_GRUMPIG", 43, "ITEM_SITRUS_BERRY",
+         ("MOVE_PSYCHIC", "MOVE_LIGHT_SCREEN", "MOVE_REFLECT", "MOVE_CALM_MIND")),
+    ],
+    "Juan1": [
+        ("SPECIES_STARMIE", 47, "ITEM_SITRUS_BERRY",
+         ("MOVE_SURF", "MOVE_PSYCHIC", "MOVE_ICE_BEAM", "MOVE_RECOVER")),
+    ],
 }
 
 
@@ -454,10 +457,13 @@ def _format_item_custom_moves_mon(
 
 
 def apply_stronger_gym_leaders(parties_text: str) -> str:
-    """Append one themed Pokemon to each gym leader's first-battle roster."""
+    """Append themed Pokemon to each gym leader's first-battle roster."""
 
-    for name, (species, level, held_item, moves) in _STRONGER_GYM_LEADER_ADDS.items():
-        block = _format_item_custom_moves_mon(species, level, held_item, moves)
+    for name, additions in _STRONGER_GYM_LEADER_ADDS.items():
+        blocks = ",\n".join(
+            _format_item_custom_moves_mon(species, level, held_item, moves)
+            for species, level, held_item, moves in additions
+        )
         pattern = re.compile(
             r"(static const struct TrainerMonItemCustomMoves sParty_"
             + re.escape(name)
@@ -465,7 +471,7 @@ def apply_stronger_gym_leaders(parties_text: str) -> str:
             re.DOTALL,
         )
         parties_text = pattern.sub(
-            lambda m: m.group(1) + ",\n" + block + "\n};", parties_text, count=1
+            lambda m: m.group(1) + ",\n" + blocks + "\n};", parties_text, count=1
         )
     return parties_text
 
