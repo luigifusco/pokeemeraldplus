@@ -65,15 +65,6 @@ void SetUpBattleVarsAndBirchZigzagoon(void)
         CreateMon(&gEnemyParty[0], SPECIES_ZIGZAGOON, 2, USE_RANDOM_IVS, 0, 0, OT_ID_PLAYER_ID, 0);
         i = 0;
         SetMonData(&gEnemyParty[0], MON_DATA_HELD_ITEM, &i);
-#ifdef FORCE_DOUBLE_BATTLES
-        // Give the forced double a second opponent so it isn't a lone wild mon.
-        if (gBattleTypeFlags & BATTLE_TYPE_DOUBLE)
-        {
-            CreateMon(&gEnemyParty[1], SPECIES_ZIGZAGOON, 2, USE_RANDOM_IVS, 0, 0, OT_ID_PLAYER_ID, 0);
-            i = 0;
-            SetMonData(&gEnemyParty[1], MON_DATA_HELD_ITEM, &i);
-        }
-#endif
     }
 
     // Below are never read

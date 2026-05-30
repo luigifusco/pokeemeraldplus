@@ -745,11 +745,11 @@ static void CB2_InitBattleInternal(void)
 #ifdef FORCE_DOUBLE_BATTLES
     // Force double battles for standard battles.
     // Avoid battle types that don't support the normal 2v2 flow.
-    // The Birch/Zigzagoon first battle is allowed (it becomes a 1v2 double).
     if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK
                               | BATTLE_TYPE_RECORDED
                               | BATTLE_TYPE_SAFARI
-                              | BATTLE_TYPE_WALLY_TUTORIAL)))
+                              | BATTLE_TYPE_WALLY_TUTORIAL
+                              | BATTLE_TYPE_FIRST_BATTLE)))
     {
         gBattleTypeFlags |= BATTLE_TYPE_DOUBLE;
     }
