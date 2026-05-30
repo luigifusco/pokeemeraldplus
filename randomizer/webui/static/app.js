@@ -20,6 +20,7 @@ const defaultConfig = () => ({
     stronger_villains: false,
     stronger_rival: false,
     stronger_wally: false,
+    stronger_gym_leaders: false,
     level_scale: {
         wild_percent: 0,
         trainer_percent: 0,

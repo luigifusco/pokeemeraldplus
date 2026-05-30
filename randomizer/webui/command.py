@@ -87,6 +87,7 @@ class BuildConfig:
     stronger_villains: bool = False
     stronger_rival: bool = False
     stronger_wally: bool = False
+    stronger_gym_leaders: bool = False
     level_scale: LevelScale = field(default_factory=LevelScale)
     randomize_level_up_moves: bool = False
     randomize_egg_moves: bool = False
@@ -252,6 +253,9 @@ def to_randomize_args(
 
     if cfg.stronger_wally:
         argv.append("--stronger-wally")
+
+    if cfg.stronger_gym_leaders:
+        argv.append("--stronger-gym-leaders")
 
     if cfg.evo_mode == EvoMode.HARDCODED:
         argv.append("--hardcoded-random-evos")
