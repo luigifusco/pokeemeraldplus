@@ -425,6 +425,24 @@ static void CreateWildMon(u16 species, u8 level)
 #define TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildPokemon, type, ability, ptr, count) TryGetAbilityInfluencedWildMonIndex(wildPokemon, type, ability, ptr)
 #endif
 
+#ifdef FORCE_DOUBLE_BATTLES
+// Decide whether a generated wild encounter should spawn a second opponent.
+// This deliberately avoids gBattleTypeFlags: wild mons are generated in the
+// field BEFORE BattleSetup_StartWildBattle() resets the flags, so the flags
+// still describe the PREVIOUS battle. After a scripted single battle (the
+// Birch first battle or the Wally tutorial) the stale flag would otherwise
+// suppress the second mon and leak a single battle into the next encounter.
+// Instead, query the special modes that manage their own party setup directly.
+static bool8 ShouldForceWildDoubleBattle(void)
+{
+    if (GetSafariZoneFlag())
+        return FALSE;
+    if (InBattlePike() || InBattlePyramid_())
+        return FALSE;
+    return TRUE;
+}
+#endif
+
 static bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, u8 area, u8 flags)
 {
     u8 wildMonIndex = 0;
@@ -462,13 +480,7 @@ static bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, u8 ar
 
 #ifdef FORCE_DOUBLE_BATTLES
     // Create a second wild mon for forced double battles.
-    // Skip battle types that don't become doubles under FORCE_DOUBLE_BATTLES.
-    // Also skip Pike/Pyramid wild battles, which have their own party setup.
-    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI
-                              | BATTLE_TYPE_WALLY_TUTORIAL
-                              | BATTLE_TYPE_FIRST_BATTLE
-                              | BATTLE_TYPE_PIKE
-                              | BATTLE_TYPE_PYRAMID)))
+    if (ShouldForceWildDoubleBattle())
     {
         u8 wildMonIndex2;
         u8 level2;
@@ -501,11 +513,7 @@ static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 
     CreateWildMonInSlot(0, wildMonInfo->wildPokemon[wildMonIndex].species, level);
 
 #ifdef FORCE_DOUBLE_BATTLES
-    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI
-                              | BATTLE_TYPE_WALLY_TUTORIAL
-                              | BATTLE_TYPE_FIRST_BATTLE
-                              | BATTLE_TYPE_PIKE
-                              | BATTLE_TYPE_PYRAMID)))
+    if (ShouldForceWildDoubleBattle())
     {
         u8 wildMonIndex2 = ChooseWildMonIndex_Fishing(rod);
         u8 level2 = ChooseWildMonLevel(&wildMonInfo->wildPokemon[wildMonIndex2]);
@@ -528,11 +536,7 @@ static bool8 SetUpMassOutbreakEncounter(u8 flags)
         SetMonMoveSlot(&gEnemyParty[0], gSaveBlock1Ptr->outbreakPokemonMoves[i], i);
 
 #ifdef FORCE_DOUBLE_BATTLES
-    if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI
-                              | BATTLE_TYPE_WALLY_TUTORIAL
-                              | BATTLE_TYPE_FIRST_BATTLE
-                              | BATTLE_TYPE_PIKE
-                              | BATTLE_TYPE_PYRAMID)))
+    if (ShouldForceWildDoubleBattle())
     {
         CreateWildMonInSlot(1, gSaveBlock1Ptr->outbreakPokemonSpecies, gSaveBlock1Ptr->outbreakPokemonLevel);
         for (i = 0; i < MAX_MON_MOVES; i++)
@@ -854,7 +858,7 @@ void FishingWildEncounter(u8 rod)
         ZeroEnemyPartyMons();
         CreateWildMonInSlot(0, species, level);
 #ifdef FORCE_DOUBLE_BATTLES
-        if (!(gBattleTypeFlags & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_WALLY_TUTORIAL | BATTLE_TYPE_PIKE | BATTLE_TYPE_PYRAMID)))
+        if (ShouldForceWildDoubleBattle())
             CreateWildMonInSlot(1, species, level);
 #endif
     }
