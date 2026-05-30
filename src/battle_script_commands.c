@@ -10266,8 +10266,8 @@ static void Cmd_givecaughtmon(void)
 
 static void Cmd_trysetcaughtmondexflags(void)
 {
-    u16 species = GetMonData(&gEnemyParty[0], MON_DATA_SPECIES, NULL);
-    u32 personality = GetMonData(&gEnemyParty[0], MON_DATA_PERSONALITY, NULL);
+    u16 species = GetMonData(&gEnemyParty[gBattlerPartyIndexes[gBattlerTarget]], MON_DATA_SPECIES, NULL);
+    u32 personality = GetMonData(&gEnemyParty[gBattlerPartyIndexes[gBattlerTarget]], MON_DATA_PERSONALITY, NULL);
 
     if (GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_GET_CAUGHT))
     {
@@ -10282,7 +10282,7 @@ static void Cmd_trysetcaughtmondexflags(void)
 
 static void Cmd_displaydexinfo(void)
 {
-    u16 species = GetMonData(&gEnemyParty[0], MON_DATA_SPECIES, NULL);
+    u16 species = GetMonData(&gEnemyParty[gBattlerPartyIndexes[gBattlerTarget]], MON_DATA_SPECIES, NULL);
 
     switch (gBattleCommunication[0])
     {
