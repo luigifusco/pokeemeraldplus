@@ -63,6 +63,7 @@ const defaultConfig = () => ({
     start_with_super_rare_candy: false,
     walk_through_walls: false,
     repel_any_level: false,
+    level_cap: false,
     webui_opponent: false,
     opponent_stat_stage_mod: 0,
     player_stat_stage_mod: 0,

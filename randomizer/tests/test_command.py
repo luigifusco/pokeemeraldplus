@@ -257,6 +257,7 @@ class MakeArgsTest(unittest.TestCase):
             "WALK_FAST=0",
             "FAST_SWIM=0",
             "REPEL_ANY_LEVEL=0",
+            "LEVEL_CAP=0",
             "NUZLOCKE_DELETE_FAINTED=0",
             "INSTANT_TEXT=0",
             "FAST_BATTLE_ANIMS=0",

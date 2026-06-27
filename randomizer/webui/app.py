@@ -94,6 +94,7 @@ class BuildConfigModel(BaseModel):
     start_with_super_rare_candy: bool = False
     walk_through_walls: bool = False
     repel_any_level: bool = False
+    level_cap: bool = False
     webui_opponent: bool = False
     opponent_stat_stage_mod: int = 0
     player_stat_stage_mod: int = 0
