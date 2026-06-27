@@ -101,6 +101,7 @@ class BuildConfigModel(BaseModel):
     fast_evolution_anim: bool = False
     prevent_evolution_cancel: bool = False
     walk_fast: bool = False
+    fast_swim: bool = False
     instant_text: bool = False
     fast_battle_anims: bool = False
     skip_battle_transition: bool = False

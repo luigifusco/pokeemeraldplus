@@ -67,6 +67,7 @@ const defaultConfig = () => ({
     player_stat_stage_mod: 0,
     gym_leader_first_roster: 0,
     walk_fast: false,
+    fast_swim: false,
     instant_text: false,
     fast_battle_anims: false,
     skip_battle_transition: false,
@@ -86,6 +87,7 @@ const state = {
 
 const QOL_CHECKBOX_FIELDS = [
     "walk_fast",
+    "fast_swim",
     "instant_text",
     "fast_battle_anims",
     "skip_battle_transition",

@@ -127,6 +127,7 @@ class BuildConfig:
     fast_evolution_anim: bool = False
     prevent_evolution_cancel: bool = False
     walk_fast: bool = False
+    fast_swim: bool = False
     instant_text: bool = False
     fast_battle_anims: bool = False
     skip_battle_transition: bool = False
@@ -300,6 +301,7 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("fast_evolution_anim", "FAST_EVOLUTION_ANIM"),
     ("prevent_evolution_cancel", "PREVENT_EVOLUTION_CANCEL"),
     ("walk_fast", "WALK_FAST"),
+    ("fast_swim", "FAST_SWIM"),
     ("walk_through_walls", "WALK_THROUGH_WALLS"),
     ("nuzlocke_delete_fainted", "NUZLOCKE_DELETE_FAINTED"),
     ("instant_text", "INSTANT_TEXT"),
