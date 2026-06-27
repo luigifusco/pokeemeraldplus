@@ -947,11 +947,17 @@ bool8 UpdateRepelCounter(void)
 
 static bool8 IsWildLevelAllowedByRepel(u8 wildLevel)
 {
+#ifndef REPEL_ANY_LEVEL
     u8 i;
+#endif
 
     if (!VarGet(VAR_REPEL_STEP_COUNT))
         return TRUE;
 
+#ifdef REPEL_ANY_LEVEL
+    // Repel is active: block every wild encounter regardless of level.
+    return FALSE;
+#else
     for (i = 0; i < PARTY_SIZE; i++)
     {
         if (GetMonData(&gPlayerParty[i], MON_DATA_HP) && !GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG))
@@ -966,6 +972,7 @@ static bool8 IsWildLevelAllowedByRepel(u8 wildLevel)
     }
 
     return FALSE;
+#endif
 }
 
 static bool8 IsAbilityAllowingEncounter(u8 level)

@@ -118,6 +118,7 @@ class BuildConfig:
     money_for_moves: bool = False
     start_with_super_rare_candy: bool = False
     walk_through_walls: bool = False
+    repel_any_level: bool = False
     webui_opponent: bool = False            # WEBUI_OPPONENT=1 — control opponent via browser UI
     opponent_stat_stage_mod: int = 0        # -6..+6
     player_stat_stage_mod: int = 0          # -6..+6
@@ -303,6 +304,7 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("walk_fast", "WALK_FAST"),
     ("fast_swim", "FAST_SWIM"),
     ("walk_through_walls", "WALK_THROUGH_WALLS"),
+    ("repel_any_level", "REPEL_ANY_LEVEL"),
     ("nuzlocke_delete_fainted", "NUZLOCKE_DELETE_FAINTED"),
     ("instant_text", "INSTANT_TEXT"),
     ("fast_battle_anims", "FAST_BATTLE_ANIMS"),
