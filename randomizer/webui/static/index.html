@@ -185,6 +185,11 @@
                 <label class="check"><input type="checkbox" data-bind="no_exp_wild" /><span class="box"></span> <span><strong>No EXP from wild</strong> — wild Pokémon give no EXP.</span></label>
                 <label class="check"><input type="checkbox" data-bind="no_exp_trainer" /><span class="box"></span> <span><strong>No EXP from trainers</strong> — trainer Pokémon give no EXP.</span></label>
                 <label class="check"><input type="checkbox" data-bind="negative_exp" /><span class="box"></span> <span><strong>Negative EXP</strong> — lose EXP on defeat.</span></label>
+                <div class="row">
+                    <div class="row-label"><strong>EXP multiplier</strong><small>Scales EXP gained when a Pokémon faints (1.0x–3.0x).</small></div>
+                    <input type="range" min="1" max="3" step="0.1" data-bind="exp_multiplier" />
+                    <input type="number" class="num-mirror" min="1" max="3" step="0.1" data-bind="exp_multiplier" />
+                </div>
                 <label class="check"><input type="checkbox" data-bind="no_pokeballs" /><span class="box"></span> <span><strong>No Poké Balls</strong> — catching disabled.</span></label>
                 <label class="check"><input type="checkbox" data-bind="no_battle_items" /><span class="box"></span> <span><strong>No battle items</strong> — items/berries can't be used in battle (Poké Balls still allowed).</span></label>
                 <label class="check"><input type="checkbox" data-bind="first_shop_pokeballs" /><span class="box"></span> <span><strong>Early Poké Balls</strong> — stock Poké Balls in Oldale Mart before the first rival fight.</span></label>

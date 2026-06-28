@@ -56,6 +56,7 @@ const defaultConfig = () => ({
     no_exp_wild: false,
     no_exp_trainer: false,
     negative_exp: false,
+    exp_multiplier: 1.0,
     no_pokeballs: false,
     no_battle_items: false,
     first_shop_pokeballs: false,
@@ -281,7 +282,7 @@ function wireBindings() {
                 if (el.placeholder === "—") {
                     val = parseMaybeNumber(el);
                 } else if (el.type === "range") {
-                    val = parseInt(el.value, 10);
+                    val = (el.step && el.step !== "1") ? parseFloat(el.value) : parseInt(el.value, 10);
                 } else {
                     val = parseMaybeNumber(el) ?? 0;
                 }

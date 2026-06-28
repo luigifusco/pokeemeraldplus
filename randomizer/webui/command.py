@@ -112,6 +112,7 @@ class BuildConfig:
     no_exp_wild: bool = False
     no_exp_trainer: bool = False
     negative_exp: bool = False
+    exp_multiplier: float = 1.0             # EXP_MULTIPLIER in tenths (1.0x..3.0x)
     no_pokeballs: bool = False
     no_battle_items: bool = False
     first_shop_pokeballs: bool = False
@@ -363,5 +364,9 @@ def to_make_args(
     argv.append(f"STARTER_LEVEL={_clamp(cfg.level_scale.starter_level, 1, 100)}")
 
     argv.append(f"WAIT_TIME_DIVISOR={32 if cfg.fastest_speed else 1}")
+
+    # EXP multiplier is configured as a float (1.0x..3.0x) but passed to make in
+    # tenths (10..30) so the C side can do integer-only math.
+    argv.append(f"EXP_MULTIPLIER={_clamp(round(cfg.exp_multiplier * 10), 10, 30)}")
 
     return argv

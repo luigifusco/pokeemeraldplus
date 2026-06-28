@@ -273,6 +273,11 @@ ifeq ($(NEGATIVE_EXP),1)
 	CPPFLAGS += -DNEGATIVE_EXP
 endif
 
+# Compile-time setting: multiply EXP gained on faint, expressed in tenths
+# (10 = 1.0x, 30 = 3.0x). Default 10 keeps vanilla EXP. Usage: make EXP_MULTIPLIER=25
+EXP_MULTIPLIER ?= 10
+CPPFLAGS += -DEXP_MULTIPLIER=$(EXP_MULTIPLIER)
+
 # Compile-time toggle: prevent using Poké Balls.
 # Usage: make NO_POKEBALLS=1
 NO_POKEBALLS ?= 0

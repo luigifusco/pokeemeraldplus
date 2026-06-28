@@ -87,6 +87,7 @@ class BuildConfigModel(BaseModel):
     no_exp_wild: bool = False
     no_exp_trainer: bool = False
     negative_exp: bool = False
+    exp_multiplier: float = 1.0
     no_pokeballs: bool = False
     no_battle_items: bool = False
     first_shop_pokeballs: bool = False

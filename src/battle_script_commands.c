@@ -3423,6 +3423,11 @@ static void Cmd_getexp(void)
             }
 
             calculatedExp = gSpeciesInfo[gBattleMons[gBattlerFainted].species].expYield * gBattleMons[gBattlerFainted].level / 7;
+#if EXP_MULTIPLIER != 10
+            // Scale by EXP_MULTIPLIER tenths (e.g. 25 = 2.5x). Use a 32-bit
+            // intermediate: at 3x the product can exceed u16's range.
+            calculatedExp = (u32)calculatedExp * EXP_MULTIPLIER / 10;
+#endif
 
             if (viaExpShare) // at least one mon is getting exp via exp share
             {

@@ -276,6 +276,7 @@ class MakeArgsTest(unittest.TestCase):
             "GYM_LEADER_FIRST_ROSTER=0",
             "STARTER_LEVEL=5",
             "WAIT_TIME_DIVISOR=1",
+            "EXP_MULTIPLIER=10",
         ):
             self.assertIn(expected, args, f"missing {expected} in {args!r}")
 
@@ -306,6 +307,12 @@ class MakeArgsTest(unittest.TestCase):
     def test_cap_candy_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(start_with_cap_candy=True), jobs=1)
         self.assertIn("START_WITH_CAP_CANDY=1", args)
+
+    def test_exp_multiplier_emits_tenths(self) -> None:
+        self.assertIn("EXP_MULTIPLIER=25", to_make_args(BuildConfig(exp_multiplier=2.5), jobs=1))
+        # Clamped to the 1.0x..3.0x range (10..30 tenths).
+        self.assertIn("EXP_MULTIPLIER=30", to_make_args(BuildConfig(exp_multiplier=5.0), jobs=1))
+        self.assertIn("EXP_MULTIPLIER=10", to_make_args(BuildConfig(exp_multiplier=0.5), jobs=1))
 
     def test_first_shop_pokeballs_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(first_shop_pokeballs=True), jobs=1)
