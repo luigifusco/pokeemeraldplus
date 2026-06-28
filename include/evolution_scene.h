@@ -4,6 +4,7 @@
 void BeginEvolutionScene(struct Pokemon *mon, u16 postEvoSpecies, bool8 canStopEvo, u8 partyId);
 void EvolutionScene(struct Pokemon *mon, u16 postEvoSpecies, bool8 canStopEvo, u8 partyId);
 void TradeEvolutionScene(struct Pokemon *mon, u16 postEvoSpecies, u8 preEvoSpriteId, u8 partyId);
+void CreateShedinja(u16 preEvoSpecies, struct Pokemon *mon);
 
 extern void (*gCB2_AfterEvolution)(void);
 

@@ -3457,6 +3457,7 @@ extern const u32 gItemIconPalette_Calcium[];
 extern const u32 gItemIcon_RareCandy[];
 extern const u32 gItemIconPalette_RareCandy[];
 extern const u32 gItemIconPalette_SuperRareCandy[];
+extern const u32 gItemIconPalette_CapCandy[];
 extern const u32 gItemIcon_PPUp[];
 extern const u32 gItemIconPalette_PPUp[];
 extern const u32 gItemIconPalette_Zinc[];

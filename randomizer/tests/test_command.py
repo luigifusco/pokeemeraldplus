@@ -258,6 +258,7 @@ class MakeArgsTest(unittest.TestCase):
             "FAST_SWIM=0",
             "REPEL_ANY_LEVEL=0",
             "LEVEL_CAP=0",
+            "START_WITH_CAP_CANDY=0",
             "NUZLOCKE_DELETE_FAINTED=0",
             "INSTANT_TEXT=0",
             "FAST_BATTLE_ANIMS=0",
@@ -301,6 +302,10 @@ class MakeArgsTest(unittest.TestCase):
     def test_fast_intro_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(fast_intro=True), jobs=1)
         self.assertIn("FAST_INTRO=1", args)
+
+    def test_cap_candy_emits_make_flag(self) -> None:
+        args = to_make_args(BuildConfig(start_with_cap_candy=True), jobs=1)
+        self.assertIn("START_WITH_CAP_CANDY=1", args)
 
     def test_first_shop_pokeballs_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(first_shop_pokeballs=True), jobs=1)

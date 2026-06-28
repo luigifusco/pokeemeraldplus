@@ -1720,6 +1720,11 @@ void CB2_ContinueSavedGame(void)
         AddBagItem(ITEM_SUPER_RARE_CANDY, 1);
 #endif
 
+#ifdef START_WITH_CAP_CANDY
+    if (!CheckBagHasItem(ITEM_CAP_CANDY, 1))
+        AddBagItem(ITEM_CAP_CANDY, 1);
+#endif
+
     if (gSaveFileStatus == SAVE_STATUS_ERROR)
         ResetWinStreaks();
 

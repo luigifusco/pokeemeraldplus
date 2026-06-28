@@ -259,6 +259,13 @@ ifeq ($(START_WITH_SUPER_RARE_CANDY),1)
 	CPPFLAGS += -DSTART_WITH_SUPER_RARE_CANDY
 endif
 
+# Compile-time toggle: start the game with the Cap Candy key item, which raises
+# a Pokemon's level to the current level cap (see LEVEL_CAP). Usage: make START_WITH_CAP_CANDY=1
+START_WITH_CAP_CANDY ?= 0
+ifeq ($(START_WITH_CAP_CANDY),1)
+	CPPFLAGS += -DSTART_WITH_CAP_CANDY
+endif
+
 # Compile-time toggle: EXP is subtracted instead of added.
 # Usage: make NEGATIVE_EXP=1
 NEGATIVE_EXP ?= 0

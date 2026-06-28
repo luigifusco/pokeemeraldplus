@@ -1286,6 +1286,56 @@ bool8 HasTrainerBeenFought(u16 trainerId)
     return FlagGet(TRAINER_FLAGS_START + trainerId);
 }
 
+// Highest level a party Pokemon may train toward, based on story progress.
+// Defaults to MAX_LEVEL (no cap) unless LEVEL_CAP is enabled, in which case it
+// returns the highest-level Pokemon of the next undefeated gym leader / Elite
+// Four member. Used both to gate battle EXP and to bound the CAP CANDY item.
+u8 GetCurrentLevelCap(void)
+{
+#ifdef LEVEL_CAP
+    static const struct { u16 trainerId; u8 level; } caps[] = {
+        { TRAINER_ROXANNE_1,       15 },
+        { TRAINER_BRAWLY_1,        19 },
+        { TRAINER_WATTSON_1,       24 },
+        { TRAINER_FLANNERY_1,      29 },
+        { TRAINER_NORMAN_1,        31 },
+        { TRAINER_WINONA_1,        33 },
+        { TRAINER_TATE_AND_LIZA_1, 42 },
+        { TRAINER_JUAN_1,          46 },
+        { TRAINER_SIDNEY,          49 },
+        { TRAINER_PHOEBE,          51 },
+        { TRAINER_GLACIA,          53 },
+        { TRAINER_DRAKE,           55 },
+        { TRAINER_WALLACE,         58 },
+    };
+    u32 i;
+    u8 maxBeaten = 0;
+    u8 nextLevel = MAX_LEVEL;
+    bool8 foundNext = FALSE;
+
+    for (i = 0; i < ARRAY_COUNT(caps); i++)
+    {
+        if (HasTrainerBeenFought(caps[i].trainerId))
+        {
+            if (caps[i].level > maxBeaten)
+                maxBeaten = caps[i].level;
+        }
+        else if (!foundNext)
+        {
+            nextLevel = caps[i].level;
+            foundNext = TRUE;
+        }
+    }
+    // All bosses defeated: no cap. Otherwise cap at the next boss's top level,
+    // clamped up to the strongest boss already beaten so it never decreases.
+    if (!foundNext)
+        return MAX_LEVEL;
+    return (nextLevel > maxBeaten) ? nextLevel : maxBeaten;
+#else
+    return MAX_LEVEL;
+#endif
+}
+
 void SetTrainerFlag(u16 trainerId)
 {
     FlagSet(TRAINER_FLAGS_START + trainerId);

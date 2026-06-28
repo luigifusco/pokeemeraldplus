@@ -69,6 +69,9 @@
 #include "constants/field_effects.h"
 #include "constants/item_effects.h"
 #include "constants/items.h"
+#include "constants/game_stat.h"
+#include "battle_setup.h"
+#include "pokedex.h"
 #include "constants/moves.h"
 #include "constants/party_menu.h"
 #include "constants/rgb.h"
@@ -307,6 +310,9 @@ static bool8 IsSelectedMonNotEgg(u8 *);
 static void PartyMenuRemoveWindow(u8 *);
 static void CB2_SetUpExitToBattleScreen(void);
 static void Task_ClosePartyMenuAfterText(u8);
+static void Task_CapCandy_LearnMoves(u8 taskId);
+static void CapCandy_RaiseLevel(u8 taskId);
+static void CapCandy_NextLevelOrFinish(u8 taskId);
 static void TryTutorSelectedMon(u8);
 static void TryGiveMailToSelectedMon(u8);
 static void TryGiveItemOrMailToSelectedMon(u8);
@@ -5008,6 +5014,90 @@ static void UpdateMonDisplayInfoAfterRareCandy(u8 slot, struct Pokemon *mon)
     ScheduleBgCopyTilemapToVram(0);
 }
 
+// CAP CANDY: raise the selected Pokemon's level repeatedly until it reaches the
+// current level cap (GetCurrentLevelCap), playing the normal move-learning
+// textboxes and evolving instantly (no scene) along the way.
+void ItemUseCB_RareCandyToCap(u8 taskId, TaskFunc task)
+{
+    struct Pokemon *mon = &gPlayerParty[gPartyMenu.slotId];
+    u8 level = GetMonData(mon, MON_DATA_LEVEL);
+    u8 cap = GetCurrentLevelCap();
+
+    PlaySE(SE_SELECT);
+    if (level >= cap || level >= MAX_LEVEL)
+    {
+        gPartyMenuUseExitCallback = FALSE;
+        DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
+        ScheduleBgCopyTilemapToVram(2);
+        gTasks[taskId].func = task;
+        return;
+    }
+    gPartyMenuUseExitCallback = TRUE;
+    CapCandy_RaiseLevel(taskId);
+}
+
+// Raise one level, then funnel into the shared move-learning chain. The chain
+// ends at PartyMenuTryEvolution, which loops back here (or finishes) for us.
+static void CapCandy_RaiseLevel(u8 taskId)
+{
+    struct Pokemon *mon = &gPlayerParty[gPartyMenu.slotId];
+
+    ExecuteTableBasedItemEffect_(gPartyMenu.slotId, gSpecialVar_ItemId, 0);
+    UpdateMonDisplayInfoAfterRareCandy(gPartyMenu.slotId, mon);
+    gPartyMenu.learnMoveState = 1;
+    gTasks[taskId].func = Task_CapCandy_LearnMoves;
+}
+
+// Like Task_TryLearnNewMoves but without the level-up stats window / fanfare
+// gating, so the cap loop can teach this level's moves and move on.
+static void Task_CapCandy_LearnMoves(u8 taskId)
+{
+    u16 learnMove;
+
+    if (IsPartyMenuTextPrinterActive() == TRUE)
+        return;
+
+    learnMove = MonTryLearningNewMove(&gPlayerParty[gPartyMenu.slotId], TRUE);
+    gPartyMenu.learnMoveState = 1;
+    switch (learnMove)
+    {
+    case 0: // No moves to learn: try evolving / next level.
+        PartyMenuTryEvolution(taskId);
+        break;
+    case MON_HAS_MAX_MOVES:
+        DisplayMonNeedsToReplaceMove(taskId);
+        break;
+    case MON_ALREADY_KNOWS_MOVE:
+        gTasks[taskId].func = Task_TryLearningNextMove;
+        break;
+    default:
+        DisplayMonLearnedMove(taskId, learnMove);
+        break;
+    }
+}
+
+// Decide whether to raise another level or finish and close the menu.
+static void CapCandy_NextLevelOrFinish(u8 taskId)
+{
+    struct Pokemon *mon = &gPlayerParty[gPartyMenu.slotId];
+    u8 level = GetMonData(mon, MON_DATA_LEVEL);
+    u8 cap = GetCurrentLevelCap();
+
+    if (level < cap && level < MAX_LEVEL)
+    {
+        CapCandy_RaiseLevel(taskId);
+    }
+    else
+    {
+        GetMonNickname(mon, gStringVar1);
+        ConvertIntToDecimalStringN(gStringVar2, level, STR_CONV_MODE_LEFT_ALIGN, 3);
+        StringExpandPlaceholders(gStringVar4, gText_PkmnElevatedToLvVar2);
+        DisplayPartyMenuMessage(gStringVar4, TRUE);
+        ScheduleBgCopyTilemapToVram(2);
+        gTasks[taskId].func = Task_ClosePartyMenuAfterText;
+    }
+}
+
 static void Task_DisplayLevelUpStatsPg1(u8 taskId)
 {
     if (WaitFanfare(FALSE) && IsPartyMenuTextPrinterActive() != TRUE && ((JOY_NEW(A_BUTTON)) || (JOY_NEW(B_BUTTON))))
@@ -5098,6 +5188,33 @@ static void PartyMenuTryEvolution(u8 taskId)
 {
     struct Pokemon *mon = &gPlayerParty[gPartyMenu.slotId];
     u16 targetSpecies = GetEvolutionTargetSpecies(mon, EVO_MODE_NORMAL, ITEM_NONE);
+
+    if (gSpecialVar_ItemId == ITEM_CAP_CANDY)
+    {
+        if (targetSpecies != SPECIES_NONE)
+        {
+            // Instant evolution (no scene): replicate the evolution scene's
+            // bookkeeping, then re-run move learning for the evolved species at
+            // this level before continuing up toward the cap.
+            u16 preEvoSpecies = GetMonData(mon, MON_DATA_SPECIES);
+            SetMonData(mon, MON_DATA_SPECIES, &targetSpecies);
+            NormalizeMonAbilityNum(mon);
+            CalculateMonStats(mon);
+            EvolutionRenameMon(mon, preEvoSpecies, targetSpecies);
+            GetSetPokedexFlag(SpeciesToNationalPokedexNum(targetSpecies), FLAG_SET_SEEN);
+            GetSetPokedexFlag(SpeciesToNationalPokedexNum(targetSpecies), FLAG_SET_CAUGHT);
+            IncrementGameStat(GAME_STAT_EVOLVED_POKEMON);
+            CreateShedinja(preEvoSpecies, mon);
+            UpdateMonDisplayInfoAfterRareCandy(gPartyMenu.slotId, mon);
+            gPartyMenu.learnMoveState = 1;
+            gTasks[taskId].func = Task_CapCandy_LearnMoves;
+        }
+        else
+        {
+            CapCandy_NextLevelOrFinish(taskId);
+        }
+        return;
+    }
 
     if (targetSpecies != SPECIES_NONE)
     {

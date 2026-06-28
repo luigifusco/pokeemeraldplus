@@ -1032,15 +1032,16 @@ const struct Item gItems[] =
         .battleUseFunc = ItemUseInBattle_Escape,
     },
 
-    [ITEM_052] =
+    [ITEM_CAP_CANDY] =
     {
-        .name = _("????????"),
-        .itemId = ITEM_NONE,
+        .name = _("CAP CANDY"),
+        .itemId = ITEM_CAP_CANDY,
         .price = 0,
-        .description = sDummyDesc,
-        .pocket = POCKET_ITEMS,
-        .type = ITEM_USE_BAG_MENU,
-        .fieldUseFunc = ItemUseOutOfBattle_CannotUse,
+        .description = sCapCandyDesc,
+        .importance = 1,
+        .pocket = POCKET_KEY_ITEMS,
+        .type = ITEM_USE_PARTY_MENU,
+        .fieldUseFunc = ItemUseOutOfBattle_RareCandyToCap,
     },
 
 // Field items

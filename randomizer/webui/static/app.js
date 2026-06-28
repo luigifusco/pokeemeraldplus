@@ -61,6 +61,7 @@ const defaultConfig = () => ({
     first_shop_pokeballs: false,
     money_for_moves: false,
     start_with_super_rare_candy: false,
+    start_with_cap_candy: false,
     walk_through_walls: false,
     repel_any_level: false,
     level_cap: false,

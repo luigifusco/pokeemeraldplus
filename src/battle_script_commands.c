@@ -3359,55 +3359,12 @@ static bool32 NoExpForCurrentBattle(void)
 }
 #endif
 
-// Highest level a party Pokemon may gain EXP toward. Defaults to MAX_LEVEL so
-// the EXP gate below behaves exactly like the vanilla "== MAX_LEVEL" check.
-// Under LEVEL_CAP, it returns the highest-level Pokemon of the next undefeated
-// gym leader / Elite Four member, so Pokemon stop gaining EXP once they reach
-// the level of the boss they are about to face.
+// Highest level a party Pokemon may gain EXP toward. GetCurrentLevelCap()
+// (battle_setup.c) returns MAX_LEVEL unless LEVEL_CAP is enabled, so the EXP
+// gate below behaves exactly like the vanilla "== MAX_LEVEL" check by default.
 static u8 GetExpLevelCap(void)
 {
-#ifdef LEVEL_CAP
-    static const struct { u16 trainerId; u8 level; } caps[] = {
-        { TRAINER_ROXANNE_1,       15 },
-        { TRAINER_BRAWLY_1,        19 },
-        { TRAINER_WATTSON_1,       24 },
-        { TRAINER_FLANNERY_1,      29 },
-        { TRAINER_NORMAN_1,        31 },
-        { TRAINER_WINONA_1,        33 },
-        { TRAINER_TATE_AND_LIZA_1, 42 },
-        { TRAINER_JUAN_1,          46 },
-        { TRAINER_SIDNEY,          49 },
-        { TRAINER_PHOEBE,          51 },
-        { TRAINER_GLACIA,          53 },
-        { TRAINER_DRAKE,           55 },
-        { TRAINER_WALLACE,         58 },
-    };
-    u32 i;
-    u8 maxBeaten = 0;
-    u8 nextLevel = MAX_LEVEL;
-    bool8 foundNext = FALSE;
-
-    for (i = 0; i < ARRAY_COUNT(caps); i++)
-    {
-        if (HasTrainerBeenFought(caps[i].trainerId))
-        {
-            if (caps[i].level > maxBeaten)
-                maxBeaten = caps[i].level;
-        }
-        else if (!foundNext)
-        {
-            nextLevel = caps[i].level;
-            foundNext = TRUE;
-        }
-    }
-    // All bosses defeated: no cap. Otherwise cap at the next boss's top level,
-    // clamped up to the strongest boss already beaten so it never decreases.
-    if (!foundNext)
-        return MAX_LEVEL;
-    return (nextLevel > maxBeaten) ? nextLevel : maxBeaten;
-#else
-    return MAX_LEVEL;
-#endif
+    return GetCurrentLevelCap();
 }
 
 static void Cmd_getexp(void)

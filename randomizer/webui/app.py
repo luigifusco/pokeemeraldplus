@@ -92,6 +92,7 @@ class BuildConfigModel(BaseModel):
     first_shop_pokeballs: bool = False
     money_for_moves: bool = False
     start_with_super_rare_candy: bool = False
+    start_with_cap_candy: bool = False
     walk_through_walls: bool = False
     repel_any_level: bool = False
     level_cap: bool = False

@@ -239,6 +239,10 @@ void NewGameInitData(void)
     AddBagItem(ITEM_SUPER_RARE_CANDY, 1);
 #endif
 
+#ifdef START_WITH_CAP_CANDY
+    AddBagItem(ITEM_CAP_CANDY, 1);
+#endif
+
     NewGameInitPCItems();
     ClearPokeblocks();
     ClearDecorationInventories();
