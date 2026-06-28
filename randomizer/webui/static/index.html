@@ -60,6 +60,22 @@
             </div>
 
             <div class="group">
+                <div class="group-title">Boss teams</div>
+                <div class="group-desc">Shape the randomized teams of bosses — the eight gym leaders, the Elite Four &amp; champion, Aqua/Magma leaders &amp; admins, both rivals, and Wally. Only applies when <strong>Trainer teams</strong> is randomized.</div>
+                <label class="check"><input type="checkbox" data-bind="guarantee_strong_bosses" /><span class="box"></span> <span><strong>Guarantee strong bosses</strong> — force each boss team's average base-stat total to at least the chosen percentile.</span></label>
+                <div class="row">
+                    <div class="row-label"><strong>Boss strength percentile</strong><small>Minimum BST percentile (across all Pokémon) for a boss team's average.</small></div>
+                    <input type="range" min="0" max="100" step="10" data-bind="strong_bosses_percentile" />
+                    <input type="number" class="num-mirror" min="0" max="100" step="10" data-bind="strong_bosses_percentile" />
+                </div>
+                <div class="row">
+                    <div class="row-label"><strong>Minimum boss party size</strong><small>Pad each boss team up to this many randomized Pokémon. 1 = leave as-is.</small></div>
+                    <input type="range" min="1" max="6" step="1" data-bind="min_boss_party_size" />
+                    <input type="number" class="num-mirror" min="1" max="6" step="1" data-bind="min_boss_party_size" />
+                </div>
+            </div>
+
+            <div class="group">
                 <div class="group-title">Moves</div>
                 <div class="group-desc">UPR-style move randomization. Move power, type, accuracy, PP, and category are not changed.</div>
                 <label class="check"><input type="checkbox" data-bind="randomize_level_up_moves" /><span class="box"></span>
@@ -206,17 +222,6 @@
                 <label class="check"><input type="checkbox" data-bind="stronger_rival" /><span class="box"></span> <span><strong>Stronger rival</strong> — May/Brendan get larger Hoenn teams after the first battle, ending in a six-Pokémon Lilycove roster above gym-leader level.</span></label>
                 <label class="check"><input type="checkbox" data-bind="stronger_wally" /><span class="box"></span> <span><strong>Stronger Wally</strong> — the Mauville battle gains a small team and each Victory Road battle becomes a six-Pokémon roster led by Gardevoir.</span></label>
                 <label class="check"><input type="checkbox" data-bind="stronger_gym_leaders" /><span class="box"></span> <span><strong>Stronger gym leaders</strong> — each leader's first battle (not rematches) gains one extra themed Pokémon above their ace, for a harder normal run.</span></label>
-                <label class="check"><input type="checkbox" data-bind="guarantee_strong_bosses" /><span class="box"></span> <span><strong>Guarantee strong bosses</strong> — when randomizing trainers, force each boss team (gym leaders, Elite Four, champion, Aqua/Magma leaders &amp; admins, both rivals, and Wally) to have an average base-stat total at or above the chosen percentile.</span></label>
-                <div class="row">
-                    <div class="row-label"><strong>Boss strength percentile</strong><small>Minimum BST percentile (across all Pokémon) for a boss team's average.</small></div>
-                    <input type="range" min="0" max="100" step="10" data-bind="strong_bosses_percentile" />
-                    <input type="number" class="num-mirror" min="0" max="100" step="10" data-bind="strong_bosses_percentile" />
-                </div>
-                <div class="row">
-                    <div class="row-label"><strong>Minimum boss party size</strong><small>Pad each boss team (same set) up to this many randomized Pokémon. 1 = leave as-is.</small></div>
-                    <input type="range" min="1" max="6" step="1" data-bind="min_boss_party_size" />
-                    <input type="number" class="num-mirror" min="1" max="6" step="1" data-bind="min_boss_party_size" />
-                </div>
                 <label class="check"><input type="checkbox" data-bind="nuzlocke_delete_fainted" /><span class="box"></span> <span><strong>Nuzlocke: delete fainted.</strong></span></label>
                 <label class="check"><input type="checkbox" data-bind="walk_through_walls" /><span class="box"></span> <span><strong>Walk through walls</strong> (debug).</span></label>
                 <label class="check"><input type="checkbox" data-bind="repel_any_level" /><span class="box"></span> <span><strong>Repels always work</strong> — an active Repel blocks every wild encounter regardless of level.</span></label>
