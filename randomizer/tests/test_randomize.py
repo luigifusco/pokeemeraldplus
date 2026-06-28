@@ -6,6 +6,7 @@ import json
 import unittest
 
 from randomizer.randomize import (
+    enforce_min_boss_party_size,
     enforce_strong_bosses,
     parse_base_stat_totals,
     scale_trainer_party_levels,
@@ -148,6 +149,59 @@ class StrongBossesTest(unittest.TestCase):
         )
         result = enforce_strong_bosses(parties, pool, bst, 100)
         self.assertEqual(result, parties)
+
+
+class MinBossPartySizeTest(unittest.TestCase):
+    _POOL = ["SPECIES_WEAKA", "SPECIES_WEAKB", "SPECIES_MIDC", "SPECIES_STRONGD"]
+
+    def _boss(self) -> str:
+        return (
+            "static const struct TrainerMonNoItemDefaultMoves sParty_Roxanne1[] = {\n"
+            "    {\n    .iv = 0,\n    .lvl = 15,\n    .species = SPECIES_WEAKA,\n    }\n"
+            "};\n"
+        )
+
+    def test_pads_boss_to_min_size(self) -> None:
+        result = enforce_min_boss_party_size(self._boss(), self._POOL, 6)
+        self.assertEqual(result.count(".species ="), 6)
+        # Every padded entry keeps the cloned struct fields.
+        self.assertEqual(result.count(".lvl = 15"), 6)
+
+    def test_no_op_at_size_one(self) -> None:
+        boss = self._boss()
+        self.assertEqual(enforce_min_boss_party_size(boss, self._POOL, 1), boss)
+
+    def test_already_large_party_untouched(self) -> None:
+        boss = (
+            "static const struct TrainerMonNoItemDefaultMoves sParty_Drake[] = {\n"
+            "    {\n    .iv = 0,\n    .lvl = 50,\n    .species = SPECIES_MIDC,\n    },\n"
+            "    {\n    .iv = 0,\n    .lvl = 50,\n    .species = SPECIES_STRONGD,\n    }\n"
+            "};\n"
+        )
+        self.assertEqual(enforce_min_boss_party_size(boss, self._POOL, 2), boss)
+
+    def test_non_boss_not_padded(self) -> None:
+        guy = (
+            "static const struct TrainerMonNoItemDefaultMoves sParty_RandomGuy[] = {\n"
+            "    {\n    .iv = 0,\n    .lvl = 5,\n    .species = SPECIES_WEAKA,\n    }\n"
+            "};\n"
+        )
+        result = enforce_min_boss_party_size(guy, self._POOL, 6)
+        self.assertEqual(result, guy)
+
+    def test_custom_moves_party_pads_with_valid_blocks(self) -> None:
+        boss = (
+            "static const struct TrainerMonItemCustomMoves sParty_Sidney[] = {\n"
+            "    {\n    .iv = 200,\n    .lvl = 49,\n    .species = SPECIES_MIDC,\n"
+            "    .heldItem = ITEM_SITRUS_BERRY,\n"
+            "    .moves = {MOVE_CRUNCH, MOVE_SWAGGER, MOVE_TAUNT, MOVE_ROAR}\n    }\n"
+            "};\n"
+        )
+        result = enforce_min_boss_party_size(boss, self._POOL, 3)
+        self.assertEqual(result.count(".species ="), 3)
+        # Cloned mons preserve the held-item/moves structure of the template.
+        self.assertEqual(result.count(".heldItem ="), 3)
+        self.assertEqual(result.count(".moves ="), 3)
 
 
 if __name__ == "__main__":

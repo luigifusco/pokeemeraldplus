@@ -212,6 +212,11 @@
                     <input type="range" min="0" max="100" step="10" data-bind="strong_bosses_percentile" />
                     <input type="number" class="num-mirror" min="0" max="100" step="10" data-bind="strong_bosses_percentile" />
                 </div>
+                <div class="row">
+                    <div class="row-label"><strong>Minimum boss party size</strong><small>Pad each boss team (same set) up to this many randomized Pokémon. 1 = leave as-is.</small></div>
+                    <input type="range" min="1" max="6" step="1" data-bind="min_boss_party_size" />
+                    <input type="number" class="num-mirror" min="1" max="6" step="1" data-bind="min_boss_party_size" />
+                </div>
                 <label class="check"><input type="checkbox" data-bind="nuzlocke_delete_fainted" /><span class="box"></span> <span><strong>Nuzlocke: delete fainted.</strong></span></label>
                 <label class="check"><input type="checkbox" data-bind="walk_through_walls" /><span class="box"></span> <span><strong>Walk through walls</strong> (debug).</span></label>
                 <label class="check"><input type="checkbox" data-bind="repel_any_level" /><span class="box"></span> <span><strong>Repels always work</strong> — an active Repel blocks every wild encounter regardless of level.</span></label>

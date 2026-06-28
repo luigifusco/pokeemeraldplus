@@ -23,6 +23,7 @@ const defaultConfig = () => ({
     stronger_gym_leaders: false,
     guarantee_strong_bosses: false,
     strong_bosses_percentile: 0,
+    min_boss_party_size: 1,
     level_scale: {
         wild_percent: 0,
         trainer_percent: 0,

@@ -90,6 +90,7 @@ class BuildConfig:
     stronger_gym_leaders: bool = False
     guarantee_strong_bosses: bool = False
     strong_bosses_percentile: int = 0       # 0..100, min BST percentile for boss teams
+    min_boss_party_size: int = 1            # 1..6, min number of mons in boss teams
     level_scale: LevelScale = field(default_factory=LevelScale)
     randomize_level_up_moves: bool = False
     randomize_egg_moves: bool = False
@@ -268,6 +269,12 @@ def to_randomize_args(
         argv.extend([
             "--strong-bosses-percentile",
             str(_clamp(cfg.strong_bosses_percentile, 0, 100)),
+        ])
+
+    if cfg.min_boss_party_size > 1:
+        argv.extend([
+            "--min-boss-party-size",
+            str(_clamp(cfg.min_boss_party_size, 1, 6)),
         ])
 
     if cfg.evo_mode == EvoMode.HARDCODED:

@@ -67,6 +67,7 @@ class BuildConfigModel(BaseModel):
     stronger_gym_leaders: bool = False
     guarantee_strong_bosses: bool = False
     strong_bosses_percentile: int = 0
+    min_boss_party_size: int = 1
     level_scale: LevelScaleModel = Field(default_factory=LevelScaleModel)
     randomize_level_up_moves: bool = False
     randomize_egg_moves: bool = False

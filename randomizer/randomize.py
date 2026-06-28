@@ -1260,6 +1260,55 @@ def enforce_strong_bosses(
     return _PARTY_BLOCK_RE.sub(process, parties_text)
 
 
+# Matches a single mon entry inside a party body. A mon block opens with "{\n"
+# and closes at its 4-space-indented "}". Inline braces (.moves = {...}) sit on
+# one line, so they never contain "\n    }" and don't break the match.
+_MON_BLOCK_RE = re.compile(r"\{\n.*?\n    \}", re.DOTALL)
+
+
+def enforce_min_boss_party_size(
+    parties_text: str,
+    all_species: list[str],
+    min_size: int,
+) -> str:
+    """Pad each boss party up to ``min_size`` mons with randomized species.
+
+    New mons clone the format of a random existing mon in the same party
+    (preserving iv/level/heldItem/moves fields and struct shape) and get a
+    fresh random species, preferring ones not already on the team. Because
+    .partySize is ARRAY_COUNT(party), growing the array updates the size; any
+    cloned custom movesets are stripped later by the default-moves conversion.
+    """
+
+    if min_size <= 1:
+        return parties_text
+
+    def process(match: re.Match[str]) -> str:
+        header, name, body, footer = match.groups()
+        if not _is_boss_party(name):
+            return match.group(0)
+
+        mons = _MON_BLOCK_RE.findall(body)
+        if not mons or len(mons) >= min_size:
+            return match.group(0)
+
+        present = set(_SPECIES_FIELD_RE.findall(body))
+        additions: list[str] = []
+        for _ in range(min_size - len(mons)):
+            choices = [s for s in all_species if s not in present] or all_species
+            new_species = random.choice(choices)
+            present.add(new_species)
+            template = random.choice(mons)
+            clone = _SPECIES_FIELD_RE.sub(
+                lambda _m: ".species = " + new_species, template, count=1
+            )
+            additions.append(",\n    " + clone)
+
+        return header + body + "".join(additions) + footer
+
+    return _PARTY_BLOCK_RE.sub(process, parties_text)
+
+
 def _pick_species(all_species: list[str], *, avoid: str | None = None) -> str:
     choice = random.choice(all_species)
     if avoid is not None and choice == avoid and len(all_species) > 1:
@@ -1944,6 +1993,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--min-boss-party-size",
+        type=int,
+        default=None,
+        help=(
+            "When randomizing trainers, pad each boss team (same set as "
+            "--strong-bosses-percentile) up to this many Pokemon (1-6) by adding "
+            "randomized species. Bosses already at or above the size are left alone."
+        ),
+    )
+    parser.add_argument(
         "--restore",
         action="store_true",
         help="Restore original (unrandomized) files from randomizer/ templates.",
@@ -2290,6 +2349,13 @@ def main() -> None:
             trainer_parties = apply_stronger_gym_leaders(trainer_parties)
         if do_trainers:
             trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
+            # Pad boss teams first so the strength guarantee below covers the
+            # full (post-padding) roster.
+            if args.min_boss_party_size is not None:
+                trainer_parties = enforce_min_boss_party_size(
+                    trainer_parties, all_species,
+                    max(1, min(6, args.min_boss_party_size)),
+                )
             if args.strong_bosses_percentile is not None:
                 species_info_text = (repo_root / "src/data/pokemon/species_info.h").read_text()
                 bst = parse_base_stat_totals(species_info_text)

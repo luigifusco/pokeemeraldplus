@@ -329,6 +329,15 @@ class MakeArgsTest(unittest.TestCase):
         )
         self.assertNotIn("--strong-bosses-percentile", args)
 
+    def test_min_boss_party_size_emitted_when_above_one(self) -> None:
+        args = to_randomize_args(BuildConfig(min_boss_party_size=6), python_executable="py")
+        self.assertIn("--min-boss-party-size", args)
+        self.assertEqual(args[args.index("--min-boss-party-size") + 1], "6")
+
+    def test_min_boss_party_size_omitted_at_one(self) -> None:
+        args = to_randomize_args(BuildConfig(min_boss_party_size=1), python_executable="py")
+        self.assertNotIn("--min-boss-party-size", args)
+
     def test_first_shop_pokeballs_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(first_shop_pokeballs=True), jobs=1)
         self.assertIn("FIRST_SHOP_POKEBALLS=1", args)
