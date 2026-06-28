@@ -314,6 +314,21 @@ class MakeArgsTest(unittest.TestCase):
         self.assertIn("EXP_MULTIPLIER=30", to_make_args(BuildConfig(exp_multiplier=5.0), jobs=1))
         self.assertIn("EXP_MULTIPLIER=10", to_make_args(BuildConfig(exp_multiplier=0.5), jobs=1))
 
+    def test_strong_bosses_emits_percentile_when_enabled(self) -> None:
+        args = to_randomize_args(
+            BuildConfig(guarantee_strong_bosses=True, strong_bosses_percentile=70),
+            python_executable="py",
+        )
+        self.assertIn("--strong-bosses-percentile", args)
+        self.assertEqual(args[args.index("--strong-bosses-percentile") + 1], "70")
+
+    def test_strong_bosses_omitted_when_disabled(self) -> None:
+        args = to_randomize_args(
+            BuildConfig(guarantee_strong_bosses=False, strong_bosses_percentile=70),
+            python_executable="py",
+        )
+        self.assertNotIn("--strong-bosses-percentile", args)
+
     def test_first_shop_pokeballs_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(first_shop_pokeballs=True), jobs=1)
         self.assertIn("FIRST_SHOP_POKEBALLS=1", args)

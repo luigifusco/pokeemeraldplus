@@ -65,6 +65,8 @@ class BuildConfigModel(BaseModel):
     stronger_rival: bool = False
     stronger_wally: bool = False
     stronger_gym_leaders: bool = False
+    guarantee_strong_bosses: bool = False
+    strong_bosses_percentile: int = 0
     level_scale: LevelScaleModel = Field(default_factory=LevelScaleModel)
     randomize_level_up_moves: bool = False
     randomize_egg_moves: bool = False

@@ -1129,6 +1129,137 @@ def randomize_species_in_text(text: str, all_species: list[str], *, per_occurren
     return RANDOMIZE_SPECIES_PATTERN.sub(repl, text)
 
 
+# --- Guarantee strong bosses ----------------------------------------------
+# When trainers are randomized, optionally force each boss/rival/league team's
+# *average* base-stat total (BST) to sit at or above a chosen percentile of the
+# BST distribution across the randomization pool. The team is rolled normally
+# first, then its weakest slots are upgraded to strong species (BST >= the
+# threshold) one at a time until the average clears the bar. Upgrading the
+# weakest slot strictly raises the average and is bounded above (all slots
+# strong), so this always converges.
+
+# Boss party-array name prefixes in trainer_parties.h. Covers the eight gym
+# leaders (with their five rematch versions), the Elite Four + champion, the
+# Aqua/Magma leaders and admins, both rival lines, and Wally.
+_BOSS_PARTY_PREFIXES = (
+    "Roxanne", "Brawly", "Wattson", "Flannery", "Norman", "Winona",
+    "TateAndLiza", "Juan",
+    "Sidney", "Phoebe", "Glacia", "Drake", "Wallace",
+    "Maxie", "Archie", "Tabitha", "Shelly", "Matt", "Matthew", "Courtney",
+    "Brendan", "May",
+    "Wally",
+)
+
+_PARTY_BLOCK_RE = re.compile(
+    r"(static const struct \w+ sParty_(\w+)\[\] = \{)(.*?)(\n\};)",
+    re.DOTALL,
+)
+
+_SPECIES_FIELD_RE = re.compile(r"\.species\s*=\s*(SPECIES_[A-Z0-9_]+)")
+
+
+def _is_boss_party(name: str) -> bool:
+    if "Placeholder" in name:
+        return False
+    return any(name.startswith(prefix) for prefix in _BOSS_PARTY_PREFIXES)
+
+
+def parse_base_stat_totals(species_info_text: str) -> dict[str, int]:
+    """Map SPECIES_* -> base-stat total parsed from species_info.h."""
+
+    start = species_info_text.find("gSpeciesInfo[]")
+    if start != -1:
+        species_info_text = species_info_text[start:]
+
+    bst: dict[str, int] = {}
+    # Each species block ends at its 4-space-indented closing brace; the inner
+    # braces (.types, .eggGroups, .abilities) are single-line so they don't
+    # match "\n    }".
+    for match in re.finditer(
+        r"\[(SPECIES_[A-Z0-9_]+)\]\s*=\s*\{\n(.*?)\n    \}", species_info_text, re.DOTALL
+    ):
+        name, body = match.group(1), match.group(2)
+        stats: list[int] = []
+        for key in (
+            "baseHP", "baseAttack", "baseDefense",
+            "baseSpeed", "baseSpAttack", "baseSpDefense",
+        ):
+            field = re.search(r"\." + key + r"\s*=\s*(\d+)", body)
+            if field is None:
+                break
+            stats.append(int(field.group(1)))
+        if len(stats) == 6:
+            bst[name] = sum(stats)
+    return bst
+
+
+def _percentile(sorted_values: list[int], p: float) -> float:
+    """Linear-interpolated p-th percentile (0..100) of a sorted list."""
+
+    if not sorted_values:
+        return 0.0
+    if p <= 0:
+        return float(sorted_values[0])
+    if p >= 100:
+        return float(sorted_values[-1])
+    idx = (p / 100.0) * (len(sorted_values) - 1)
+    lo = int(idx)
+    hi = min(lo + 1, len(sorted_values) - 1)
+    frac = idx - lo
+    return sorted_values[lo] + (sorted_values[hi] - sorted_values[lo]) * frac
+
+
+def enforce_strong_bosses(
+    parties_text: str,
+    all_species: list[str],
+    bst: dict[str, int],
+    min_percentile: int,
+) -> str:
+    """Upgrade boss teams so each one's average BST clears ``min_percentile``."""
+
+    pool_values = sorted(bst[s] for s in all_species if s in bst)
+    if not pool_values:
+        return parties_text
+    threshold = _percentile(pool_values, min_percentile)
+
+    strong_pool = [s for s in all_species if bst.get(s, 0) >= threshold]
+    if not strong_pool:
+        strong_pool = [max(all_species, key=lambda s: bst.get(s, 0))]
+
+    def process(match: re.Match[str]) -> str:
+        header, name, body, footer = match.groups()
+        if not _is_boss_party(name):
+            return match.group(0)
+
+        tokens = _SPECIES_FIELD_RE.findall(body)
+        team = [s for s in tokens if s not in ("SPECIES_NONE", "SPECIES_EGG")]
+        if not team:
+            return match.group(0)
+
+        values = [bst.get(s, 0) for s in team]
+        guard = 0
+        while sum(values) / len(values) < threshold and guard < 1000:
+            weakest = min(range(len(values)), key=lambda k: values[k])
+            # Prefer a strong species not already on the team to keep variety.
+            choices = [s for s in strong_pool if s not in team] or strong_pool
+            new_species = random.choice(choices)
+            team[weakest] = new_species
+            values[weakest] = bst.get(new_species, 0)
+            guard += 1
+
+        team_iter = iter(team)
+
+        def replace_species(field: re.Match[str]) -> str:
+            token = field.group(1)
+            if token in ("SPECIES_NONE", "SPECIES_EGG"):
+                return field.group(0)
+            return ".species = " + next(team_iter)
+
+        return header + _SPECIES_FIELD_RE.sub(replace_species, body) + footer
+
+    return _PARTY_BLOCK_RE.sub(process, parties_text)
+
+
 def _pick_species(all_species: list[str], *, avoid: str | None = None) -> str:
     choice = random.choice(all_species)
     if avoid is not None and choice == avoid and len(all_species) > 1:
@@ -1801,6 +1932,18 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--strong-bosses-percentile",
+        type=int,
+        default=None,
+        help=(
+            "When randomizing trainers, guarantee that each boss team (gym leaders, "
+            "Elite Four, champion, Aqua/Magma leaders and admins, both rivals, and "
+            "Wally) has an average base-stat total at or above this percentile "
+            "(0-100) of BSTs across the randomization pool. Weakest slots are "
+            "upgraded to strong species until the average clears the bar."
+        ),
+    )
+    parser.add_argument(
         "--restore",
         action="store_true",
         help="Restore original (unrandomized) files from randomizer/ templates.",
@@ -2147,6 +2290,13 @@ def main() -> None:
             trainer_parties = apply_stronger_gym_leaders(trainer_parties)
         if do_trainers:
             trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
+            if args.strong_bosses_percentile is not None:
+                species_info_text = (repo_root / "src/data/pokemon/species_info.h").read_text()
+                bst = parse_base_stat_totals(species_info_text)
+                trainer_parties = enforce_strong_bosses(
+                    trainer_parties, all_species, bst,
+                    max(0, min(100, args.strong_bosses_percentile)),
+                )
         trainer_parties = scale_trainer_party_levels(
             trainer_parties,
             trainer_level_percent,

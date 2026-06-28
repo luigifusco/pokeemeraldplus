@@ -88,6 +88,8 @@ class BuildConfig:
     stronger_rival: bool = False
     stronger_wally: bool = False
     stronger_gym_leaders: bool = False
+    guarantee_strong_bosses: bool = False
+    strong_bosses_percentile: int = 0       # 0..100, min BST percentile for boss teams
     level_scale: LevelScale = field(default_factory=LevelScale)
     randomize_level_up_moves: bool = False
     randomize_egg_moves: bool = False
@@ -261,6 +263,12 @@ def to_randomize_args(
 
     if cfg.stronger_gym_leaders:
         argv.append("--stronger-gym-leaders")
+
+    if cfg.guarantee_strong_bosses:
+        argv.extend([
+            "--strong-bosses-percentile",
+            str(_clamp(cfg.strong_bosses_percentile, 0, 100)),
+        ])
 
     if cfg.evo_mode == EvoMode.HARDCODED:
         argv.append("--hardcoded-random-evos")
