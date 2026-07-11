@@ -259,6 +259,7 @@ class MakeArgsTest(unittest.TestCase):
             "REPEL_ANY_LEVEL=0",
             "LEVEL_CAP=0",
             "START_WITH_CAP_CANDY=0",
+            "SWAP_TRAINER_POKEMON=0",
             "NUZLOCKE_DELETE_FAINTED=0",
             "INSTANT_TEXT=0",
             "FAST_BATTLE_ANIMS=0",
@@ -307,6 +308,10 @@ class MakeArgsTest(unittest.TestCase):
     def test_cap_candy_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(start_with_cap_candy=True), jobs=1)
         self.assertIn("START_WITH_CAP_CANDY=1", args)
+
+    def test_trainer_pokemon_swap_emits_make_flag(self) -> None:
+        args = to_make_args(BuildConfig(swap_trainer_pokemon=True), jobs=1)
+        self.assertIn("SWAP_TRAINER_POKEMON=1", args)
 
     def test_exp_multiplier_emits_tenths(self) -> None:
         self.assertIn("EXP_MULTIPLIER=25", to_make_args(BuildConfig(exp_multiplier=2.5), jobs=1))

@@ -188,6 +188,7 @@ static EWRAM_DATA struct PokemonSummaryScreenData
     u8 unk_filler4[6];
 } *sMonSummaryScreen = NULL;
 EWRAM_DATA u8 gLastViewedMonIndex = 0;
+EWRAM_DATA bool8 gSummaryScreenSelectionMade = FALSE;
 static EWRAM_DATA u8 sMoveSlotToReplace = 0;
 ALIGNED(4) static EWRAM_DATA u8 sAnimDelayTaskId = 0;
 
@@ -1119,6 +1120,7 @@ void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, 
         sMonSummaryScreen->maxPageIndex = PSS_PAGE_COUNT - 1;
         break;
     case SUMMARY_MODE_LOCK_MOVES:
+    case SUMMARY_MODE_SELECT_MON:
         sMonSummaryScreen->minPageIndex = 0;
         sMonSummaryScreen->maxPageIndex = PSS_PAGE_COUNT - 1;
         sMonSummaryScreen->lockMovesFlag = TRUE;
@@ -1131,6 +1133,7 @@ void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, 
     }
 
     sMonSummaryScreen->currPageIndex = sMonSummaryScreen->minPageIndex;
+    gSummaryScreenSelectionMade = FALSE;
     SummaryScreen_SetAnimDelayTaskId(TASK_NONE);
 
     // Always use the MonSpritesGfxManager for the summary screen outside of battle.
@@ -1560,7 +1563,14 @@ static void Task_HandleInput(u8 taskId)
         }
         else if (JOY_NEW(A_BUTTON))
         {
-            if (sMonSummaryScreen->currPageIndex != PSS_PAGE_SKILLS)
+            if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MON)
+            {
+                StopPokemonAnimations();
+                PlaySE(SE_SELECT);
+                gSummaryScreenSelectionMade = TRUE;
+                BeginCloseSummaryScreen(taskId);
+            }
+            else if (sMonSummaryScreen->currPageIndex != PSS_PAGE_SKILLS)
             {
                 if (sMonSummaryScreen->currPageIndex == PSS_PAGE_INFO)
                 {
@@ -1579,6 +1589,8 @@ static void Task_HandleInput(u8 taskId)
         {
             StopPokemonAnimations();
             PlaySE(SE_SELECT);
+            if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MON)
+                gSummaryScreenSelectionMade = FALSE;
             BeginCloseSummaryScreen(taskId);
         }
     }
@@ -2849,12 +2861,18 @@ static void PrintPageNamesAndStats(void)
     PrintTextOnWindow(PSS_LABEL_WINDOW_BATTLE_MOVES_TITLE, gText_BattleMoves, 2, 1, 0, 1);
     PrintTextOnWindow(PSS_LABEL_WINDOW_CONTEST_MOVES_TITLE, gText_ContestMoves, 2, 1, 0, 1);
 
-    stringXPos = GetStringRightAlignXOffset(FONT_NORMAL, gText_Cancel2, 62);
+    if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MON)
+        stringXPos = GetStringRightAlignXOffset(FONT_NORMAL, gText_Select, 62);
+    else
+        stringXPos = GetStringRightAlignXOffset(FONT_NORMAL, gText_Cancel2, 62);
     iconXPos = stringXPos - 16;
     if (iconXPos < 0)
         iconXPos = 0;
     PrintAOrBButtonIcon(PSS_LABEL_WINDOW_PROMPT_CANCEL, FALSE, iconXPos);
-    PrintTextOnWindow(PSS_LABEL_WINDOW_PROMPT_CANCEL, gText_Cancel2, stringXPos, 1, 0, 0);
+    if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MON)
+        PrintTextOnWindow(PSS_LABEL_WINDOW_PROMPT_CANCEL, gText_Select, stringXPos, 1, 0, 0);
+    else
+        PrintTextOnWindow(PSS_LABEL_WINDOW_PROMPT_CANCEL, gText_Cancel2, stringXPos, 1, 0, 0);
 
     stringXPos = GetStringRightAlignXOffset(FONT_NORMAL, gText_Info, 62);
     iconXPos = stringXPos - 16;
@@ -2902,11 +2920,15 @@ static void PutPageWindowTilemaps(u8 page)
     ClearWindowTilemap(PSS_LABEL_WINDOW_BATTLE_MOVES_TITLE);
     ClearWindowTilemap(PSS_LABEL_WINDOW_CONTEST_MOVES_TITLE);
 
+    if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MON)
+        PutWindowTilemap(PSS_LABEL_WINDOW_PROMPT_CANCEL);
+
     switch (page)
     {
     case PSS_PAGE_INFO:
         PutWindowTilemap(PSS_LABEL_WINDOW_POKEMON_INFO_TITLE);
-        PutWindowTilemap(PSS_LABEL_WINDOW_PROMPT_CANCEL);
+        if (sMonSummaryScreen->mode != SUMMARY_MODE_SELECT_MON)
+            PutWindowTilemap(PSS_LABEL_WINDOW_PROMPT_CANCEL);
         if (InBattleFactory() == TRUE || InSlateportBattleTent() == TRUE)
             PutWindowTilemap(PSS_LABEL_WINDOW_POKEMON_INFO_RENTAL);
         PutWindowTilemap(PSS_LABEL_WINDOW_POKEMON_INFO_TYPE);
@@ -2924,7 +2946,7 @@ static void PutPageWindowTilemaps(u8 page)
             if (sMonSummaryScreen->newMove != MOVE_NONE || sMonSummaryScreen->firstMoveIndex != MAX_MON_MOVES)
                 PutWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
         }
-        else
+        else if (sMonSummaryScreen->mode != SUMMARY_MODE_SELECT_MON)
         {
             PutWindowTilemap(PSS_LABEL_WINDOW_PROMPT_INFO);
         }
@@ -2936,7 +2958,7 @@ static void PutPageWindowTilemaps(u8 page)
             if (sMonSummaryScreen->newMove != MOVE_NONE || sMonSummaryScreen->firstMoveIndex != MAX_MON_MOVES)
                 PutWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
         }
-        else
+        else if (sMonSummaryScreen->mode != SUMMARY_MODE_SELECT_MON)
         {
             PutWindowTilemap(PSS_LABEL_WINDOW_PROMPT_INFO);
         }
@@ -2953,10 +2975,14 @@ static void ClearPageWindowTilemaps(u8 page)
 {
     u8 i;
 
+    if (sMonSummaryScreen->mode == SUMMARY_MODE_SELECT_MON)
+        ClearWindowTilemap(PSS_LABEL_WINDOW_PROMPT_CANCEL);
+
     switch (page)
     {
     case PSS_PAGE_INFO:
-        ClearWindowTilemap(PSS_LABEL_WINDOW_PROMPT_CANCEL);
+        if (sMonSummaryScreen->mode != SUMMARY_MODE_SELECT_MON)
+            ClearWindowTilemap(PSS_LABEL_WINDOW_PROMPT_CANCEL);
         if (InBattleFactory() == TRUE || InSlateportBattleTent() == TRUE)
             ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_INFO_RENTAL);
         ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_INFO_TYPE);
@@ -2972,7 +2998,7 @@ static void ClearPageWindowTilemaps(u8 page)
             if (sMonSummaryScreen->newMove != MOVE_NONE || sMonSummaryScreen->firstMoveIndex != MAX_MON_MOVES)
                 ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
         }
-        else
+        else if (sMonSummaryScreen->mode != SUMMARY_MODE_SELECT_MON)
         {
             ClearWindowTilemap(PSS_LABEL_WINDOW_PROMPT_INFO);
         }
@@ -2983,7 +3009,7 @@ static void ClearPageWindowTilemaps(u8 page)
             if (sMonSummaryScreen->newMove != MOVE_NONE || sMonSummaryScreen->firstMoveIndex != MAX_MON_MOVES)
                 ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
         }
-        else
+        else if (sMonSummaryScreen->mode != SUMMARY_MODE_SELECT_MON)
         {
             ClearWindowTilemap(PSS_LABEL_WINDOW_PROMPT_INFO);
         }

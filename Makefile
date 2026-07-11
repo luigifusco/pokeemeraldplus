@@ -230,6 +230,10 @@ STEAL_TRAINER_TEAM ?= 0
 ifeq ($(STEAL_TRAINER_TEAM),1)
 	CPPFLAGS += -DSTEAL_TRAINER_TEAM
 endif
+SWAP_TRAINER_POKEMON ?= 0
+ifeq ($(SWAP_TRAINER_POKEMON),1)
+	CPPFLAGS += -DSWAP_TRAINER_POKEMON
+endif
 
 # Compile-time toggle: prevent Pokémon from gaining experience.
 # Usage: make NO_EXP=1

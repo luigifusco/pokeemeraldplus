@@ -44,6 +44,7 @@
 #include "string_util.h"
 #include "strings.h"
 #include "task.h"
+#include "trainer_mon_swap.h"
 
 #ifndef OPPONENT_STAT_STAGE_MOD
 #define OPPONENT_STAT_STAGE_MOD 0
@@ -82,7 +83,7 @@ static void TryCorrectShedinjaLanguage(struct Pokemon *mon);
 static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 firstTrainer);
 static bool8 IsBattlerAbsent(u8 battler);
 
-#ifdef STEAL_TRAINER_TEAM
+#if defined(STEAL_TRAINER_TEAM) && !defined(SWAP_TRAINER_POKEMON)
 static void ReplacePlayerPartyWithEnemyPartyAndRewriteOT(void);
 static void FullyHealMon(struct Pokemon *mon);
 #endif
@@ -5363,7 +5364,7 @@ static void ReturnFromBattleToOverworld(void)
     if (gBattleTypeFlags & BATTLE_TYPE_LINK && gReceivedRemoteLinkPlayers)
         return;
 
-#ifdef STEAL_TRAINER_TEAM
+#if defined(STEAL_TRAINER_TEAM) && !defined(SWAP_TRAINER_POKEMON)
     if (gBattleOutcome == B_OUTCOME_WON
         && (gBattleTypeFlags & BATTLE_TYPE_TRAINER)
         && !(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK | BATTLE_TYPE_RECORDED)))
@@ -5389,10 +5390,17 @@ static void ReturnFromBattleToOverworld(void)
     }
 
     m4aSongNumStop(SE_LOW_HEALTH);
+#ifdef SWAP_TRAINER_POKEMON
+    if (ShouldOfferTrainerMonSwap())
+    {
+        StartTrainerMonSwap();
+        return;
+    }
+#endif
     SetMainCallback2(gMain.savedCallback);
 }
 
-#ifdef STEAL_TRAINER_TEAM
+#if defined(STEAL_TRAINER_TEAM) && !defined(SWAP_TRAINER_POKEMON)
 static void FullyHealMon(struct Pokemon *mon)
 {
     u8 i;

@@ -55,6 +55,7 @@ const defaultConfig = () => ({
     nuzlocke_delete_fainted: false,
     force_doubles: false,
     steal_trainer_team: false,
+    swap_trainer_pokemon: false,
     no_exp: false,
     no_exp_wild: false,
     no_exp_trainer: false,

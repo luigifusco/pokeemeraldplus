@@ -86,6 +86,7 @@ class BuildConfigModel(BaseModel):
     nuzlocke_delete_fainted: bool = False
     force_doubles: bool = False
     steal_trainer_team: bool = False
+    swap_trainer_pokemon: bool = False
     no_exp: bool = False
     no_exp_wild: bool = False
     no_exp_trainer: bool = False

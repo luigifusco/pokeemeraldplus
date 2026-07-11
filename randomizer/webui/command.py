@@ -111,6 +111,7 @@ class BuildConfig:
     nuzlocke_delete_fainted: bool = False
     force_doubles: bool = False
     steal_trainer_team: bool = False
+    swap_trainer_pokemon: bool = False
     no_exp: bool = False
     no_exp_wild: bool = False
     no_exp_trainer: bool = False
@@ -335,6 +336,7 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("manual_battle_text", "MANUAL_BATTLE_TEXT"),
     ("force_doubles", "FORCE_DOUBLE_BATTLES"),
     ("steal_trainer_team", "STEAL_TRAINER_TEAM"),
+    ("swap_trainer_pokemon", "SWAP_TRAINER_POKEMON"),
     ("no_exp", "NO_EXP"),
     ("no_exp_wild", "NO_EXP_WILD"),
     ("no_exp_trainer", "NO_EXP_TRAINER"),
