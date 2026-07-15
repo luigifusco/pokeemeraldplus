@@ -60,6 +60,49 @@ static const struct TrainerMonNoItemDefaultMoves sParty[] = {
 
 
 class RouteIndependentTrainersTest(unittest.TestCase):
+    def test_global_wild_mapping_is_stable_across_routes(self) -> None:
+        text = json.dumps({
+            "wild_encounter_groups": [{
+                "encounters": [
+                    {
+                        "map": "MAP_ROUTE101",
+                        "land_mons": {"mons": [
+                            {"species": "SPECIES_GEODUDE"},
+                        ]},
+                    },
+                    {
+                        "map": "MAP_ROUTE112",
+                        "land_mons": {"mons": [
+                            {"species": "SPECIES_GEODUDE"},
+                        ]},
+                    },
+                ],
+            }],
+        })
+
+        with patch(
+            "randomizer.randomize.random.choice",
+            return_value="SPECIES_RALTS",
+        ) as choose:
+            result = json.loads(
+                randomize_species_in_text(
+                    text,
+                    ["SPECIES_RALTS", "SPECIES_ARON"],
+                    per_occurrence=False,
+                )
+            )
+
+        encounters = result["wild_encounter_groups"][0]["encounters"]
+        self.assertEqual(
+            encounters[0]["land_mons"]["mons"][0]["species"],
+            "SPECIES_RALTS",
+        )
+        self.assertEqual(
+            encounters[1]["land_mons"]["mons"][0]["species"],
+            "SPECIES_RALTS",
+        )
+        choose.assert_called_once()
+
     def test_wild_species_is_stable_within_route_and_rerolled_across_routes(self) -> None:
         text = json.dumps({
             "wild_encounter_groups": [{

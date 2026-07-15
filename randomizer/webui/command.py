@@ -37,6 +37,7 @@ class RandomMode:
     PER_OCCURRENCE = "per-occurrence"
     PER_MAP = "per-map"        # per-map-consistent
     PER_ROUTE_INDEPENDENT_TRAINERS = "per-route-independent-trainers"
+    GLOBAL_WILD_INDEPENDENT_TRAINERS = "global-wild-independent-trainers"
 
 
 class EvoMode:
@@ -215,6 +216,8 @@ def to_randomize_args(
             argv.append("--per-map-consistent")
         elif cfg.random_mode == RandomMode.PER_ROUTE_INDEPENDENT_TRAINERS:
             argv.append("--per-route-independent-trainers")
+        elif cfg.random_mode == RandomMode.GLOBAL_WILD_INDEPENDENT_TRAINERS:
+            argv.append("--global-wild-independent-trainers")
     else:
         # Restore templates; level-scaling block below may still apply
         # modifications on top of the restored files.

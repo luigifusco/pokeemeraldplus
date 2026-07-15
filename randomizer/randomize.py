@@ -2032,6 +2032,15 @@ def parse_args() -> argparse.Namespace:
             "stable so the selection screen and received Pokemon stay consistent."
         ),
     )
+    mode.add_argument(
+        "--global-wild-independent-trainers",
+        action="store_true",
+        help=(
+            "Use one stable species mapping across all wild routes/maps while "
+            "rerolling every trainer party slot independently. Starter substitutions "
+            "also remain stable."
+        ),
+    )
 
     parser.add_argument(
         "--level-percent",
@@ -2363,6 +2372,7 @@ def main() -> None:
                 per_occurrence=(
                     args.per_occurrence
                     or args.per_route_independent_trainers
+                    or args.global_wild_independent_trainers
                 ),
             )
             # Pad boss teams first so the strength guarantee below covers the
