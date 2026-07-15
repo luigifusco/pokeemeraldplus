@@ -2,21 +2,29 @@
 #include "battle.h"
 #include "mail.h"
 #include "main.h"
+#include "overworld.h"
+#include "party_menu.h"
 #include "pokedex.h"
 #include "pokemon.h"
-#include "pokemon_summary_screen.h"
 #include "trainer_mon_swap.h"
 #include "constants/items.h"
 
 #ifdef SWAP_TRAINER_POKEMON
 
-static MainCallback sReturnCallback;
-static EWRAM_DATA struct Pokemon sTrainerSwapEnemyParty[PARTY_SIZE];
+static EWRAM_DATA struct Pokemon sTrainerSwapEnemyParty[PARTY_SIZE] = {0};
+static EWRAM_DATA struct Pokemon sTrainerSwapPlayerParty[PARTY_SIZE] = {0};
 static u8 sTrainerSwapEnemyCount;
+static u8 sTrainerSwapPlayerCount;
 static u8 sTrainerSwapEnemySelection;
+static u8 sTrainerSwapMenuSelection;
+static bool8 sTrainerSwapPending;
+static bool8 sTrainerSwapShowingEnemy;
 
-static void CB2_AfterTrainerSwapEnemySummary(void);
-static void CB2_AfterTrainerSwapPlayerSummary(void);
+static void CB2_TrainerMonSwapReturnToEnemy(void);
+static void CB2_TrainerMonSwapQuit(void);
+static void ShowTrainerSwapEnemyParty(void);
+static void ShowTrainerSwapPlayerParty(void);
+static void CopyTrainerSwapPartyToPlayer(struct Pokemon *party, u8 count);
 static void FinishTrainerMonSwap(void);
 
 static void FullyHealSwapMon(struct Pokemon *mon)
@@ -55,11 +63,21 @@ bool8 ShouldOfferTrainerMonSwap(void)
         && !(gBattleTypeFlags & excludedBattleTypes);
 }
 
-void StartTrainerMonSwap(void)
+void PrepareTrainerMonSwap(void)
 {
     u8 i;
 
-    sReturnCallback = gMain.savedCallback;
+    sTrainerSwapPending = FALSE;
+    sTrainerSwapPlayerCount = CalculatePlayerPartyCount();
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        CopyMon(
+            &sTrainerSwapPlayerParty[i],
+            &gPlayerParty[i],
+            sizeof(struct Pokemon)
+        );
+    }
+
     sTrainerSwapEnemyCount = 0;
     for (i = 0; i < PARTY_SIZE; i++)
     {
@@ -76,54 +94,48 @@ void StartTrainerMonSwap(void)
         sTrainerSwapEnemyCount++;
     }
 
-    if (sTrainerSwapEnemyCount == 0)
-    {
-        FinishTrainerMonSwap();
-        return;
-    }
-
-    ShowPokemonSummaryScreen(
-        SUMMARY_MODE_SELECT_MON,
-        sTrainerSwapEnemyParty,
-        0,
-        sTrainerSwapEnemyCount - 1,
-        CB2_AfterTrainerSwapEnemySummary
-    );
+    if (sTrainerSwapEnemyCount != 0)
+        sTrainerSwapPending = TRUE;
 }
 
-static void CB2_AfterTrainerSwapEnemySummary(void)
+bool8 IsTrainerMonSwapPending(void)
 {
-    if (!gSummaryScreenSelectionMade)
-    {
-        FinishTrainerMonSwap();
-        return;
-    }
-
-    sTrainerSwapEnemySelection = gLastViewedMonIndex;
-    CalculatePlayerPartyCount();
-    if (gPlayerPartyCount == 0)
-    {
-        FinishTrainerMonSwap();
-        return;
-    }
-
-    ShowPokemonSummaryScreen(
-        SUMMARY_MODE_SELECT_MON,
-        gPlayerParty,
-        0,
-        gPlayerPartyCount - 1,
-        CB2_AfterTrainerSwapPlayerSummary
-    );
+    return sTrainerSwapPending;
 }
 
-static void CB2_AfterTrainerSwapPlayerSummary(void)
+void CB2_StartTrainerMonSwap(void)
 {
-    if (gSummaryScreenSelectionMade
-        && gLastViewedMonIndex < gPlayerPartyCount
+    ShowTrainerSwapEnemyParty();
+}
+
+void SetTrainerMonSwapSelection(u8 slot)
+{
+    sTrainerSwapMenuSelection = slot;
+}
+
+void CB2_TrainerMonSwapSelectionMade(void)
+{
+    if (sTrainerSwapShowingEnemy)
+    {
+        if (sTrainerSwapMenuSelection >= sTrainerSwapEnemyCount)
+        {
+            ShowTrainerSwapEnemyParty();
+            return;
+        }
+        sTrainerSwapEnemySelection = sTrainerSwapMenuSelection;
+        ShowTrainerSwapPlayerParty();
+        return;
+    }
+
+    if (sTrainerSwapMenuSelection < sTrainerSwapPlayerCount
         && sTrainerSwapEnemySelection < sTrainerSwapEnemyCount)
     {
         struct Pokemon incoming;
-        u8 mailId = GetMonData(&gPlayerParty[gLastViewedMonIndex], MON_DATA_MAIL);
+        u8 i;
+        u8 mailId = GetMonData(
+            &gPlayerParty[sTrainerSwapMenuSelection],
+            MON_DATA_MAIL
+        );
         u16 species;
 
         if (mailId != MAIL_NONE && mailId < MAIL_COUNT)
@@ -136,20 +148,78 @@ static void CB2_AfterTrainerSwapPlayerSummary(void)
         );
         SetMonOwnerToPlayer(&incoming);
         FullyHealSwapMon(&incoming);
-        CopyMon(&gPlayerParty[gLastViewedMonIndex], &incoming, sizeof(incoming));
+        CopyMon(
+            &gPlayerParty[sTrainerSwapMenuSelection],
+            &incoming,
+            sizeof(incoming)
+        );
 
         species = GetMonData(&incoming, MON_DATA_SPECIES);
         GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);
         GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT);
         CalculatePlayerPartyCount();
+        sTrainerSwapPlayerCount = gPlayerPartyCount;
+        for (i = 0; i < PARTY_SIZE; i++)
+        {
+            CopyMon(
+                &sTrainerSwapPlayerParty[i],
+                &gPlayerParty[i],
+                sizeof(struct Pokemon)
+            );
+        }
     }
 
     FinishTrainerMonSwap();
 }
 
+static void ShowTrainerSwapEnemyParty(void)
+{
+    sTrainerSwapShowingEnemy = TRUE;
+    CopyTrainerSwapPartyToPlayer(
+        sTrainerSwapEnemyParty,
+        sTrainerSwapEnemyCount
+    );
+    OpenTrainerMonSwapPartyMenu(TRUE, CB2_TrainerMonSwapQuit);
+}
+
+static void ShowTrainerSwapPlayerParty(void)
+{
+    sTrainerSwapShowingEnemy = FALSE;
+    CopyTrainerSwapPartyToPlayer(
+        sTrainerSwapPlayerParty,
+        sTrainerSwapPlayerCount
+    );
+    OpenTrainerMonSwapPartyMenu(FALSE, CB2_TrainerMonSwapReturnToEnemy);
+}
+
+static void CopyTrainerSwapPartyToPlayer(struct Pokemon *party, u8 count)
+{
+    u8 i;
+
+    ZeroPlayerPartyMons();
+    for (i = 0; i < count; i++)
+        CopyMon(&gPlayerParty[i], &party[i], sizeof(struct Pokemon));
+    CalculatePlayerPartyCount();
+}
+
+static void CB2_TrainerMonSwapReturnToEnemy(void)
+{
+    ShowTrainerSwapEnemyParty();
+}
+
+static void CB2_TrainerMonSwapQuit(void)
+{
+    FinishTrainerMonSwap();
+}
+
 static void FinishTrainerMonSwap(void)
 {
-    SetMainCallback2(sReturnCallback);
+    CopyTrainerSwapPartyToPlayer(
+        sTrainerSwapPlayerParty,
+        sTrainerSwapPlayerCount
+    );
+    sTrainerSwapPending = FALSE;
+    SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
 }
 
 #endif // SWAP_TRAINER_POKEMON

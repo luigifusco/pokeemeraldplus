@@ -5392,10 +5392,7 @@ static void ReturnFromBattleToOverworld(void)
     m4aSongNumStop(SE_LOW_HEALTH);
 #ifdef SWAP_TRAINER_POKEMON
     if (ShouldOfferTrainerMonSwap())
-    {
-        StartTrainerMonSwap();
-        return;
-    }
+        PrepareTrainerMonSwap();
 #endif
     SetMainCallback2(gMain.savedCallback);
 }

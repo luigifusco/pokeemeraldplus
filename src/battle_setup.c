@@ -23,6 +23,7 @@
 #include "sound.h"
 #include "strings.h"
 #include "trainer_hill.h"
+#include "trainer_mon_swap.h"
 #include "secret_base.h"
 #include "string_util.h"
 #include "overworld.h"
@@ -94,6 +95,7 @@ static u8 GetStarterLevel(void);
 static void CB2_StartFirstBattle(void);
 static void CB2_EndFirstBattle(void);
 static void CB2_EndTrainerBattle(void);
+static void CB2_ReturnToFieldAfterTrainerBattle(void);
 static bool32 IsPlayerDefeated(u32 battleOutcome);
 static u16 GetRematchTrainerId(u16 trainerId);
 static void UseGymLeaderFirstRoster(void);
@@ -266,6 +268,18 @@ static const struct TrainerBattleParameter sTrainerBContinueScriptBattleParams[]
     .trainerIds = {trainer1, trainer2, trainer3, trainer4, trainer5},   \
     .mapGroup = MAP_GROUP(map),                                         \
     .mapNum = MAP_NUM(map),                                             \
+}
+
+static void CB2_ReturnToFieldAfterTrainerBattle(void)
+{
+#ifdef SWAP_TRAINER_POKEMON
+    if (IsTrainerMonSwapPending())
+    {
+        SetMainCallback2(CB2_StartTrainerMonSwap);
+        return;
+    }
+#endif
+    SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
 }
 
 const struct RematchTrainer gRematchTable[REMATCH_TABLE_ENTRIES] =
@@ -1416,7 +1430,7 @@ static void CB2_EndTrainerBattle(void)
     }
     else
     {
-        SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+        SetMainCallback2(CB2_ReturnToFieldAfterTrainerBattle);
         if (CurrentBattlePyramidLocation() == PYRAMID_LOCATION_NONE && !InTrainerHillChallenge())
         {
             RegisterTrainerInMatchCall();
@@ -1437,7 +1451,7 @@ static void CB2_EndRematchBattle(void)
     }
     else
     {
-        SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+        SetMainCallback2(CB2_ReturnToFieldAfterTrainerBattle);
         RegisterTrainerInMatchCall();
         SetBattledTrainersFlags();
         HandleRematchVarsOnBattleEnd();

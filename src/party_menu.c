@@ -62,6 +62,7 @@
 #include "text.h"
 #include "text_window.h"
 #include "trade.h"
+#include "trainer_mon_swap.h"
 #include "union_room.h"
 #include "window.h"
 #include "constants/battle.h"
@@ -97,6 +98,7 @@ enum {
     MENU_TRADE1,
     MENU_TRADE2,
     MENU_TOSS,
+    MENU_TRAINER_SWAP,
     MENU_FIELD_MOVES
 };
 
@@ -116,6 +118,7 @@ enum {
     ACTIONS_TRADE,
     ACTIONS_SPIN_TRADE,
     ACTIONS_TAKEITEM_TOSS,
+    ACTIONS_TRAINER_SWAP,
 };
 
 // In CursorCb_FieldMove, field moves <= FIELD_MOVE_WATERFALL are assumed to line up with the badge flags.
@@ -482,6 +485,7 @@ static void CursorCb_Register(u8);
 static void CursorCb_Trade1(u8);
 static void CursorCb_Trade2(u8);
 static void CursorCb_Toss(u8);
+static void CursorCb_TrainerSwap(u8);
 static void CursorCb_FieldMove(u8);
 static bool8 SetUpFieldMove_Surf(void);
 static bool8 SetUpFieldMove_Fly(void);
@@ -1384,6 +1388,13 @@ static bool8 IsSelectedMonNotEgg(u8 *slotPtr)
 
 static void HandleChooseMonCancel(u8 taskId, s8 *slotPtr)
 {
+    if (gPartyMenu.menuType == PARTY_MENU_TYPE_TRAINER_SWAP_PLAYER)
+    {
+        PlaySE(SE_SELECT);
+        Task_ClosePartyMenu(taskId);
+        return;
+    }
+
     switch (gPartyMenu.action)
     {
     case PARTY_ACTION_SEND_OUT:
@@ -1416,7 +1427,9 @@ static bool8 DisplayCancelChooseMonYesNo(u8 taskId)
 {
     const u8 *stringPtr = NULL;
 
-    if (gPartyMenu.menuType == PARTY_MENU_TYPE_CONTEST)
+    if (gPartyMenu.menuType == PARTY_MENU_TYPE_TRAINER_SWAP_ENEMY)
+        stringPtr = gText_QuitSwapping;
+    else if (gPartyMenu.menuType == PARTY_MENU_TYPE_CONTEST)
         stringPtr = gText_CancelParticipation;
     else if (gPartyMenu.menuType == PARTY_MENU_TYPE_CHOOSE_HALF)
         stringPtr = GetFacilityCancelString();
@@ -2687,6 +2700,10 @@ static u8 GetPartyMenuActionsType(struct Pokemon *mon)
     case PARTY_MENU_TYPE_STORE_PYRAMID_HELD_ITEMS:
         actionType = ACTIONS_TAKEITEM_TOSS;
         break;
+    case PARTY_MENU_TYPE_TRAINER_SWAP_ENEMY:
+    case PARTY_MENU_TYPE_TRAINER_SWAP_PLAYER:
+        actionType = ACTIONS_TRAINER_SWAP;
+        break;
     // The following have no selection actions (i.e. they exit immediately upon selection)
     // PARTY_MENU_TYPE_CONTEST
     // PARTY_MENU_TYPE_CHOOSE_MON
@@ -2779,6 +2796,18 @@ static void CursorCb_Summary(u8 taskId)
     PlaySE(SE_SELECT);
     sPartyMenuInternal->exitCallback = CB2_ShowPokemonSummaryScreen;
     Task_ClosePartyMenu(taskId);
+}
+
+static void CursorCb_TrainerSwap(u8 taskId)
+{
+    PlaySE(SE_SELECT);
+#ifdef SWAP_TRAINER_POKEMON
+    SetTrainerMonSwapSelection(gPartyMenu.slotId);
+    sPartyMenuInternal->exitCallback = CB2_TrainerMonSwapSelectionMade;
+    Task_ClosePartyMenu(taskId);
+#else
+    CursorCb_Cancel1(taskId);
+#endif
 }
 
 static void CB2_ShowPokemonSummaryScreen(void)
@@ -5471,6 +5500,26 @@ static void TryTutorSelectedMon(u8 taskId)
 void CB2_PartyMenuFromStartMenu(void)
 {
     InitPartyMenu(PARTY_MENU_TYPE_FIELD, PARTY_LAYOUT_SINGLE, PARTY_ACTION_CHOOSE_MON, FALSE, PARTY_MSG_CHOOSE_MON, Task_HandleChooseMonInput, CB2_ReturnToFieldWithOpenMenu);
+}
+
+void OpenTrainerMonSwapPartyMenu(bool8 showEnemy, MainCallback exitCallback)
+{
+    u8 menuType;
+
+    if (showEnemy)
+        menuType = PARTY_MENU_TYPE_TRAINER_SWAP_ENEMY;
+    else
+        menuType = PARTY_MENU_TYPE_TRAINER_SWAP_PLAYER;
+
+    InitPartyMenu(
+        menuType,
+        PARTY_LAYOUT_SINGLE,
+        PARTY_ACTION_CHOOSE_MON,
+        FALSE,
+        PARTY_MSG_CHOOSE_MON,
+        Task_HandleChooseMonInput,
+        exitCallback
+    );
 }
 
 // Giving an item by selecting Give from the bag menu

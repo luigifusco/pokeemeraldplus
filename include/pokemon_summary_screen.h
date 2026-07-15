@@ -4,7 +4,6 @@
 #include "main.h"
 
 extern u8 gLastViewedMonIndex;
-extern bool8 gSummaryScreenSelectionMade;
 
 extern const u8 *const gMoveDescriptionPointers[];
 extern const u8 *const gNatureNamePointers[];
@@ -23,7 +22,6 @@ enum PokemonSummaryScreenMode
     SUMMARY_MODE_LOCK_MOVES,
     SUMMARY_MODE_BOX,
     SUMMARY_MODE_SELECT_MOVE,
-    SUMMARY_MODE_SELECT_MON,
 };
 
 #endif // GUARD_POKEMON_SUMMARY_SCREEN_H
