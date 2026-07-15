@@ -275,7 +275,7 @@ static void CB2_ReturnToFieldAfterTrainerBattle(void)
 #ifdef SWAP_TRAINER_POKEMON
     if (IsTrainerMonSwapPending())
     {
-        SetMainCallback2(CB2_StartTrainerMonSwap);
+        SetMainCallback2(CB2_ReturnToFieldForTrainerMonSwap);
         return;
     }
 #endif

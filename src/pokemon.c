@@ -7209,6 +7209,7 @@ void DestroyMonSpritesGfxManager(u8 managerId)
     gfx = sMonSpritesGfxManagers[managerId];
     if (gfx == NULL)
         return;
+    sMonSpritesGfxManagers[managerId] = NULL;
 
     if (gfx->active != GFX_MANAGER_ACTIVE)
     {

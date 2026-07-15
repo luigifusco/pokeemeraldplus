@@ -20,6 +20,7 @@ static u8 sTrainerSwapMenuSelection;
 static bool8 sTrainerSwapPending;
 static bool8 sTrainerSwapShowingEnemy;
 
+static bool8 FieldCB2_StartTrainerMonSwap(void);
 static void CB2_TrainerMonSwapReturnToEnemy(void);
 static void CB2_TrainerMonSwapQuit(void);
 static void ShowTrainerSwapEnemyParty(void);
@@ -103,9 +104,19 @@ bool8 IsTrainerMonSwapPending(void)
     return sTrainerSwapPending;
 }
 
-void CB2_StartTrainerMonSwap(void)
+void CB2_ReturnToFieldForTrainerMonSwap(void)
 {
+    gFieldCallback = NULL;
+    gFieldCallback2 = FieldCB2_StartTrainerMonSwap;
+    CB2_ReturnToField();
+}
+
+static bool8 FieldCB2_StartTrainerMonSwap(void)
+{
+    gFieldCallback2 = NULL;
+    CleanupOverworldWindowsAndTilemaps();
     ShowTrainerSwapEnemyParty();
+    return FALSE;
 }
 
 void SetTrainerMonSwapSelection(u8 slot)
