@@ -114,7 +114,9 @@
                 <label class="radio"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="per-occurrence" /><span class="box"></span>
                     <div class="row-label"><strong>Per occurrence</strong><small>Every instance rolls independently (chaotic).</small></div></label>
                 <label class="radio"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="per-map" /><span class="box"></span>
-                    <div class="row-label"><strong>Per map, consistent</strong><small>One pick per map; the same species persists across routes/floors.</small></div></label>
+                    <div class="row-label"><strong>Per map, consistent</strong><small>Wild species stay consistent within each map; trainer species retain global substitutions.</small></div></label>
+                <label class="radio"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="per-route-independent-trainers" /><span class="box"></span>
+                    <div class="row-label"><strong>Per route + independent trainers</strong><small>Wild species stay consistent within one route/map but reroll on other routes; every trainer party slot rolls independently.</small></div></label>
             </div>
 
             <div class="group">

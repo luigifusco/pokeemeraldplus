@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import json
 import unittest
+from unittest.mock import patch
 
 from randomizer.randomize import (
     enforce_min_boss_party_size,
     enforce_strong_bosses,
     parse_base_stat_totals,
+    randomize_species_in_text,
+    randomize_wild_encounters_per_map,
     scale_trainer_party_levels,
     scale_wild_levels_json,
     _percentile,
@@ -54,6 +57,64 @@ static const struct TrainerMonNoItemDefaultMoves sParty[] = {
         self.assertIn(".lvl = 42", result)
         self.assertNotIn(".lvl = 5", result)
         self.assertNotIn(".lvl = 99", result)
+
+
+class RouteIndependentTrainersTest(unittest.TestCase):
+    def test_wild_species_is_stable_within_route_and_rerolled_across_routes(self) -> None:
+        text = json.dumps({
+            "wild_encounter_groups": [{
+                "encounters": [
+                    {
+                        "map": "MAP_ROUTE101",
+                        "land_mons": {"mons": [
+                            {"species": "SPECIES_POOCHYENA"},
+                            {"species": "SPECIES_POOCHYENA"},
+                        ]},
+                    },
+                    {
+                        "map": "MAP_ROUTE102",
+                        "land_mons": {"mons": [
+                            {"species": "SPECIES_POOCHYENA"},
+                        ]},
+                    },
+                ],
+            }],
+        })
+
+        with patch(
+            "randomizer.randomize._pick_species",
+            side_effect=["SPECIES_RALTS", "SPECIES_ARON"],
+        ):
+            result = json.loads(
+                randomize_wild_encounters_per_map(
+                    text,
+                    ["SPECIES_RALTS", "SPECIES_ARON"],
+                )
+            )
+
+        encounters = result["wild_encounter_groups"][0]["encounters"]
+        route101 = [mon["species"] for mon in encounters[0]["land_mons"]["mons"]]
+        route102 = [mon["species"] for mon in encounters[1]["land_mons"]["mons"]]
+        self.assertEqual(route101, ["SPECIES_RALTS", "SPECIES_RALTS"])
+        self.assertEqual(route102, ["SPECIES_ARON"])
+
+    def test_trainer_slots_roll_independently(self) -> None:
+        text = (
+            ".species = SPECIES_POOCHYENA,\n"
+            ".species = SPECIES_POOCHYENA,\n"
+        )
+        with patch(
+            "randomizer.randomize.random.choice",
+            side_effect=["SPECIES_RALTS", "SPECIES_ARON"],
+        ):
+            result = randomize_species_in_text(
+                text,
+                ["SPECIES_RALTS", "SPECIES_ARON"],
+                per_occurrence=True,
+            )
+
+        self.assertEqual(result.count("SPECIES_RALTS"), 1)
+        self.assertEqual(result.count("SPECIES_ARON"), 1)
 
 
 # Minimal species_info.h fragment: three weak, three strong species.

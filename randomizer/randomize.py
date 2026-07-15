@@ -2023,6 +2023,15 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="For wild encounters, keep replacements consistent within each map.",
     )
+    mode.add_argument(
+        "--per-route-independent-trainers",
+        action="store_true",
+        help=(
+            "Keep wild replacements consistent within each route/map but reroll "
+            "every trainer party slot independently. Starter substitutions remain "
+            "stable so the selection screen and received Pokemon stay consistent."
+        ),
+    )
 
     parser.add_argument(
         "--level-percent",
@@ -2318,7 +2327,7 @@ def main() -> None:
 
     if do_wild:
         encounters = (randomizer_dir / "wild_encounters.json").read_text()
-        if args.per_map_consistent:
+        if args.per_map_consistent or args.per_route_independent_trainers:
             encounters = randomize_wild_encounters_per_map(encounters, all_species)
         else:
             encounters = randomize_species_in_text(encounters, all_species, per_occurrence=args.per_occurrence)
@@ -2348,7 +2357,14 @@ def main() -> None:
         if args.stronger_gym_leaders:
             trainer_parties = apply_stronger_gym_leaders(trainer_parties)
         if do_trainers:
-            trainer_parties = randomize_species_in_text(trainer_parties, all_species, per_occurrence=args.per_occurrence)
+            trainer_parties = randomize_species_in_text(
+                trainer_parties,
+                all_species,
+                per_occurrence=(
+                    args.per_occurrence
+                    or args.per_route_independent_trainers
+                ),
+            )
             # Pad boss teams first so the strength guarantee below covers the
             # full (post-padding) roster.
             if args.min_boss_party_size is not None:

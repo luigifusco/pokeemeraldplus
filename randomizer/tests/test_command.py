@@ -63,6 +63,17 @@ class RandomizeArgsTest(unittest.TestCase):
         self.assertIn("--per-map-consistent", args)
         self.assertNotIn("--per-occurrence", args)
 
+    def test_per_route_independent_trainers_mode(self) -> None:
+        cfg = BuildConfig(
+            randomize_wild=True,
+            randomize_trainers=True,
+            random_mode=RandomMode.PER_ROUTE_INDEPENDENT_TRAINERS,
+        )
+        args = to_randomize_args(cfg, python_executable="py")
+        self.assertIn("--per-route-independent-trainers", args)
+        self.assertNotIn("--per-map-consistent", args)
+        self.assertNotIn("--per-occurrence", args)
+
     def test_stronger_villains_with_restore(self) -> None:
         cfg = BuildConfig(stronger_villains=True)
         args = to_randomize_args(cfg, python_executable="py")
