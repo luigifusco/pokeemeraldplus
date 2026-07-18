@@ -311,6 +311,20 @@ ifeq ($(MONEY_FOR_MOVES),1)
 	CPPFLAGS += -DMONEY_FOR_MOVES
 endif
 
+# Compile-time toggle: remove Nurse Joy NPCs from Pokemon Center 1F maps.
+# Usage: make REMOVE_POKEMON_CENTER_JOY=1
+REMOVE_POKEMON_CENTER_JOY ?= 0
+ifeq ($(REMOVE_POKEMON_CENTER_JOY),1)
+	CPPFLAGS += -DREMOVE_POKEMON_CENTER_JOY
+endif
+
+# Compile-time toggle: disable field interactions with PCs.
+# Usage: make DISABLE_PCS=1
+DISABLE_PCS ?= 0
+ifeq ($(DISABLE_PCS),1)
+	CPPFLAGS += -DDISABLE_PCS
+endif
+
 # Compile-time toggle: skip/instant-complete visual fade in/out animations.
 # Usage: make SKIP_FADE_ANIMS=1
 SKIP_FADE_ANIMS ?= 0

@@ -41,6 +41,39 @@
 #error "OBJECT_EVENT_TEMPLATES_COUNT is too large. Object event local IDs may overlap with reserved IDs."
 #endif
 
+#ifdef REMOVE_POKEMON_CENTER_JOY
+static bool8 IsPokemonCenter1FMap(u8 mapNum, u8 mapGroup)
+{
+    switch ((mapGroup << 8) | mapNum)
+    {
+    case MAP_OLDALE_TOWN_POKEMON_CENTER_1F:
+    case MAP_DEWFORD_TOWN_POKEMON_CENTER_1F:
+    case MAP_LAVARIDGE_TOWN_POKEMON_CENTER_1F:
+    case MAP_FALLARBOR_TOWN_POKEMON_CENTER_1F:
+    case MAP_VERDANTURF_TOWN_POKEMON_CENTER_1F:
+    case MAP_PACIFIDLOG_TOWN_POKEMON_CENTER_1F:
+    case MAP_PETALBURG_CITY_POKEMON_CENTER_1F:
+    case MAP_SLATEPORT_CITY_POKEMON_CENTER_1F:
+    case MAP_MAUVILLE_CITY_POKEMON_CENTER_1F:
+    case MAP_RUSTBORO_CITY_POKEMON_CENTER_1F:
+    case MAP_FORTREE_CITY_POKEMON_CENTER_1F:
+    case MAP_LILYCOVE_CITY_POKEMON_CENTER_1F:
+    case MAP_MOSSDEEP_CITY_POKEMON_CENTER_1F:
+    case MAP_SOOTOPOLIS_CITY_POKEMON_CENTER_1F:
+    case MAP_EVER_GRANDE_CITY_POKEMON_CENTER_1F:
+    case MAP_BATTLE_FRONTIER_POKEMON_CENTER_1F:
+        return TRUE;
+    default:
+        return FALSE;
+    }
+}
+
+static bool8 IsPokemonCenterJoyObject(const struct ObjectEventTemplate *template, u8 mapNum, u8 mapGroup)
+{
+    return template->graphicsId == OBJ_EVENT_GFX_NURSE && IsPokemonCenter1FMap(mapNum, mapGroup);
+}
+#endif
+
 // this file was known as evobjmv.c in Game Freak's original source
 
 enum {
@@ -1348,6 +1381,10 @@ u8 Unref_TryInitLocalObjectEvent(u8 localId)
         for (i = 0; i < objectEventCount; i++)
         {
             template = &gSaveBlock1Ptr->objectEventTemplates[i];
+#ifdef REMOVE_POKEMON_CENTER_JOY
+            if (IsPokemonCenterJoyObject(template, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup))
+                continue;
+#endif
             if (template->localId == localId && !FlagGet(template->flagId))
                 return InitObjectEventStateFromTemplate(template, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
         }
@@ -1482,6 +1519,11 @@ static u8 TrySpawnObjectEventTemplate(const struct ObjectEventTemplate *objectEv
     struct SpriteFrameImage spriteFrameImage;
     const struct ObjectEventGraphicsInfo *graphicsInfo;
     const struct SubspriteTable *subspriteTables = NULL;
+
+#ifdef REMOVE_POKEMON_CENTER_JOY
+    if (IsPokemonCenterJoyObject(objectEventTemplate, mapNum, mapGroup))
+        return OBJECT_EVENTS_COUNT;
+#endif
 
     graphicsInfo = GetObjectEventGraphicsInfo(objectEventTemplate->graphicsId);
     MakeSpriteTemplateFromObjectEventTemplate(objectEventTemplate, &spriteTemplate, &subspriteTables);
@@ -1668,6 +1710,9 @@ void TrySpawnObjectEvents(s16 cameraX, s16 cameraY)
             s16 npcY = template->y + MAP_OFFSET;
 
             if (top <= npcY && bottom >= npcY && left <= npcX && right >= npcX
+#ifdef REMOVE_POKEMON_CENTER_JOY
+                && !IsPokemonCenterJoyObject(template, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup)
+#endif
                 && !FlagGet(template->flagId))
                 TrySpawnObjectEventTemplate(template, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup, cameraX, cameraY);
         }

@@ -123,6 +123,8 @@ class BuildConfig:
     no_battle_items: bool = False
     first_shop_pokeballs: bool = False
     money_for_moves: bool = False
+    remove_pokemon_center_joy: bool = False
+    disable_pcs: bool = False
     start_with_super_rare_candy: bool = False
     start_with_cap_candy: bool = False
     walk_through_walls: bool = False
@@ -351,6 +353,8 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("no_battle_items", "NO_BATTLE_ITEMS"),
     ("first_shop_pokeballs", "FIRST_SHOP_POKEBALLS"),
     ("money_for_moves", "MONEY_FOR_MOVES"),
+    ("remove_pokemon_center_joy", "REMOVE_POKEMON_CENTER_JOY"),
+    ("disable_pcs", "DISABLE_PCS"),
     ("start_with_super_rare_candy", "START_WITH_SUPER_RARE_CANDY"),
     ("start_with_cap_candy", "START_WITH_CAP_CANDY"),
     ("webui_opponent", "WEBUI_OPPONENT"),

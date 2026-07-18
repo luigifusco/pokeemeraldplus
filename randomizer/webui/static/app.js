@@ -65,6 +65,8 @@ const defaultConfig = () => ({
     no_battle_items: false,
     first_shop_pokeballs: false,
     money_for_moves: false,
+    remove_pokemon_center_joy: false,
+    disable_pcs: false,
     start_with_super_rare_candy: false,
     start_with_cap_candy: false,
     walk_through_walls: false,

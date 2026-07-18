@@ -68,6 +68,9 @@ static bool8 TryStartMiscWalkingScripts(u16);
 static bool8 TryStartStepCountScript(u16);
 static void UpdateFriendshipStepCounter(void);
 static bool8 UpdatePoisonStepCounter(void);
+#ifdef DISABLE_PCS
+static bool8 IsPCInteractionScript(const u8 *);
+#endif
 
 void FieldClearPlayerInput(struct FieldInput *input)
 {
@@ -223,6 +226,11 @@ static bool8 TryStartInteractionScript(struct MapPosition *position, u16 metatil
     if (script == NULL)
         return FALSE;
 
+#ifdef DISABLE_PCS
+    if (IsPCInteractionScript(script))
+        return FALSE;
+#endif
+
     // Don't play interaction sound for certain scripts.
     if (script != LittlerootTown_BrendansHouse_2F_EventScript_PC
      && script != LittlerootTown_MaysHouse_2F_EventScript_PC
@@ -236,6 +244,22 @@ static bool8 TryStartInteractionScript(struct MapPosition *position, u16 metatil
     ScriptContext_SetupScript(script);
     return TRUE;
 }
+
+#ifdef DISABLE_PCS
+static bool8 IsPCInteractionScript(const u8 *script)
+{
+    if (script == EventScript_PC
+     || script == LittlerootTown_BrendansHouse_2F_EventScript_PC
+     || script == LittlerootTown_MaysHouse_2F_EventScript_PC
+     || script == LittlerootTown_ProfessorBirchsLab_EventScript_PC
+     || script == Route114_LanettesHouse_EventScript_PC
+     || script == SecretBase_EventScript_PC
+     || script == SecretBase_EventScript_RecordMixingPC)
+        return TRUE;
+    else
+        return FALSE;
+}
+#endif
 
 static const u8 *GetInteractionScript(struct MapPosition *position, u8 metatileBehavior, u8 direction)
 {
@@ -367,6 +391,14 @@ static const u8 *GetInteractedBackgroundEventScript(struct MapPosition *position
 static const u8 *GetInteractedMetatileScript(struct MapPosition *position, u8 metatileBehavior, u8 direction)
 {
     s8 elevation;
+
+#ifdef DISABLE_PCS
+    if (MetatileBehavior_IsPC(metatileBehavior) == TRUE
+     || MetatileBehavior_IsSecretBasePC(metatileBehavior) == TRUE
+     || MetatileBehavior_IsRecordMixingSecretBasePC(metatileBehavior) == TRUE
+     || MetatileBehavior_IsPlayerRoomPCOn(metatileBehavior) == TRUE)
+        return NULL;
+#endif
 
     if (MetatileBehavior_IsPlayerFacingTVScreen(metatileBehavior, direction) == TRUE)
         return EventScript_TV;

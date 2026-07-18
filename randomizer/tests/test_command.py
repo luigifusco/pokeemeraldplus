@@ -293,6 +293,8 @@ class MakeArgsTest(unittest.TestCase):
             "NO_EXP_TRAINER=0",
             "NO_BATTLE_ITEMS=0",
             "FIRST_SHOP_POKEBALLS=0",
+            "REMOVE_POKEMON_CENTER_JOY=0",
+            "DISABLE_PCS=0",
             "RANDOM_EVOLUTIONS=0",
             "HARDCODED_RANDOM_EVOLUTIONS=0",
             "OPPONENT_STAT_STAGE_MOD=0",
@@ -409,6 +411,20 @@ class MakeArgsTest(unittest.TestCase):
     def test_no_battle_items_toggle(self) -> None:
         self.assertIn("NO_BATTLE_ITEMS=1", to_make_args(BuildConfig(no_battle_items=True), jobs=1))
         self.assertIn("NO_BATTLE_ITEMS=0", to_make_args(BuildConfig(no_battle_items=False), jobs=1))
+
+    def test_remove_pokemon_center_joy_toggle(self) -> None:
+        self.assertIn(
+            "REMOVE_POKEMON_CENTER_JOY=1",
+            to_make_args(BuildConfig(remove_pokemon_center_joy=True), jobs=1),
+        )
+        self.assertIn(
+            "REMOVE_POKEMON_CENTER_JOY=0",
+            to_make_args(BuildConfig(remove_pokemon_center_joy=False), jobs=1),
+        )
+
+    def test_disable_pcs_toggle(self) -> None:
+        self.assertIn("DISABLE_PCS=1", to_make_args(BuildConfig(disable_pcs=True), jobs=1))
+        self.assertIn("DISABLE_PCS=0", to_make_args(BuildConfig(disable_pcs=False), jobs=1))
 
 
 class ReportArgsTest(unittest.TestCase):
