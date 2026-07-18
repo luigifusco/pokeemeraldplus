@@ -280,9 +280,11 @@ class MakeArgsTest(unittest.TestCase):
             "WALK_FAST=0",
             "FAST_SWIM=0",
             "REPEL_ANY_LEVEL=0",
+            "NO_WILD_ENCOUNTERS=0",
             "LEVEL_CAP=0",
             "START_WITH_CAP_CANDY=0",
             "SWAP_TRAINER_POKEMON=0",
+            "ADD_TRAINER_POKEMON_IF_SPACE=0",
             "NUZLOCKE_DELETE_FAINTED=0",
             "INSTANT_TEXT=0",
             "FAST_BATTLE_ANIMS=0",
@@ -337,6 +339,12 @@ class MakeArgsTest(unittest.TestCase):
     def test_trainer_pokemon_swap_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(swap_trainer_pokemon=True), jobs=1)
         self.assertIn("SWAP_TRAINER_POKEMON=1", args)
+
+    def test_add_trainer_pokemon_if_space_emits_make_flag(self) -> None:
+        on = to_make_args(BuildConfig(add_trainer_pokemon_if_space=True), jobs=1)
+        self.assertIn("ADD_TRAINER_POKEMON_IF_SPACE=1", on)
+        off = to_make_args(BuildConfig(add_trainer_pokemon_if_space=False), jobs=1)
+        self.assertIn("ADD_TRAINER_POKEMON_IF_SPACE=0", off)
 
     def test_exp_multiplier_emits_tenths(self) -> None:
         self.assertIn("EXP_MULTIPLIER=25", to_make_args(BuildConfig(exp_multiplier=2.5), jobs=1))
@@ -407,6 +415,16 @@ class MakeArgsTest(unittest.TestCase):
         self.assertIn("NO_EXP_WILD=0", to_make_args(BuildConfig(no_exp_wild=False), jobs=1))
         self.assertIn("NO_EXP_TRAINER=1", to_make_args(BuildConfig(no_exp_trainer=True), jobs=1))
         self.assertIn("NO_EXP_TRAINER=0", to_make_args(BuildConfig(no_exp_trainer=False), jobs=1))
+
+    def test_no_wild_encounters_toggle(self) -> None:
+        self.assertIn(
+            "NO_WILD_ENCOUNTERS=1",
+            to_make_args(BuildConfig(no_wild_encounters=True), jobs=1),
+        )
+        self.assertIn(
+            "NO_WILD_ENCOUNTERS=0",
+            to_make_args(BuildConfig(no_wild_encounters=False), jobs=1),
+        )
 
     def test_no_battle_items_toggle(self) -> None:
         self.assertIn("NO_BATTLE_ITEMS=1", to_make_args(BuildConfig(no_battle_items=True), jobs=1))

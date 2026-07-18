@@ -87,6 +87,7 @@ class BuildConfigModel(BaseModel):
     force_doubles: bool = False
     steal_trainer_team: bool = False
     swap_trainer_pokemon: bool = False
+    add_trainer_pokemon_if_space: bool = False
     no_exp: bool = False
     no_exp_wild: bool = False
     no_exp_trainer: bool = False
@@ -102,6 +103,7 @@ class BuildConfigModel(BaseModel):
     start_with_cap_candy: bool = False
     walk_through_walls: bool = False
     repel_any_level: bool = False
+    no_wild_encounters: bool = False
     level_cap: bool = False
     webui_opponent: bool = False
     opponent_stat_stage_mod: int = 0

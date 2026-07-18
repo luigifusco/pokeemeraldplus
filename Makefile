@@ -181,6 +181,10 @@ REPEL_ANY_LEVEL ?= 0
 ifeq ($(REPEL_ANY_LEVEL),1)
   CPPFLAGS += -DREPEL_ANY_LEVEL
 endif
+NO_WILD_ENCOUNTERS ?= 0
+ifeq ($(NO_WILD_ENCOUNTERS),1)
+  CPPFLAGS += -DNO_WILD_ENCOUNTERS
+endif
 LEVEL_CAP ?= 0
 ifeq ($(LEVEL_CAP),1)
   CPPFLAGS += -DLEVEL_CAP
@@ -230,9 +234,16 @@ STEAL_TRAINER_TEAM ?= 0
 ifeq ($(STEAL_TRAINER_TEAM),1)
 	CPPFLAGS += -DSTEAL_TRAINER_TEAM
 endif
+# Compile-time toggle: add the selected trainer Pokemon when the player's
+# party has space, while retaining replacement selection for full parties.
+# Requires SWAP_TRAINER_POKEMON=1.
+ADD_TRAINER_POKEMON_IF_SPACE ?= 0
 SWAP_TRAINER_POKEMON ?= 0
 ifeq ($(SWAP_TRAINER_POKEMON),1)
 	CPPFLAGS += -DSWAP_TRAINER_POKEMON
+  ifeq ($(ADD_TRAINER_POKEMON_IF_SPACE),1)
+	CPPFLAGS += -DADD_TRAINER_POKEMON_IF_SPACE
+  endif
 endif
 
 # Compile-time toggle: prevent Pokémon from gaining experience.

@@ -134,6 +134,33 @@ void CB2_TrainerMonSwapSelectionMade(void)
             return;
         }
         sTrainerSwapEnemySelection = sTrainerSwapMenuSelection;
+#ifdef ADD_TRAINER_POKEMON_IF_SPACE
+        if (sTrainerSwapPlayerCount < PARTY_SIZE)
+        {
+            struct Pokemon incoming;
+            u16 species;
+
+            CopyMon(
+                &incoming,
+                &sTrainerSwapEnemyParty[sTrainerSwapEnemySelection],
+                sizeof(incoming)
+            );
+            SetMonOwnerToPlayer(&incoming);
+            FullyHealSwapMon(&incoming);
+            CopyMon(
+                &sTrainerSwapPlayerParty[sTrainerSwapPlayerCount],
+                &incoming,
+                sizeof(incoming)
+            );
+            sTrainerSwapPlayerCount++;
+
+            species = GetMonData(&incoming, MON_DATA_SPECIES);
+            GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);
+            GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT);
+            FinishTrainerMonSwap();
+            return;
+        }
+#endif
         ShowTrainerSwapPlayerParty();
         return;
     }

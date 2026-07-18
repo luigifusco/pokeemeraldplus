@@ -168,7 +168,7 @@
 
             <div class="group" id="evo-constraints-group">
                 <div class="group-title">Hardcoded constraints</div>
-                <div class="group-desc">Shape of the evolution graph. Only used when the mode above is <em>Hardcoded random</em>. Leave empty for no constraint. The generator iteratively swaps/splices to meet every active target.</div>
+                <div class="group-desc">Shape of the evolution graph. Only used when the mode above is <em>Hardcoded random</em>. Leave empty for no constraint. CP-SAT proves the requested structure feasible before constructing the randomized graph.</div>
                 <div class="row">
                     <div class="row-label"><strong>Max in-degree</strong><small>Most Pokémon that can evolve INTO any single species.</small></div>
                     <input type="number" min="0" data-bind="evo_constraints.max_indegree" placeholder="—" />
@@ -235,6 +235,7 @@
                 <label class="check"><input type="checkbox" data-bind="force_doubles" /><span class="box"></span> <span><strong>Force double battles.</strong></span></label>
                 <label class="check"><input type="checkbox" data-bind="steal_trainer_team" /><span class="box"></span> <span><strong>Steal trainer team</strong> — defeat a trainer, take their Pokémon.</span></label>
                 <label class="check"><input type="checkbox" data-bind="swap_trainer_pokemon" /><span class="box"></span> <span><strong>Post-battle Pokémon swap</strong> — after winning a normal trainer battle, inspect the opponent's party and optionally replace one of your Pokémon with one of theirs.</span></label>
+                <label class="check"><input type="checkbox" data-bind="add_trainer_pokemon_if_space" /><span class="box"></span> <span><strong>Add opponent if party has space</strong> — with post-battle swapping enabled, add the selected opponent directly when your party has fewer than six Pokémon; full parties still choose a replacement.</span></label>
                 <label class="check"><input type="checkbox" data-bind="stronger_villains" /><span class="box"></span> <span><strong>Stronger villains</strong> — Team Aqua/Magma bosses &amp; minibosses fight at gym-leader level; grunts are evolved and field more Pokémon.</span></label>
                 <label class="check"><input type="checkbox" data-bind="stronger_rival" /><span class="box"></span> <span><strong>Stronger rival</strong> — May/Brendan get larger Hoenn teams after the first battle, ending in a six-Pokémon Lilycove roster above gym-leader level.</span></label>
                 <label class="check"><input type="checkbox" data-bind="stronger_wally" /><span class="box"></span> <span><strong>Stronger Wally</strong> — the Mauville battle gains a small team and each Victory Road battle becomes a six-Pokémon roster led by Gardevoir.</span></label>
@@ -242,6 +243,7 @@
                 <label class="check"><input type="checkbox" data-bind="nuzlocke_delete_fainted" /><span class="box"></span> <span><strong>Nuzlocke: delete fainted.</strong></span></label>
                 <label class="check"><input type="checkbox" data-bind="walk_through_walls" /><span class="box"></span> <span><strong>Walk through walls</strong> (debug).</span></label>
                 <label class="check"><input type="checkbox" data-bind="repel_any_level" /><span class="box"></span> <span><strong>Repels always work</strong> — an active Repel blocks every wild encounter regardless of level.</span></label>
+                <label class="check"><input type="checkbox" data-bind="no_wild_encounters" /><span class="box"></span> <span><strong>No wild encounters</strong> — disables encounters from walking, surfing, fishing, Rock Smash, and Sweet Scent.</span></label>
                 <label class="check"><input type="checkbox" data-bind="level_cap" /><span class="box"></span> <span><strong>Level cap</strong> — Pokémon stop gaining EXP once they reach the highest level of the next gym leader / Elite Four member.</span></label>
             </div>
 

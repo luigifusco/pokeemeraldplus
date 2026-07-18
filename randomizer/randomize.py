@@ -1,11 +1,15 @@
 import argparse
+from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
+import math
 import random
 import re
 import sys
 import zlib
 from pathlib import Path
+
+from ortools.sat.python import cp_model
 
 
 RANDOMIZE_SPECIES_PATTERN = re.compile(r"\bSPECIES_[A-Z0-9_]+\b")
@@ -1419,189 +1423,268 @@ def _random_mapping(all_species: list[str]) -> dict[str, str]:
     return mapping
 
 
-# -- Local transformations -------------------------------------------------
-#
-# Every rule below preserves the "functional graph" shape (every node has
-# out-degree exactly 1) and never creates a self-loop.
-
-def _rule_reduce_indegree(
-    mapping: dict[str, str], A: str, all_species: list[str], max_indegree: int
-) -> bool:
-    """Rule 1: reduce the in-degree of A by redirecting one predecessor B
-    (currently B -> A) to a tail (a node with in-degree 0, which has the
-    most room to accept a new edge). Falls back to any node still below
-    the cap if no tails exist."""
-    indeg = _compute_indegree(mapping)
-    preds = [s for s, t in mapping.items() if t == A]
-    if not preds:
-        return False
-    random.shuffle(preds)
-    tails = [n for n in all_species if indeg[n] == 0]
-    random.shuffle(tails)
-    for B in preds:
-        for T in tails:
-            if T != B:
-                mapping[B] = T
-                return True
-        # No tail available: accept any node whose in-degree is < cap - 1
-        # (so it stays <= cap - 1 + 1 = cap after the redirect).
-        room = [n for n in all_species if n != B and n != A and indeg[n] < max_indegree]
-        if room:
-            mapping[B] = random.choice(room)
-            return True
-    return False
+@dataclass(frozen=True)
+class _FunctionalGraphShape:
+    cycle_lengths: tuple[int, ...]
+    level_counts: tuple[int, ...]
+    parent_counts: tuple[int, ...]
 
 
-def _rule_extend_cycle(
-    mapping: dict[str, str], cycle: list[str], all_species: list[str]
-) -> bool:
-    """Rule 2: lengthen a cycle by splicing a tail into it. Given cycle
-    edge X -> Y and a tail T (in-degree 0, not in the cycle), rewrite to
-    X -> T -> Y. T's previous target W loses one in-degree (it was a
-    tree/cycle node feeding wherever, now T simply re-routes). This
-    preserves max_indegree bounds because T gains 1 (goes from 0 to 1)
-    and no other in-degree grows."""
-    indeg = _compute_indegree(mapping)
-    cycset = set(cycle)
-    tails = [n for n in all_species if indeg[n] == 0 and n not in cycset]
-    if not tails:
-        return False
-    T = random.choice(tails)
-    L = len(cycle)
-    i = random.randrange(L)
-    X = cycle[i]
-    Y = cycle[(i + 1) % L]
-    if T == Y:
-        # T already equals the successor; can't self-loop.
-        return False
-    mapping[X] = T
-    mapping[T] = Y
-    return True
+def _average_positive_indegree(indeg: dict[str, int]) -> float:
+    distinct_targets = sum(1 for degree in indeg.values() if degree > 0)
+    return (sum(indeg.values()) / distinct_targets) if distinct_targets else 0.0
 
 
-def _rule_merge_cycles(
-    mapping: dict[str, str], cycle_a: list[str], cycle_b: list[str]
-) -> bool:
-    """Rule 4: merge two cycles into one via an inter-cycle edge swap.
-
-    Inverse of rule 3. Given edges X -> Y in cycle A and P -> Q in cycle
-    B, swap targets: X -> Q, P -> Y. The result is a single cycle whose
-    length is len(A) + len(B). Every node's in-degree is preserved.
-
-    Used to grow cycle length (for min_cycle_length) when no tails are
-    available to splice in via rule 2.
-    """
-    if not cycle_a or not cycle_b:
-        return False
-    La, Lb = len(cycle_a), len(cycle_b)
-    i = random.randrange(La)
-    j = random.randrange(Lb)
-    X = cycle_a[i]
-    Y = cycle_a[(i + 1) % La]
-    P = cycle_b[j]
-    Q = cycle_b[(j + 1) % Lb]
-    if X == Q or P == Y:
-        return False
-    mapping[X] = Q
-    mapping[P] = Y
-    return True
-
-
-def _rule_split_cycle(
-    mapping: dict[str, str],
-    cycle: list[str],
-    target_max: int | None,
-    target_min: int | None = None,
-) -> bool:
-    """Rule 3: swap two edges inside one cycle to split it in two.
-
-    Cycle n0 -> n1 -> ... -> n(L-1) -> n0. Picking edges n_i -> n_(i+1)
-    and n_j -> n_(j+1) and swapping their targets gives two cycles of
-    length k = j - i and L - k. Every node's in-degree is preserved.
-    Disallows length-1 halves (self-loops are forbidden) and, when
-    target_min is given, halves shorter than target_min.
-    """
-    L = len(cycle)
-    lo = max(2, target_min if target_min is not None else 2)
-    hi = L - lo
-    if hi < lo:
-        return False
-    if target_max is not None:
-        # Prefer splits keeping both halves within max_cycle_length.
-        lo_pref = max(lo, L - target_max)
-        hi_pref = min(hi, target_max)
-        if lo_pref <= hi_pref:
-            lo, hi = lo_pref, hi_pref
-        # else leave lo..hi unchanged: subsequent iterations will trim.
-    k = random.randint(lo, hi)
-    i = random.randrange(L)
-    j = (i + k) % L
-    a = cycle[i]
-    b = cycle[(i + 1) % L]
-    c = cycle[j]
-    d = cycle[(j + 1) % L]
-    if a == d or c == b:
-        return False
-    mapping[a] = d
-    mapping[c] = b
-    return True
-
-
-def _rule_reduce_tree_depth(
-    mapping: dict[str, str],
-    all_species: list[str],
-    max_depth: int,
+def _solve_functional_graph_shape(
+    node_count: int,
     *,
-    max_indegree: int | None = None,
-) -> bool:
-    """Rule 5: compact trees hanging off cycles.
+    max_indegree: int | None,
+    max_cycle_length: int | None,
+    min_cycles: int | None,
+    min_cycle_length: int | None,
+    max_avg_indegree: float | None,
+    max_tree_depth: int | None,
+) -> tuple[_FunctionalGraphShape, int]:
+    if node_count < 2:
+        raise RuntimeError("At least two species are required to avoid self-loops.")
 
-    For a leaf L with depth K > D (where D = max_depth), walking D-1
-    hops along the path from L lands on a node u with depth K-D+1.
-    Redirect u to a cycle node: u's new depth becomes 1, so L's new
-    depth becomes D. Everything above u on the path gets shortened
-    accordingly; everything below u stays put because their paths no
-    longer go through u.
+    indegree_cap = node_count if max_indegree is None else max_indegree
+    if indegree_cap < 1:
+        raise RuntimeError("max_indegree must be >= 1.")
 
-    Picks the cycle target with the lowest in-degree (respecting
-    max_indegree) to avoid pushing the heaviest cycle nodes over the
-    cap. Returns False if we can't find a legal redirect; callers
-    (the outer loop) then move on to other rules and may try again.
-    """
-    cycles = _find_cycles(mapping)
-    if not cycles:
-        return False
-    depths = _compute_depths(mapping, cycles)
-    max_d = max(depths.values(), default=0)
-    if max_d <= max_depth:
-        return False
-    deepest = [n for n, d in depths.items() if d == max_d]
-    L = random.choice(deepest)
+    cycle_min = max(2, min_cycle_length or 2)
+    cycle_max = min(node_count, max_cycle_length or node_count)
+    if max_cycle_length is not None and max_cycle_length < 2:
+        raise RuntimeError("max_cycle_length must be >= 2 (no self-loops allowed).")
+    if min_cycle_length is not None and min_cycle_length < 2:
+        raise RuntimeError("min_cycle_length must be >= 2 (no self-loops allowed).")
+    if cycle_min > cycle_max:
+        raise RuntimeError("min_cycle_length must be <= max_cycle_length.")
 
-    # Walk D-1 hops from L toward the cycle. The node we land on, u,
-    # has depth K - (D-1) = K - D + 1, which is >= 1 since K > D.
-    u = L
-    for _ in range(max(0, max_depth - 1)):
-        u = mapping[u]
-    if depths[u] == 0:
-        # Shouldn't happen: D-1 hops from a node at depth K can't reach
-        # a cycle node unless K < D, but we've already bailed for that.
-        return False
+    required_cycles = max(1, min_cycles or 1)
+    if required_cycles * cycle_min > node_count:
+        raise RuntimeError(
+            f"At least {required_cycles} cycles of length {cycle_min} require "
+            f"{required_cycles * cycle_min} species, but only {node_count} are available."
+        )
 
-    cycle_nodes = [n for c in cycles for n in c]
+    if max_tree_depth is not None and max_tree_depth < 0:
+        raise RuntimeError("max_tree_depth must be >= 0.")
+    depth_limit = node_count if max_tree_depth is None else max_tree_depth
+
+    required_targets = 1
+    if max_avg_indegree is not None:
+        if not math.isfinite(max_avg_indegree) or max_avg_indegree < 1:
+            raise RuntimeError("max_avg_indegree must be a finite value >= 1.")
+        required_targets = math.ceil((node_count / max_avg_indegree) - 1e-12)
+
+    model = cp_model.CpModel()
+    cycles_by_length: dict[int, cp_model.IntVar] = {}
+    for length in range(cycle_min, cycle_max + 1):
+        cycles_by_length[length] = model.NewIntVar(
+            0, node_count // length, f"cycles_length_{length}"
+        )
+
+    cycle_count = model.NewIntVar(required_cycles, node_count // cycle_min, "cycle_count")
+    cycle_nodes = model.NewIntVar(cycle_min, node_count, "cycle_nodes")
+    model.Add(cycle_count == sum(cycles_by_length.values()))
+    model.Add(
+        cycle_nodes
+        == sum(length * count for length, count in cycles_by_length.items())
+    )
+    model.Add(cycle_count >= required_cycles)
+
+    levels = [
+        model.NewIntVar(0, node_count, f"nodes_at_depth_{depth}")
+        for depth in range(1, depth_limit + 1)
+    ]
+    model.Add(cycle_nodes + sum(levels) == node_count)
+
+    if levels:
+        model.Add(levels[0] <= (indegree_cap - 1) * cycle_nodes)
+        for previous, current in zip(levels, levels[1:]):
+            model.Add(current <= indegree_cap * previous)
+
+    parents = [
+        model.NewIntVar(0, node_count, f"parents_at_depth_{depth}")
+        for depth in range(1, depth_limit)
+    ]
+    for parent_count, current, children in zip(parents, levels, levels[1:]):
+        model.Add(parent_count <= current)
+        model.Add(parent_count <= children)
+        model.Add(children <= indegree_cap * parent_count)
+
+    model.Add(cycle_nodes + sum(parents) >= required_targets)
+
+    solver = cp_model.CpSolver()
+    solver.parameters.num_search_workers = 1
+    solver.parameters.random_seed = random.randrange(1, 2**31)
+    solver.parameters.randomize_search = True
+    status = solver.Solve(model)
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        if status == cp_model.INFEASIBLE:
+            raise RuntimeError(
+                "Evolution constraints are infeasible for "
+                f"{node_count} species: max_indegree={max_indegree}, "
+                f"cycle_length={cycle_min}..{cycle_max}, min_cycles={required_cycles}, "
+                f"max_avg_indegree={max_avg_indegree}, max_tree_depth={max_tree_depth}."
+            )
+        raise RuntimeError(f"CP-SAT could not solve the evolution constraints (status {status}).")
+
+    cycle_lengths: list[int] = []
+    for length, count_var in cycles_by_length.items():
+        cycle_lengths.extend([length] * solver.Value(count_var))
+
+    level_counts = [solver.Value(level) for level in levels]
+    while level_counts and level_counts[-1] == 0:
+        level_counts.pop()
+    parent_counts = [
+        solver.Value(parents[index])
+        for index in range(max(0, len(level_counts) - 1))
+    ]
+
+    return (
+        _FunctionalGraphShape(
+            cycle_lengths=tuple(cycle_lengths),
+            level_counts=tuple(level_counts),
+            parent_counts=tuple(parent_counts),
+        ),
+        indegree_cap,
+    )
+
+
+def _attach_graph_level(
+    mapping: dict[str, str],
+    children: list[str],
+    candidate_parents: list[str],
+    capacity: int,
+    *,
+    active_parent_count: int | None = None,
+) -> None:
+    if not children:
+        return
+
+    shuffled_children = list(children)
+    random.shuffle(shuffled_children)
+
+    if active_parent_count is None:
+        slots = [
+            parent
+            for parent in candidate_parents
+            for _ in range(capacity)
+        ]
+        random.shuffle(slots)
+        if len(shuffled_children) > len(slots):
+            raise RuntimeError("Solved evolution shape exceeds its root capacity.")
+        for child, parent in zip(shuffled_children, slots):
+            mapping[child] = parent
+        return
+
+    if active_parent_count < 1 or active_parent_count > len(candidate_parents):
+        raise RuntimeError("Solved evolution shape has an invalid active-parent count.")
+    if active_parent_count > len(shuffled_children):
+        raise RuntimeError("Solved evolution shape has more active parents than children.")
+
+    active_parents = random.sample(candidate_parents, active_parent_count)
+    for child, parent in zip(shuffled_children[:active_parent_count], active_parents):
+        mapping[child] = parent
+
+    remaining_slots = [
+        parent
+        for parent in active_parents
+        for _ in range(capacity - 1)
+    ]
+    random.shuffle(remaining_slots)
+    remaining_children = shuffled_children[active_parent_count:]
+    if len(remaining_children) > len(remaining_slots):
+        raise RuntimeError("Solved evolution shape exceeds its parent capacity.")
+    for child, parent in zip(remaining_children, remaining_slots):
+        mapping[child] = parent
+
+
+def _realize_functional_graph(
+    all_species: list[str],
+    shape: _FunctionalGraphShape,
+    indegree_cap: int,
+) -> dict[str, str]:
+    species = list(all_species)
+    random.shuffle(species)
+    cycle_lengths = list(shape.cycle_lengths)
+    random.shuffle(cycle_lengths)
+
+    cycle_node_count = sum(cycle_lengths)
+    cycle_nodes = species[:cycle_node_count]
+    mapping: dict[str, str] = {}
+    offset = 0
+    for length in cycle_lengths:
+        cycle = cycle_nodes[offset:offset + length]
+        offset += length
+        for index, node in enumerate(cycle):
+            mapping[node] = cycle[(index + 1) % length]
+
+    levels: list[list[str]] = []
+    offset = cycle_node_count
+    for count in shape.level_counts:
+        levels.append(species[offset:offset + count])
+        offset += count
+
+    if levels:
+        _attach_graph_level(
+            mapping,
+            levels[0],
+            cycle_nodes,
+            indegree_cap - 1,
+        )
+        for index in range(len(levels) - 1):
+            _attach_graph_level(
+                mapping,
+                levels[index + 1],
+                levels[index],
+                indegree_cap,
+                active_parent_count=shape.parent_counts[index],
+            )
+
+    if len(mapping) != len(all_species):
+        raise RuntimeError("Failed to assign an evolution target to every species.")
+    return mapping
+
+
+def _validate_constrained_mapping(
+    mapping: dict[str, str],
+    *,
+    max_indegree: int | None,
+    max_cycle_length: int | None,
+    min_cycles: int | None,
+    min_cycle_length: int | None,
+    max_avg_indegree: float | None,
+    max_tree_depth: int | None,
+) -> None:
+    if any(source == target for source, target in mapping.items()):
+        raise RuntimeError("Generated evolution mapping contains a self-loop.")
+
     indeg = _compute_indegree(mapping)
-    cap = max_indegree if max_indegree is not None else len(all_species)
-    candidates = [n for n in cycle_nodes if n != u and indeg[n] < cap]
-    if not candidates:
-        candidates = [n for n in cycle_nodes if n != u]
-    if not candidates:
-        return False
-    # Lowest-indegree cycle node, break ties randomly.
-    min_indeg = min(indeg[n] for n in candidates)
-    best = [n for n in candidates if indeg[n] == min_indeg]
-    w = random.choice(best)
-    mapping[u] = w
-    return True
+    cycles = _find_cycles(mapping)
+    if max_indegree is not None and max(indeg.values(), default=0) > max_indegree:
+        raise RuntimeError("Generated evolution mapping exceeds max_indegree.")
+    if (
+        max_avg_indegree is not None
+        and _average_positive_indegree(indeg) > max_avg_indegree + 1e-9
+    ):
+        raise RuntimeError("Generated evolution mapping exceeds max_avg_indegree.")
+    if max_cycle_length is not None and any(
+        len(cycle) > max_cycle_length for cycle in cycles
+    ):
+        raise RuntimeError("Generated evolution mapping exceeds max_cycle_length.")
+    if min_cycle_length is not None and any(
+        len(cycle) < min_cycle_length for cycle in cycles
+    ):
+        raise RuntimeError("Generated evolution mapping violates min_cycle_length.")
+    if min_cycles is not None and len(cycles) < min_cycles:
+        raise RuntimeError("Generated evolution mapping violates min_cycles.")
+    if max_tree_depth is not None:
+        depths = _compute_depths(mapping, cycles)
+        if max(depths.values(), default=0) > max_tree_depth:
+            raise RuntimeError("Generated evolution mapping exceeds max_tree_depth.")
 
 
 def _pick_constrained_mapping(
@@ -1614,200 +1697,28 @@ def _pick_constrained_mapping(
     max_avg_indegree: float | None = None,
     max_tree_depth: int | None = None,
 ) -> dict[str, str]:
-    """Start from a random mapping and repair until constraints hold.
+    if len(set(all_species)) != len(all_species):
+        raise RuntimeError("Evolution species list contains duplicate entries.")
 
-    Repair rules (all local, all preserve the functional-graph shape;
-    none ever produces a self-loop):
-      1. _rule_reduce_indegree: if node A has too many predecessors,
-         redirect one predecessor B to a tail (a node with in-degree 0).
-         Also used to lower the *average* in-degree of non-tail nodes:
-         every application turns one tail into a target (+1 distinct
-         target), so N / num_distinct_targets strictly decreases.
-      2. _rule_extend_cycle: splice a tail into a cycle (cycle length
-         +1). Used to lengthen a short cycle for min_cycle_length or to
-         make a too-short cycle splittable for min_cycles.
-      3. _rule_split_cycle: intra-cycle edge swap; splits one cycle of
-         length L into lengths k and L-k, preserving in-degrees. Used
-         to shrink long cycles and raise the cycle count.
-      4. _rule_merge_cycles: inter-cycle edge swap; merges cycles A and
-         B into one of length len(A)+len(B), preserving in-degrees.
-         Used to grow cycle length when no tails remain for rule 2.
-      5. _rule_reduce_tree_depth: redirect a mid-chain tail node to a
-         cycle node, compacting the chain above it. Used to enforce
-         max_tree_depth (the longest chain from any leaf into its cycle).
-    """
-    if max_cycle_length is not None and max_cycle_length < 2:
-        raise RuntimeError("max_cycle_length must be >= 2 (no self-loops allowed).")
-    if min_cycle_length is not None and min_cycle_length < 2:
-        raise RuntimeError("min_cycle_length must be >= 2 (no self-loops allowed).")
-    if (
-        max_cycle_length is not None
-        and min_cycle_length is not None
-        and min_cycle_length > max_cycle_length
-    ):
-        raise RuntimeError("min_cycle_length must be <= max_cycle_length.")
-    if max_tree_depth is not None and max_tree_depth < 1:
-        raise RuntimeError(
-            "max_tree_depth must be >= 1 (0 requires every species to be on a cycle)."
-        )
-
-    mapping = _random_mapping(all_species)
-    N = len(all_species)
-    budget = N * 50
-
-    def _avg_indeg(indeg: dict[str, int]) -> float:
-        # Average in-degree over non-tail nodes = N / num_distinct_targets.
-        distinct = sum(1 for d in indeg.values() if d > 0)
-        return (N / distinct) if distinct else 0.0
-
-    for _ in range(budget):
-        indeg = _compute_indegree(mapping)
-
-        # Rule 1: squash any in-degree violation first.
-        if max_indegree is not None:
-            over = [n for n, d in indeg.items() if d > max_indegree]
-            if over:
-                A = random.choice(over)
-                _rule_reduce_indegree(mapping, A, all_species, max_indegree)
-                continue
-
-        # Rule 1 again: lower average in-degree if above the cap. Pick
-        # the node with the highest in-degree and bleed an edge off to
-        # a tail (turns a 0 into a 1, improving the ratio).
-        if max_avg_indegree is not None and _avg_indeg(indeg) > max_avg_indegree:
-            # Effective per-node cap used by rule 1's fallback path.
-            cap = max_indegree if max_indegree is not None else N
-            heaviest = max(indeg, key=lambda n: indeg[n])
-            if indeg[heaviest] >= 2:
-                _rule_reduce_indegree(mapping, heaviest, all_species, cap)
-                continue
-            # Everything is already at indeg 1; can't reduce further.
-            break
-
-        cycles = _find_cycles(mapping)
-
-        # Rule 3: shrink any cycle longer than max_cycle_length.
-        if max_cycle_length is not None:
-            too_long = [c for c in cycles if len(c) > max_cycle_length]
-            if too_long:
-                cyc = max(too_long, key=len)
-                if _rule_split_cycle(
-                    mapping, cyc,
-                    target_max=max_cycle_length,
-                    target_min=min_cycle_length,
-                ):
-                    continue
-                if _rule_extend_cycle(mapping, cyc, all_species):
-                    continue
-                break
-
-        # Rule 2/4: grow any cycle shorter than min_cycle_length.
-        if min_cycle_length is not None:
-            too_short = [c for c in cycles if len(c) < min_cycle_length]
-            if too_short:
-                cyc = random.choice(too_short)
-                if _rule_extend_cycle(mapping, cyc, all_species):
-                    continue
-                # No tails available: merge with another cycle.
-                others = [c for c in cycles if c is not cyc]
-                if others:
-                    other = random.choice(others)
-                    if _rule_merge_cycles(mapping, cyc, other):
-                        continue
-                break
-
-        # Rule 3/2: raise the cycle count by splitting cycles.
-        if min_cycles is not None and len(cycles) < min_cycles:
-            # A cycle is split-valid iff both halves can be at least
-            # max(2, min_cycle_length) long.
-            min_half = max(2, min_cycle_length or 2)
-            splittable = [c for c in cycles if len(c) >= 2 * min_half]
-            if splittable:
-                # Prefer the smallest splittable cycle: splitting
-                # short cycles first leaves the big ones intact as a
-                # reservoir for further splits.
-                cyc = min(splittable, key=len)
-                if _rule_split_cycle(
-                    mapping, cyc,
-                    target_max=max_cycle_length,
-                    target_min=min_cycle_length,
-                ):
-                    continue
-            # No splittable cycle: grow one (the shortest, cheapest)
-            # toward 2*min_half by splicing in a tail. The strategy
-            # "absorb tails into a cycle, then halve" is the most
-            # efficient way to raise the cycle count under a tight
-            # max_cycle_length.
-            growable = sorted(cycles, key=len)
-            did = False
-            for cyc in growable:
-                if len(cyc) >= 2 * min_half:
-                    continue  # already splittable; handled above
-                if _rule_extend_cycle(mapping, cyc, all_species):
-                    did = True
-                    break
-            if did:
-                continue
-            # No tails left. Merge two cycles, after which the result
-            # may be splittable (and net cycle count stays the same,
-            # but a subsequent split will lift it).
-            if len(cycles) >= 2:
-                sample = random.sample(cycles, 2)
-                if _rule_merge_cycles(mapping, sample[0], sample[1]):
-                    continue
-            break
-
-        # Rule 5: compact any tail subtree that violates max_tree_depth.
-        # Applied after the cycle rules so we only touch off-cycle
-        # edges once the cycle structure is close to satisfied.
-        if max_tree_depth is not None:
-            depths = _compute_depths(mapping, cycles)
-            if max(depths.values(), default=0) > max_tree_depth:
-                if _rule_reduce_tree_depth(
-                    mapping, all_species, max_tree_depth,
-                    max_indegree=max_indegree,
-                ):
-                    continue
-                break
-
-        return mapping
-
-    # Final validation: report any constraint we failed to satisfy.
-    indeg = _compute_indegree(mapping)
-    cycles = _find_cycles(mapping)
-    if max_indegree is not None and max(indeg.values(), default=0) > max_indegree:
-        raise RuntimeError(
-            f"Could not enforce max_indegree={max_indegree} "
-            f"(worst in-degree = {max(indeg.values())})."
-        )
-    if max_avg_indegree is not None and _avg_indeg(indeg) > max_avg_indegree + 1e-9:
-        raise RuntimeError(
-            f"Could not enforce max_avg_indegree={max_avg_indegree} "
-            f"(achieved {_avg_indeg(indeg):.3f})."
-        )
-    if max_cycle_length is not None and any(len(c) > max_cycle_length for c in cycles):
-        raise RuntimeError(
-            f"Could not reduce max cycle length to {max_cycle_length} "
-            f"(longest remaining cycle = {max(len(c) for c in cycles)})."
-        )
-    if min_cycle_length is not None and any(len(c) < min_cycle_length for c in cycles):
-        raise RuntimeError(
-            f"Could not enforce min_cycle_length={min_cycle_length} "
-            f"(shortest remaining cycle = {min(len(c) for c in cycles)})."
-        )
-    if min_cycles is not None and len(cycles) < min_cycles:
-        raise RuntimeError(
-            f"Could not reach min_cycles={min_cycles} "
-            f"(achieved {len(cycles)})."
-        )
-    if max_tree_depth is not None:
-        depths = _compute_depths(mapping, cycles)
-        worst = max(depths.values(), default=0)
-        if worst > max_tree_depth:
-            raise RuntimeError(
-                f"Could not enforce max_tree_depth={max_tree_depth} "
-                f"(deepest remaining chain = {worst})."
-            )
+    shape, indegree_cap = _solve_functional_graph_shape(
+        len(all_species),
+        max_indegree=max_indegree,
+        max_cycle_length=max_cycle_length,
+        min_cycles=min_cycles,
+        min_cycle_length=min_cycle_length,
+        max_avg_indegree=max_avg_indegree,
+        max_tree_depth=max_tree_depth,
+    )
+    mapping = _realize_functional_graph(all_species, shape, indegree_cap)
+    _validate_constrained_mapping(
+        mapping,
+        max_indegree=max_indegree,
+        max_cycle_length=max_cycle_length,
+        min_cycles=min_cycles,
+        min_cycle_length=min_cycle_length,
+        max_avg_indegree=max_avg_indegree,
+        max_tree_depth=max_tree_depth,
+    )
     return mapping
 
 

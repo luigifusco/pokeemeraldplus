@@ -80,6 +80,15 @@ void DisableWildEncounters(bool8 disabled)
     sWildEncountersDisabled = disabled;
 }
 
+static bool8 AreWildEncountersDisabled(void)
+{
+#ifdef NO_WILD_ENCOUNTERS
+    return TRUE;
+#else
+    return sWildEncountersDisabled;
+#endif
+}
+
 // Each fishing spot on Route 119 is given a number between 1 and NUM_FISHING_SPOTS inclusive.
 // The number is determined by counting the valid fishing spots left to right top to bottom.
 // The map is divided into three sections, with each section having a pre-counted number of
@@ -623,7 +632,7 @@ bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior)
     u16 headerId;
     struct Roamer *roamer;
 
-    if (sWildEncountersDisabled == TRUE)
+    if (AreWildEncountersDisabled())
         return FALSE;
 
     headerId = GetCurrentMapWildMonHeaderId();
@@ -738,6 +747,12 @@ void RockSmashWildEncounter(void)
 {
     u16 headerId = GetCurrentMapWildMonHeaderId();
 
+    if (AreWildEncountersDisabled())
+    {
+        gSpecialVar_Result = FALSE;
+        return;
+    }
+
     if (headerId != HEADER_NONE)
     {
         const struct WildPokemonInfo *wildPokemonInfo = gWildMonHeaders[headerId].rockSmashMonsInfo;
@@ -767,6 +782,9 @@ bool8 SweetScentWildEncounter(void)
 {
     s16 x, y;
     u16 headerId;
+
+    if (AreWildEncountersDisabled())
+        return FALSE;
 
     PlayerGetDestCoords(&x, &y);
     headerId = GetCurrentMapWildMonHeaderId();
@@ -840,6 +858,9 @@ bool8 DoesCurrentMapHaveFishingMons(void)
 {
     u16 headerId = GetCurrentMapWildMonHeaderId();
 
+    if (AreWildEncountersDisabled())
+        return FALSE;
+
     if (headerId != HEADER_NONE && gWildMonHeaders[headerId].fishingMonsInfo != NULL)
         return TRUE;
     else
@@ -849,6 +870,9 @@ bool8 DoesCurrentMapHaveFishingMons(void)
 void FishingWildEncounter(u8 rod)
 {
     u16 species;
+
+    if (AreWildEncountersDisabled())
+        return;
 
     if (CheckFeebas() == TRUE)
     {

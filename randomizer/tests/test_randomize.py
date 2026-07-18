@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import json
+import random
 import unittest
 from unittest.mock import patch
 
 from randomizer.randomize import (
+    _average_positive_indegree,
+    _compute_depths,
+    _compute_indegree,
+    _find_cycles,
+    _pick_constrained_mapping,
     enforce_min_boss_party_size,
     enforce_strong_bosses,
     parse_base_stat_totals,
@@ -306,6 +312,111 @@ class MinBossPartySizeTest(unittest.TestCase):
         # Cloned mons preserve the held-item/moves structure of the template.
         self.assertEqual(result.count(".heldItem ="), 3)
         self.assertEqual(result.count(".moves ="), 3)
+
+
+class ConstrainedEvolutionGraphTest(unittest.TestCase):
+    def _species(self, count: int) -> list[str]:
+        return [f"SPECIES_TEST_{index}" for index in range(count)]
+
+    def _assert_constraints(
+        self,
+        mapping: dict[str, str],
+        *,
+        max_indegree: int,
+        min_cycle_length: int,
+        max_cycle_length: int,
+        min_cycles: int,
+        max_avg_indegree: float,
+        max_tree_depth: int,
+    ) -> None:
+        self.assertLessEqual(set(mapping.values()), set(mapping))
+        self.assertTrue(all(source != target for source, target in mapping.items()))
+
+        indeg = _compute_indegree(mapping)
+        cycles = _find_cycles(mapping)
+        depths = _compute_depths(mapping, cycles)
+        self.assertLessEqual(max(indeg.values()), max_indegree)
+        self.assertGreaterEqual(len(cycles), min_cycles)
+        self.assertTrue(all(min_cycle_length <= len(cycle) <= max_cycle_length for cycle in cycles))
+        self.assertLessEqual(_average_positive_indegree(indeg), max_avg_indegree + 1e-9)
+        self.assertLessEqual(max(depths.values()), max_tree_depth)
+
+    def test_cp_sat_constructs_mapping_meeting_all_constraints(self) -> None:
+        random.seed(12345)
+        species = self._species(25)
+        mapping = _pick_constrained_mapping(
+            species,
+            max_indegree=2,
+            max_cycle_length=4,
+            min_cycles=3,
+            min_cycle_length=4,
+            max_avg_indegree=1.25,
+            max_tree_depth=2,
+        )
+        self.assertEqual(set(mapping), set(species))
+        self._assert_constraints(
+            mapping,
+            max_indegree=2,
+            min_cycle_length=4,
+            max_cycle_length=4,
+            min_cycles=3,
+            max_avg_indegree=1.25,
+            max_tree_depth=2,
+        )
+
+    def test_seeded_constrained_mapping_is_deterministic(self) -> None:
+        species = self._species(20)
+        kwargs = {
+            "max_indegree": 3,
+            "max_cycle_length": 5,
+            "min_cycles": 2,
+            "min_cycle_length": 3,
+            "max_avg_indegree": 1.5,
+            "max_tree_depth": 3,
+        }
+        random.seed("same-seed")
+        first = _pick_constrained_mapping(species, **kwargs)
+        random.seed("same-seed")
+        second = _pick_constrained_mapping(species, **kwargs)
+        self.assertEqual(first, second)
+
+    def test_zero_tree_depth_constructs_only_cycles(self) -> None:
+        random.seed(7)
+        species = self._species(10)
+        mapping = _pick_constrained_mapping(
+            species,
+            max_indegree=1,
+            max_cycle_length=3,
+            min_cycles=3,
+            min_cycle_length=2,
+            max_avg_indegree=1.0,
+            max_tree_depth=0,
+        )
+        self.assertTrue(all(depth == 0 for depth in _compute_depths(mapping).values()))
+
+    def test_impossible_cycle_minimum_fails_immediately(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "require 12 species"):
+            _pick_constrained_mapping(
+                self._species(10),
+                max_indegree=2,
+                max_cycle_length=5,
+                min_cycles=3,
+                min_cycle_length=4,
+                max_avg_indegree=None,
+                max_tree_depth=2,
+            )
+
+    def test_cp_sat_proves_infeasible_degree_and_cycle_combination(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "infeasible"):
+            _pick_constrained_mapping(
+                self._species(10),
+                max_indegree=1,
+                max_cycle_length=3,
+                min_cycles=1,
+                min_cycle_length=3,
+                max_avg_indegree=None,
+                max_tree_depth=2,
+            )
 
 
 if __name__ == "__main__":

@@ -56,6 +56,7 @@ const defaultConfig = () => ({
     force_doubles: false,
     steal_trainer_team: false,
     swap_trainer_pokemon: false,
+    add_trainer_pokemon_if_space: false,
     no_exp: false,
     no_exp_wild: false,
     no_exp_trainer: false,
@@ -71,6 +72,7 @@ const defaultConfig = () => ({
     start_with_cap_candy: false,
     walk_through_walls: false,
     repel_any_level: false,
+    no_wild_encounters: false,
     level_cap: false,
     webui_opponent: false,
     opponent_stat_stage_mod: 0,
@@ -357,12 +359,21 @@ function quoteIfNeeded(a) {
 
 function onConfigChanged() {
     updateEvoConstraintsEnabled();
+    updateTrainerSwapAddEnabled();
     updateStatMirror();
     updateLevelLink();
     debouncedPreview();
 }
 
 // ---------- Cross-field UI sync ----------
+function updateTrainerSwapAddEnabled() {
+    const input = $('[data-bind="add_trainer_pokemon_if_space"]');
+    if (!input) return;
+    const enabled = state.config.swap_trainer_pokemon;
+    input.disabled = !enabled;
+    input.closest(".check").style.opacity = enabled ? "1" : "0.45";
+}
+
 function updateEvoConstraintsEnabled() {
     const enabled = state.config.evo_mode === "hardcoded";
     const group = $("#evo-constraints-group");
@@ -625,6 +636,7 @@ function applyStateToDom() {
     $("#opt-run-make").checked      = state.buildOpts.run_make;
     $("#opt-jobs").value = state.buildOpts.jobs == null ? "" : String(state.buildOpts.jobs);
     updateEvoConstraintsEnabled();
+    updateTrainerSwapAddEnabled();
 }
 
 // ---------- Bootstrap ----------
@@ -635,4 +647,5 @@ wireBuild();
 wireGraphRender();
 wirePresets();
 updateEvoConstraintsEnabled();
+updateTrainerSwapAddEnabled();
 refreshPreview();
