@@ -259,6 +259,11 @@ void NewGameInitData(void)
     WarpToTruck();
     RunScriptImmediately(EventScript_ResetAllMapFlags);
 #endif
+#ifdef SKIP_WALLY_CAPTURE_TUTORIAL
+    VarSet(VAR_PETALBURG_GYM_STATE, 2);
+    VarSet(VAR_PETALBURG_CITY_STATE, 3);
+    FlagSet(FLAG_HIDE_PETALBURG_CITY_WALLYS_MOM);
+#endif
     ResetMiniGamesRecords();
     InitUnionRoomChatRegisteredTexts();
     InitLilycoveLady();

@@ -281,6 +281,8 @@ class MakeArgsTest(unittest.TestCase):
             "FAST_SWIM=0",
             "REPEL_ANY_LEVEL=0",
             "NO_WILD_ENCOUNTERS=0",
+            "RELOAD_SAVE_ON_WHITEOUT=0",
+            "SKIP_WALLY_CAPTURE_TUTORIAL=0",
             "LEVEL_CAP=0",
             "START_WITH_CAP_CANDY=0",
             "SWAP_TRAINER_POKEMON=0",
@@ -424,6 +426,26 @@ class MakeArgsTest(unittest.TestCase):
         self.assertIn(
             "NO_WILD_ENCOUNTERS=0",
             to_make_args(BuildConfig(no_wild_encounters=False), jobs=1),
+        )
+
+    def test_reload_save_on_whiteout_toggle(self) -> None:
+        self.assertIn(
+            "RELOAD_SAVE_ON_WHITEOUT=1",
+            to_make_args(BuildConfig(reload_save_on_whiteout=True), jobs=1),
+        )
+        self.assertIn(
+            "RELOAD_SAVE_ON_WHITEOUT=0",
+            to_make_args(BuildConfig(reload_save_on_whiteout=False), jobs=1),
+        )
+
+    def test_skip_wally_capture_tutorial_toggle(self) -> None:
+        self.assertIn(
+            "SKIP_WALLY_CAPTURE_TUTORIAL=1",
+            to_make_args(BuildConfig(skip_wally_capture_tutorial=True), jobs=1),
+        )
+        self.assertIn(
+            "SKIP_WALLY_CAPTURE_TUTORIAL=0",
+            to_make_args(BuildConfig(skip_wally_capture_tutorial=False), jobs=1),
         )
 
     def test_no_battle_items_toggle(self) -> None:

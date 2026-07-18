@@ -131,6 +131,8 @@ class BuildConfig:
     walk_through_walls: bool = False
     repel_any_level: bool = False
     no_wild_encounters: bool = False
+    reload_save_on_whiteout: bool = False
+    skip_wally_capture_tutorial: bool = False
     level_cap: bool = False
     webui_opponent: bool = False            # WEBUI_OPPONENT=1 — control opponent via browser UI
     opponent_stat_stage_mod: int = 0        # -6..+6
@@ -335,6 +337,8 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("walk_through_walls", "WALK_THROUGH_WALLS"),
     ("repel_any_level", "REPEL_ANY_LEVEL"),
     ("no_wild_encounters", "NO_WILD_ENCOUNTERS"),
+    ("reload_save_on_whiteout", "RELOAD_SAVE_ON_WHITEOUT"),
+    ("skip_wally_capture_tutorial", "SKIP_WALLY_CAPTURE_TUTORIAL"),
     ("level_cap", "LEVEL_CAP"),
     ("nuzlocke_delete_fainted", "NUZLOCKE_DELETE_FAINTED"),
     ("instant_text", "INSTANT_TEXT"),

@@ -104,6 +104,8 @@ class BuildConfigModel(BaseModel):
     walk_through_walls: bool = False
     repel_any_level: bool = False
     no_wild_encounters: bool = False
+    reload_save_on_whiteout: bool = False
+    skip_wally_capture_tutorial: bool = False
     level_cap: bool = False
     webui_opponent: bool = False
     opponent_stat_stage_mod: int = 0

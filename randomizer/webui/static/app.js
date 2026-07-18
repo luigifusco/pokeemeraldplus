@@ -73,6 +73,8 @@ const defaultConfig = () => ({
     walk_through_walls: false,
     repel_any_level: false,
     no_wild_encounters: false,
+    reload_save_on_whiteout: false,
+    skip_wally_capture_tutorial: false,
     level_cap: false,
     webui_opponent: false,
     opponent_stat_stage_mod: 0,

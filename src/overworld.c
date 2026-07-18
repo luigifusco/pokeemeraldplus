@@ -41,6 +41,7 @@
 #include "palette.h"
 #include "play_time.h"
 #include "random.h"
+#include "reload_save.h"
 #include "roamer.h"
 #include "rotating_gate.h"
 #include "safari_zone.h"
@@ -1558,6 +1559,13 @@ void CB2_WhiteOut(void)
 
     if (++gMain.state >= 120)
     {
+#ifdef RELOAD_SAVE_ON_WHITEOUT
+        if (gSaveFileStatus == SAVE_STATUS_OK || gSaveFileStatus == SAVE_STATUS_CORRUPT)
+        {
+            ReloadSave();
+            return;
+        }
+#endif
         FieldClearVBlankHBlankCallbacks();
         StopMapMusic();
         ResetSafariZoneFlag_();
