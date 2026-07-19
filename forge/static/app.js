@@ -1,4 +1,4 @@
-// pokeemeraldplus randomizer - frontend
+// Emerald Forge: pokeemeraldplus configuration studio
 // Plain ES2020, no framework. Single file orchestrates:
 //   - router (left-nav)
 //   - state (config mirror of BuildConfigModel)
@@ -101,6 +101,21 @@ const state = {
     currentRun: null,
 };
 
+function countChangedLeaves(current, baseline) {
+    if (current && baseline && typeof current === "object" && typeof baseline === "object") {
+        const keys = new Set([...Object.keys(current), ...Object.keys(baseline)]);
+        let total = 0;
+        keys.forEach((key) => { total += countChangedLeaves(current[key], baseline[key]); });
+        return total;
+    }
+    return current === baseline ? 0 : 1;
+}
+
+function updateChangeCount() {
+    const el = $("#change-count");
+    if (el) el.textContent = String(countChangedLeaves(state.config, defaultConfig()));
+}
+
 const QOL_CHECKBOX_FIELDS = [
     "walk_fast",
     "fast_swim",
@@ -111,10 +126,10 @@ const QOL_CHECKBOX_FIELDS = [
     "fast_intro",
     "skip_fade_anims",
     "fastest_speed",
-    "manual_battle_text",
     "fast_evolution_anim",
     "prevent_evolution_cancel",
 ];
+const QOL_RESET_FIELDS = [...QOL_CHECKBOX_FIELDS, "manual_battle_text"];
 
 // ---------- Path helpers (dotted paths like "level_scale.wild_percent") ----------
 function getPath(obj, path) {
@@ -131,15 +146,40 @@ function setPath(obj, path, value) {
 const navItems = $$(".nav-item");
 const panels = $$(".panel");
 const titleEl = $("#section-title");
+const kickerEl = $("#section-kicker");
+const descriptionEl = $("#section-description");
 function showSection(name) {
+    const aliases = {
+        randomizer: "remix",
+        evolutions: "moves",
+        gameplay: "battle",
+        qol: "experience",
+    };
+    name = aliases[name] || name;
+    if (!navItems.some((item) => item.dataset.section === name))
+        name = "remix";
+
     navItems.forEach(b => b.classList.toggle("active", b.dataset.section === name));
     panels.forEach(p => p.classList.toggle("hidden", p.dataset.section !== name));
     const active = navItems.find(b => b.dataset.section === name);
-    if (active) titleEl.textContent = active.textContent.trim();
-    try { history.replaceState(null, "", "#" + name); } catch (_) {}
+    if (active) {
+        titleEl.textContent = active.querySelector("span:last-child")?.textContent.trim() || active.textContent.trim();
+        kickerEl.textContent = active.dataset.kicker || "";
+        descriptionEl.textContent = active.dataset.description || "";
+    }
+    if ($(".content")) $(".content").scrollTop = 0;
 }
-navItems.forEach(b => b.addEventListener("click", () => showSection(b.dataset.section)));
-showSection(((location.hash || "#randomizer").slice(1)) || "randomizer");
+function navigateSection(name) {
+    if (location.hash.slice(1) === name)
+        showSection(name);
+    else
+        location.hash = name;
+}
+
+navItems.forEach(b => b.addEventListener("click", () => navigateSection(b.dataset.section)));
+showSection(((location.hash || "#remix").slice(1)) || "remix");
+window.addEventListener("hashchange", () => showSection(location.hash.slice(1)));
+$("#jump-build-btn").addEventListener("click", () => navigateSection("build"));
 
 // ---------- Health ----------
 const healthPill = $("#health-pill");
@@ -164,7 +204,12 @@ const logBody = $("#log-body");
 const logStatusEl = $("#log-status");
 const logLed = $("#log-led");
 
-$("#log-toggle").addEventListener("click", () => drawer.classList.toggle("collapsed"));
+function toggleConsole() {
+    drawer.classList.toggle("collapsed");
+}
+
+$("#log-toggle").addEventListener("click", toggleConsole);
+$("#log-toggle-inline")?.addEventListener("click", () => drawer.classList.remove("collapsed"));
 $("#log-close").addEventListener("click", () => drawer.classList.add("collapsed"));
 $("#log-clear").addEventListener("click", () => { logBody.innerHTML = ""; });
 $("#log-copy").addEventListener("click", async () => {
@@ -365,6 +410,7 @@ function onConfigChanged() {
     updateTrainerSwapAddEnabled();
     updateStatMirror();
     updateLevelLink();
+    updateChangeCount();
     debouncedPreview();
 }
 
@@ -432,9 +478,11 @@ function wireCrossField() {
     opp.forEach((i) => i.addEventListener("input", statSync));
 
     function setQolCheckboxes(checked) {
-        QOL_CHECKBOX_FIELDS.forEach((path) => {
+        const fields = checked ? QOL_CHECKBOX_FIELDS : QOL_RESET_FIELDS;
+        fields.forEach((path) => {
             setPath(state.config, path, checked);
         });
+        state.config.battle_anim_speed_multiplier = checked ? 4 : 1;
         applyStateToDom();
     }
 
@@ -607,6 +655,7 @@ function wirePresets() {
                 const p = presets[name];
                 state.config = Object.assign(defaultConfig(), p.config);
                 state.config.level_scale = Object.assign(defaultConfig().level_scale, p.config.level_scale);
+                state.config.evo_constraints = Object.assign(defaultConfig().evo_constraints, p.config.evo_constraints);
                 state.buildOpts = Object.assign({ run_randomize: true, run_make: true, jobs: null }, p.buildOpts);
                 applyStateToDom();
                 debouncedPreview();
@@ -640,6 +689,7 @@ function applyStateToDom() {
     $("#opt-jobs").value = state.buildOpts.jobs == null ? "" : String(state.buildOpts.jobs);
     updateEvoConstraintsEnabled();
     updateTrainerSwapAddEnabled();
+    updateChangeCount();
 }
 
 // ---------- Bootstrap ----------
@@ -651,4 +701,5 @@ wireGraphRender();
 wirePresets();
 updateEvoConstraintsEnabled();
 updateTrainerSwapAddEnabled();
+updateChangeCount();
 refreshPreview();

@@ -1,6 +1,6 @@
-"""Tests for randomizer.webui.command.
+"""Tests for forge.command.
 
-Run with: ``python3 -m unittest randomizer.tests.test_command``.
+Run with: ``python3 -m unittest forge.tests.test_command``.
 
 These tests don't import Qt, so they run anywhere Python runs.
 """
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import unittest
 
-from randomizer.webui.command import (
+from forge.command import (
     BuildConfig,
     EvoConstraints,
     EvoMode,

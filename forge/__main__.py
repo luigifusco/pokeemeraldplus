@@ -1,4 +1,4 @@
-"""Launcher for the randomizer web UI.
+"""Launcher for Emerald Forge.
 
 Starts uvicorn on 127.0.0.1:8765 by default and opens the browser.
 """
@@ -25,8 +25,8 @@ def _open_browser_later(url: str, delay: float = 0.6) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m randomizer.webui",
-        description="Launch the pokeemeraldplus randomizer web UI.",
+        prog="python -m forge",
+        description="Launch Emerald Forge, the pokeemeraldplus configuration and build studio.",
     )
     parser.add_argument("--host", default="127.0.0.1",
                         help="Bind host (default: 127.0.0.1). Use 0.0.0.0 for LAN access.")
@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
     except ImportError:
         sys.stderr.write(
             "uvicorn is required. Install with:\n"
-            "    pip install -r randomizer/requirements.txt\n"
+            "    pip install -r forge/requirements.txt\n"
         )
         return 2
 
@@ -50,9 +50,9 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_browser:
         _open_browser_later(url)
 
-    print(f"[randomizer] Serving at {url}  (Ctrl+C to stop)")
+    print(f"[emerald-forge] Serving at {url}  (Ctrl+C to stop)")
     uvicorn.run(
-        "randomizer.webui.app:app",
+        "forge.app:app",
         host=args.host,
         port=args.port,
         reload=args.reload,

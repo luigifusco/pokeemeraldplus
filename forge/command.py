@@ -1,4 +1,4 @@
-"""Pure command-building layer.
+"""Pure command-building layer for Emerald Forge.
 
 The old Tk GUI inlined randomize.py and make argv construction inside
 its button handler (~180 lines of closure). That coupled view state

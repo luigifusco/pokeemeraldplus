@@ -1,4 +1,4 @@
-"""FastAPI application for the randomizer web UI."""
+"""FastAPI application for Emerald Forge."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from .command import (
 from .runner import Step, manager
 
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
@@ -144,7 +144,8 @@ class BuildRequest(BaseModel):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="pokeemeraldplus randomizer",
+        title="Emerald Forge",
+        description="Local configuration, content generation, and ROM build studio for pokeemeraldplus.",
         version="0.1.0",
         docs_url="/api/docs",
         redoc_url=None,
@@ -152,6 +153,14 @@ def create_app() -> FastAPI:
 
     STATIC_DIR.mkdir(exist_ok=True)
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    @app.middleware("http")
+    async def disable_forge_asset_cache(request: Request, call_next):
+        response = await call_next(request)
+        if request.url.path == "/" or request.url.path.startswith("/static/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+        return response
 
     @app.get("/api/health")
     def health() -> JSONResponse:
@@ -166,7 +175,7 @@ def create_app() -> FastAPI:
         # what restores src/data/* from the pristine templates in
         # randomizer/, undoing any previous run's shuffling.
         if req.run_randomize:
-            steps.append({"label": "randomize", "argv": to_randomize_args(cfg)})
+            steps.append({"label": "generate content", "argv": to_randomize_args(cfg)})
             steps.append({"label": "evolution graph", "argv": to_evolution_graph_args()})
             steps.append({"label": "spoiler report", "argv": to_spoiler_report_args()})
         if req.run_make:
@@ -183,7 +192,7 @@ def create_app() -> FastAPI:
         # un-checking a previous run's randomization actually reverts the
         # source files.
         if req.run_randomize:
-            steps.append(Step(argv=to_randomize_args(cfg), cwd=cwd, label="randomize"))
+            steps.append(Step(argv=to_randomize_args(cfg), cwd=cwd, label="generate content"))
             steps.append(Step(argv=to_evolution_graph_args(), cwd=cwd, label="evolution graph"))
             steps.append(Step(argv=to_spoiler_report_args(), cwd=cwd, label="spoiler report"))
         if req.run_make:

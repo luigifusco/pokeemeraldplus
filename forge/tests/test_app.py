@@ -13,8 +13,8 @@ import unittest
 
 from fastapi.testclient import TestClient
 
-from randomizer.webui.app import app
-from randomizer.webui.runner import RunManager, Step
+from forge.app import app
+from forge.runner import RunManager, Step
 
 
 class ApiBasics(unittest.TestCase):
@@ -28,6 +28,13 @@ class ApiBasics(unittest.TestCase):
         self.assertTrue(body["ok"])
         self.assertIn("repo", body)
 
+    def test_index_uses_current_uncached_assets(self) -> None:
+        r = self.client.get("/")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("Emerald Forge · ROM Studio", r.text)
+        self.assertIn("style.css?v=editorial-2", r.text)
+        self.assertIn("no-store", r.headers["cache-control"])
+
     def test_preview_make_only(self) -> None:
         r = self.client.post(
             "/api/preview",
@@ -36,7 +43,7 @@ class ApiBasics(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         steps = r.json()["steps"]
         # No targets selected -> randomize restores pristine templates before make.
-        self.assertEqual([s["label"] for s in steps], ["randomize", "evolution graph", "spoiler report", "make"])
+        self.assertEqual([s["label"] for s in steps], ["generate content", "evolution graph", "spoiler report", "make"])
         self.assertIn("--restore", steps[0]["argv"])
         self.assertIn("evolution_graph.py", steps[1]["argv"][1])
         self.assertIn("spoiler_report.py", steps[2]["argv"][1])
@@ -53,7 +60,7 @@ class ApiBasics(unittest.TestCase):
         )
         self.assertEqual(r.status_code, 200, r.text)
         steps = r.json()["steps"]
-        self.assertEqual([s["label"] for s in steps], ["randomize", "evolution graph", "spoiler report"])
+        self.assertEqual([s["label"] for s in steps], ["generate content", "evolution graph", "spoiler report"])
         self.assertIn("--wild", steps[0]["argv"])
 
     def test_preview_with_gym_leader_first_roster(self) -> None:

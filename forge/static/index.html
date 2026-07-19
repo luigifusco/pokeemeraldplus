@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071510" />
+    <title>Emerald Forge · ROM Studio</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 4 91 28v44L50 96 9 72V28Z' fill='%2319c787'/%3E%3Cpath d='m50 17 29 17v32L50 83 21 66V34Z' fill='%23071510'/%3E%3Cpath d='m50 27 20 12v22L50 73 30 61V39Z' fill='%237fffd4'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/static/style.css?v=editorial-2" />
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-gem" aria-hidden="true"><span></span></div>
+            <div class="brand-copy">
+                <div class="brand-name">Emerald Forge</div>
+                <div class="brand-product">pokeemeraldplus studio</div>
+            </div>
+        </div>
+
+        <div class="project-status">
+            <div class="project-status-label">Current configuration</div>
+            <div class="project-status-value"><strong id="change-count">0</strong> modified settings</div>
+        </div>
+
+        <nav class="nav" aria-label="Configuration workspaces">
+            <button class="nav-item active" data-section="remix" data-kicker="Content remix" data-description="Randomize species, choose distribution rules, and reshape the game's level curve.">
+                <span class="nav-mark">01</span><span>Remix</span>
+            </button>
+            <button class="nav-item" data-section="moves" data-kicker="Pokémon systems" data-description="Configure movesets, compatibility, evolution behavior, and graph constraints.">
+                <span class="nav-mark">02</span><span>Moves &amp; Evolutions</span>
+            </button>
+            <button class="nav-item" data-section="trainers" data-kicker="Opponent design" data-description="Tune bosses, rivals, villains, Wally, and gym-leader rosters.">
+                <span class="nav-mark">03</span><span>Trainers</span>
+            </button>
+            <button class="nav-item" data-section="world" data-kicker="World rules" data-description="Change progression, encounters, facilities, starting state, and field interactions.">
+                <span class="nav-mark">04</span><span>World</span>
+            </button>
+            <button class="nav-item" data-section="battle" data-kicker="Battle rules" data-description="Shape combat, progression rewards, party acquisition, and external opponent control.">
+                <span class="nav-mark">05</span><span>Battle</span>
+            </button>
+            <button class="nav-item" data-section="experience" data-kicker="Presentation" data-description="Control pacing, animation speed, transitions, text, and quality-of-life behavior.">
+                <span class="nav-mark">06</span><span>Experience</span>
+            </button>
+            <button class="nav-item" data-section="build" data-kicker="Output pipeline" data-description="Inspect commands, run the pipeline, and open generated reports.">
+                <span class="nav-mark">07</span><span>Build</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="status-pill" id="health-pill">
+                <span class="dot"></span>
+                <span id="health-text">connecting…</span>
+            </div>
+            <span class="local-only">local workspace</span>
+        </div>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <div class="page-heading">
+                <span class="page-kicker" id="section-kicker">Content remix</span>
+                <h1 id="section-title">Remix</h1>
+                <p id="section-description">Randomize species, choose distribution rules, and reshape the game's level curve.</p>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn btn-quiet" id="preset-menu-btn">Presets</button>
+                <button class="btn btn-quiet" id="log-toggle">Console <span class="chevron">⌄</span></button>
+                <button class="btn btn-primary" id="jump-build-btn">Review build</button>
+            </div>
+        </header>
+
+        <!-- ===================== REMIX ===================== -->
+        <section class="panel" data-section="remix">
+            <div class="panel-intro">
+                <span class="eyebrow">Species &amp; levels</span>
+                <h2>Recompose the adventure</h2>
+                <p>Choose what changes, how replacements repeat, and how quickly the world scales around the player.</p>
+            </div>
+
+            <div class="studio-grid">
+                <article class="group group-wide">
+                    <div class="group-heading">
+                        <div><span class="group-index">A</span><h3>Run identity</h3></div>
+                        <p>Use the same seed and settings to reproduce generated content.</p>
+                    </div>
+                    <div class="row">
+                        <div class="row-label"><strong>Seed</strong><small>Text or number; blank creates a fresh run.</small></div>
+                        <input type="text" data-bind="seed" placeholder="optional seed" class="input-wide" />
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading">
+                        <div><span class="group-index">B</span><h3>Remix targets</h3></div>
+                        <p>Select the content pools that should be rewritten.</p>
+                    </div>
+                    <div class="option-grid">
+                        <label class="check option"><input type="checkbox" data-bind="randomize_wild" /><span class="box"></span><span><strong>Wild Pokémon</strong><small>Routes, caves, water, fishing.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="randomize_starters" /><span class="box"></span><span><strong>Starters</strong><small>Professor Birch's three choices.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="randomize_trainers" /><span class="box"></span><span><strong>Trainer teams</strong><small>All supported trainer party slots.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading">
+                        <div><span class="group-index">C</span><h3>Distribution model</h3></div>
+                        <p>Decide whether species substitutions remain stable or reroll.</p>
+                    </div>
+                    <div class="choice-stack">
+                        <label class="radio choice"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="global" /><span class="box"></span><span><strong>Global mapping</strong><small>One replacement per original species everywhere.</small></span></label>
+                        <label class="radio choice"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="global-wild-independent-trainers" /><span class="box"></span><span><strong>Global wilds</strong><small>Stable wild mapping; trainer slots reroll independently.</small></span></label>
+                        <label class="radio choice"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="per-map" /><span class="box"></span><span><strong>Per map</strong><small>Stable inside each map, different elsewhere.</small></span></label>
+                        <label class="radio choice"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="per-route-independent-trainers" /><span class="box"></span><span><strong>Per route + independent trainers</strong><small>Map-local wilds with fully independent trainer slots.</small></span></label>
+                        <label class="radio choice"><input type="radio" name="random_mode" data-bind-radio="random_mode" value="per-occurrence" /><span class="box"></span><span><strong>Per occurrence</strong><small>Every individual appearance rerolls.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group group-wide">
+                    <div class="group-heading">
+                        <div><span class="group-index">D</span><h3>Level curve</h3></div>
+                        <p>Scale existing levels or replace them with fixed values. Fixed values take priority.</p>
+                    </div>
+                    <div class="control-grid">
+                        <div class="control-block">
+                            <div class="control-label"><strong>Starter level</strong><span>1–100</span></div>
+                            <div class="control-inputs"><input type="range" min="1" max="100" step="1" data-bind="level_scale.starter_level" /><input type="number" class="num-mirror" min="1" max="100" data-bind="level_scale.starter_level" /></div>
+                        </div>
+                        <div class="control-block">
+                            <div class="control-label"><strong>Wild scaling</strong><span>-100% to +100%</span></div>
+                            <div class="control-inputs"><input type="range" min="-100" max="100" step="5" data-bind="level_scale.wild_percent" /><input type="number" class="num-mirror" min="-100" max="100" data-bind="level_scale.wild_percent" /></div>
+                        </div>
+                        <div class="control-block">
+                            <div class="control-label"><strong>Trainer scaling</strong><span>-100% to +100%</span></div>
+                            <div class="control-inputs"><input type="range" min="-100" max="100" step="5" data-bind="level_scale.trainer_percent" /><input type="number" class="num-mirror" min="-100" max="100" data-bind="level_scale.trainer_percent" /></div>
+                        </div>
+                        <div class="control-block compact-control">
+                            <div class="control-label"><strong>Wild fixed level</strong><span>optional</span></div>
+                            <input type="number" min="1" max="100" placeholder="—" data-bind="level_scale.wild_fixed_level" />
+                        </div>
+                        <div class="control-block compact-control">
+                            <div class="control-label"><strong>Trainer fixed level</strong><span>optional</span></div>
+                            <input type="number" min="1" max="100" placeholder="—" data-bind="level_scale.trainer_fixed_level" />
+                        </div>
+                        <label class="check inline-toggle"><input type="checkbox" id="level-link" /><span class="box"></span><span><strong>Link wild and trainer scaling</strong><small>Moving either percentage keeps both synchronized.</small></span></label>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ===================== MOVES & EVOLUTIONS ===================== -->
+        <section class="panel hidden" data-section="moves">
+            <div class="panel-intro">
+                <span class="eyebrow">Pokémon systems</span>
+                <h2>Rewrite growth and evolution</h2>
+                <p>Randomize learnsets and compatibility, then define how evolution paths behave across a playthrough.</p>
+            </div>
+
+            <div class="studio-grid">
+                <article class="group group-wide">
+                    <div class="group-heading">
+                        <div><span class="group-index">A</span><h3>Move sources</h3></div>
+                        <p>Identities change; power, type, accuracy, PP, and category remain intact.</p>
+                    </div>
+                    <div class="option-grid option-grid-3">
+                        <label class="check option"><input type="checkbox" data-bind="randomize_level_up_moves" /><span class="box"></span><span><strong>Level-up moves</strong><small>Preserve levels and slots.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="randomize_egg_moves" /><span class="box"></span><span><strong>Egg moves</strong><small>Preserve each list's size.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="randomize_tm_moves" /><span class="box"></span><span><strong>TM moves</strong><small>HMs remain field-safe.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="randomize_tutor_moves" /><span class="box"></span><span><strong>Tutor moves</strong><small>Avoid TM/HM overlap.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="randomize_tmhm_compat" /><span class="box"></span><span><strong>TM/HM compatibility</strong><small>Reroll by species.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="randomize_tutor_compat" /><span class="box"></span><span><strong>Tutor compatibility</strong><small>Reroll by species.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading">
+                        <div><span class="group-index">B</span><h3>Selection quality</h3></div>
+                        <p>Bias randomized move pools toward useful and thematic results.</p>
+                    </div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="moves_prefer_same_type" /><span class="box"></span><span><strong>Prefer same type</strong><small>Bias moves and compatibility toward species types.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="moves_block_broken" /><span class="box"></span><span><strong>Block broken moves</strong><small>Exclude Sketch, Struggle, Chatter, and Shadow moves.</small></span></label>
+                    </div>
+                    <div class="control-block">
+                        <div class="control-label"><strong>Good damaging chance</strong><span>0–100%</span></div>
+                        <div class="control-inputs"><input type="range" min="0" max="100" step="5" data-bind="moves_good_damaging_percent" /><input type="number" class="num-mirror" min="0" max="100" data-bind="moves_good_damaging_percent" /></div>
+                    </div>
+                    <div class="control-block">
+                        <div class="control-label"><strong>Guaranteed starting moves</strong><span>0–4</span></div>
+                        <div class="control-inputs"><input type="range" min="0" max="4" step="1" data-bind="guaranteed_starting_moves" /><input type="number" class="num-mirror" min="0" max="4" data-bind="guaranteed_starting_moves" /></div>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading">
+                        <div><span class="group-index">C</span><h3>Evolution behavior</h3></div>
+                        <p>Keep canon, reroll at runtime, or bake a deterministic graph into the ROM.</p>
+                    </div>
+                    <div class="choice-stack">
+                        <label class="radio choice"><input type="radio" name="evo_mode" data-bind-radio="evo_mode" value="vanilla" /><span class="box"></span><span><strong>Vanilla</strong><small>Canonical evolution paths.</small></span></label>
+                        <label class="radio choice"><input type="radio" name="evo_mode" data-bind-radio="evo_mode" value="random" /><span class="box"></span><span><strong>Runtime random</strong><small>Reroll every evolution event.</small></span></label>
+                        <label class="radio choice"><input type="radio" name="evo_mode" data-bind-radio="evo_mode" value="hardcoded" /><span class="box"></span><span><strong>Hardcoded random</strong><small>One deterministic graph per generated build.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group group-wide" id="evo-constraints-group">
+                    <div class="group-heading">
+                        <div><span class="group-index">D</span><h3>Graph constraints</h3></div>
+                        <p>CP-SAT proves the requested hardcoded graph feasible before generation.</p>
+                    </div>
+                    <div class="control-grid constraints-grid">
+                        <div class="control-block compact-control"><div class="control-label"><strong>Max in-degree</strong><span>incoming branches</span></div><input type="number" min="0" data-bind="evo_constraints.max_indegree" placeholder="—" /></div>
+                        <div class="control-block compact-control"><div class="control-label"><strong>Max cycle length</strong><span>longest loop</span></div><input type="number" min="0" data-bind="evo_constraints.max_cycle_length" placeholder="—" /></div>
+                        <div class="control-block compact-control"><div class="control-label"><strong>Min cycle length</strong><span>shortest loop</span></div><input type="number" min="0" data-bind="evo_constraints.min_cycle_length" placeholder="—" /></div>
+                        <div class="control-block compact-control"><div class="control-label"><strong>Minimum cycles</strong><span>distinct loops</span></div><input type="number" min="0" data-bind="evo_constraints.min_cycles" placeholder="—" /></div>
+                        <div class="control-block compact-control"><div class="control-label"><strong>Max average in-degree</strong><span>branching factor</span></div><input type="number" min="0" step="0.05" data-bind="evo_constraints.max_avg_indegree" placeholder="—" /></div>
+                        <div class="control-block compact-control"><div class="control-label"><strong>Max tree depth</strong><span>longest tail</span></div><input type="number" min="1" step="1" data-bind="evo_constraints.max_tree_depth" placeholder="—" /></div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ===================== TRAINERS ===================== -->
+        <section class="panel hidden" data-section="trainers">
+            <div class="panel-intro">
+                <span class="eyebrow">Opponent design</span>
+                <h2>Build a stronger cast</h2>
+                <p>Control randomized boss quality and opt into curated difficulty upgrades for major opponents.</p>
+            </div>
+
+            <div class="studio-grid">
+                <article class="group group-wide">
+                    <div class="group-heading">
+                        <div><span class="group-index">A</span><h3>Randomized boss quality</h3></div>
+                        <p>Applied when trainer teams are included in the remix.</p>
+                    </div>
+                    <label class="check feature-toggle"><input type="checkbox" data-bind="guarantee_strong_bosses" /><span class="box"></span><span><strong>Guarantee strong bosses</strong><small>Force boss-team average BST above the selected percentile.</small></span></label>
+                    <div class="control-grid">
+                        <div class="control-block"><div class="control-label"><strong>Strength percentile</strong><span>0–100</span></div><div class="control-inputs"><input type="range" min="0" max="100" step="10" data-bind="strong_bosses_percentile" /><input type="number" class="num-mirror" min="0" max="100" step="10" data-bind="strong_bosses_percentile" /></div></div>
+                        <div class="control-block"><div class="control-label"><strong>Minimum party size</strong><span>1–6 Pokémon</span></div><div class="control-inputs"><input type="range" min="1" max="6" step="1" data-bind="min_boss_party_size" /><input type="number" class="num-mirror" min="1" max="6" data-bind="min_boss_party_size" /></div></div>
+                    </div>
+                </article>
+
+                <article class="group group-wide">
+                    <div class="group-heading">
+                        <div><span class="group-index">B</span><h3>Curated difficulty</h3></div>
+                        <p>Hand-authored team upgrades that work with or without trainer randomization.</p>
+                    </div>
+                    <div class="option-grid option-grid-2">
+                        <label class="check option"><input type="checkbox" data-bind="stronger_villains" /><span class="box"></span><span><strong>Stronger villains</strong><small>Expanded Aqua/Magma boss, admin, and grunt teams.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="stronger_rival" /><span class="box"></span><span><strong>Stronger rival</strong><small>Larger May/Brendan teams through Lilycove.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="stronger_wally" /><span class="box"></span><span><strong>Stronger Wally</strong><small>Expanded Mauville and Victory Road encounters.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="stronger_gym_leaders" /><span class="box"></span><span><strong>Stronger gym leaders</strong><small>An extra themed Pokémon in each first badge battle.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group group-wide">
+                    <div class="group-heading">
+                        <div><span class="group-index">C</span><h3>Gym roster era</h3></div>
+                        <p>Select which canonical roster each gym leader uses for the first badge fight.</p>
+                    </div>
+                    <div class="control-block">
+                        <div class="control-label"><strong>First-battle roster</strong><span>0 base · 4 final rematch</span></div>
+                        <div class="control-inputs"><input type="range" min="0" max="4" step="1" data-bind="gym_leader_first_roster" /><input type="number" class="num-mirror" min="0" max="4" data-bind="gym_leader_first_roster" /></div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ===================== WORLD ===================== -->
+        <section class="panel hidden" data-section="world">
+            <div class="panel-intro">
+                <span class="eyebrow">World rules</span>
+                <h2>Open, restrict, or simplify Hoenn</h2>
+                <p>Change exploration gates, encounter availability, facilities, and the state of a new adventure.</p>
+            </div>
+
+            <div class="studio-grid">
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">A</span><h3>Field progression</h3></div><p>Decouple HM use from badges and party moves.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="open_world_mode" /><span class="box"></span><span><strong>Open world HM use</strong><small>Ignore badge requirements; Pokémon must know the move.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="free_hm_mode" /><span class="box"></span><span><strong>Free HM interactions</strong><small>No move knowledge or Pokémon-use presentation for direct obstacles.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="walk_through_walls" /><span class="box"></span><span><strong>Walk through walls</strong><small>Debug collision bypass.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">B</span><h3>Encounters</h3></div><p>Control whether and when wild encounters can occur.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="repel_any_level" /><span class="box"></span><span><strong>Universal Repels</strong><small>Repels block encounters regardless of level.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="no_wild_encounters" /><span class="box"></span><span><strong>No wild encounters</strong><small>Disable walking, surfing, fishing, Rock Smash, and Sweet Scent encounters.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">C</span><h3>Facilities</h3></div><p>Remove services and interaction points from the world.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="remove_pokemon_center_joy" /><span class="box"></span><span><strong>Remove Nurse Joy</strong><small>Hide healing NPCs from Pokémon Center 1F maps.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="disable_pcs" /><span class="box"></span><span><strong>Disable all PCs</strong><small>Field PCs no longer respond to interaction.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">D</span><h3>Adventure start</h3></div><p>Change early progression and starting inventory.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="skip_wally_capture_tutorial" /><span class="box"></span><span><strong>Skip Wally tutorial</strong><small>Initialize Petalburg past the capture sequence.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="first_shop_pokeballs" /><span class="box"></span><span><strong>Early Poké Balls</strong><small>Stock Oldale Mart before the first rival battle.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="start_with_super_rare_candy" /><span class="box"></span><span><strong>Super Rare Candy</strong><small>Begin with the reusable leveling key item.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="start_with_cap_candy" /><span class="box"></span><span><strong>Cap Candy</strong><small>Begin with the current-cap leveling key item.</small></span></label>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ===================== BATTLE ===================== -->
+        <section class="panel hidden" data-section="battle">
+            <div class="panel-intro">
+                <span class="eyebrow">Combat &amp; rewards</span>
+                <h2>Redefine battle consequences</h2>
+                <p>Change combat format, progression rewards, acquisition rules, and permanent stat advantages.</p>
+            </div>
+
+            <div class="studio-grid">
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">A</span><h3>Battle format</h3></div><p>Change party structure and post-battle acquisition.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="force_doubles" /><span class="box"></span><span><strong>Force double battles</strong><small>Use doubles wherever the standard battle flow supports it.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="steal_trainer_team" /><span class="box"></span><span><strong>Steal trainer team</strong><small>Replace your party after defeating a trainer.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="swap_trainer_pokemon" /><span class="box"></span><span><strong>Post-battle swap</strong><small>Choose an opponent Pokémon after a normal trainer win.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="add_trainer_pokemon_if_space" /><span class="box"></span><span><strong>Add when space exists</strong><small>Skip replacement selection if the party is not full.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">B</span><h3>Failure rules</h3></div><p>Define fainting, wipeout, and level-cap consequences.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="nuzlocke_delete_fainted" /><span class="box"></span><span><strong>Delete fainted Pokémon</strong><small>Remove party members when they faint.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="reload_save_on_whiteout" /><span class="box"></span><span><strong>Reload on wipeout</strong><small>Return to the latest save instead of respawning.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="level_cap" /><span class="box"></span><span><strong>Boss level cap</strong><small>Stop EXP at the next gym or Elite Four ceiling.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group group-wide">
+                    <div class="group-heading"><div><span class="group-index">C</span><h3>Experience &amp; economy</h3></div><p>Control growth, battle items, catching, and move costs.</p></div>
+                    <div class="option-grid option-grid-3">
+                        <label class="check option"><input type="checkbox" data-bind="no_exp" /><span class="box"></span><span><strong>No EXP</strong><small>Disable all experience gains.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="no_exp_wild" /><span class="box"></span><span><strong>No wild EXP</strong><small>Wild Pokémon grant no EXP.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="no_exp_trainer" /><span class="box"></span><span><strong>No trainer EXP</strong><small>Trainer Pokémon grant no EXP.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="negative_exp" /><span class="box"></span><span><strong>Negative EXP</strong><small>Experience is removed instead of awarded.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="no_pokeballs" /><span class="box"></span><span><strong>No Poké Balls</strong><small>Disable catching.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="no_battle_items" /><span class="box"></span><span><strong>No battle items</strong><small>Disable bag items and berries in battle.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="money_for_moves" /><span class="box"></span><span><strong>Pay per move</strong><small>Spend money instead of PP.</small></span></label>
+                    </div>
+                    <div class="control-block">
+                        <div class="control-label"><strong>EXP multiplier</strong><span>1.0×–3.0×</span></div>
+                        <div class="control-inputs"><input type="range" min="1" max="3" step="0.1" data-bind="exp_multiplier" /><input type="number" class="num-mirror" min="1" max="3" step="0.1" data-bind="exp_multiplier" /></div>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">D</span><h3>Initial stat stages</h3></div><p>Apply permanent battle-opening bonuses from -6 to +6.</p></div>
+                    <div class="control-block"><div class="control-label"><strong>Player</strong><span>-6 to +6</span></div><div class="control-inputs"><input type="range" min="-6" max="6" step="1" data-bind="player_stat_stage_mod" /><input type="number" class="num-mirror" min="-6" max="6" data-bind="player_stat_stage_mod" /></div></div>
+                    <div class="control-block"><div class="control-label"><strong>Opponent</strong><span>-6 to +6</span></div><div class="control-inputs"><input type="range" min="-6" max="6" step="1" data-bind="opponent_stat_stage_mod" /><input type="number" class="num-mirror" min="-6" max="6" data-bind="opponent_stat_stage_mod" /></div></div>
+                    <label class="check inline-toggle"><input type="checkbox" id="stat-mirror" /><span class="box"></span><span><strong>Mirror stages</strong><small>Player value becomes the inverse of the opponent.</small></span></label>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">E</span><h3>External opponent</h3></div><p>Drive opponent decisions through the companion browser battle UI.</p></div>
+                    <label class="check feature-toggle"><input type="checkbox" data-bind="webui_opponent" /><span class="box"></span><span><strong>Web-UI opponent</strong><small>Enable the mGBA Lua mailbox bridge. See <code>battleui/README.md</code>.</small></span></label>
+                </article>
+            </div>
+        </section>
+
+        <!-- ===================== EXPERIENCE ===================== -->
+        <section class="panel hidden" data-section="experience">
+            <div class="panel-intro">
+                <span class="eyebrow">Pacing &amp; presentation</span>
+                <h2>Make the game move your way</h2>
+                <p>Accelerate the parts you repeat, preserve the parts you enjoy, or strip presentation down to essentials.</p>
+            </div>
+
+            <div class="studio-grid">
+                <article class="group group-wide">
+                    <div class="group-heading">
+                        <div><span class="group-index">A</span><h3>Quick profile</h3></div>
+                        <p>Apply or clear every speed-oriented option in this workspace.</p>
+                    </div>
+                    <div class="button-row">
+                        <button class="btn btn-secondary" id="qol-enable-all">Enable speed profile</button>
+                        <button class="btn btn-quiet" id="qol-clear-all">Reset presentation</button>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">B</span><h3>Movement &amp; text</h3></div><p>Reduce friction in exploration and dialogue.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="walk_fast" /><span class="box"></span><span><strong>Fast walking</strong><small>Running-shoes movement everywhere.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="fast_swim" /><span class="box"></span><span><strong>Fast surfing</strong><small>Surf at running speed.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="instant_text" /><span class="box"></span><span><strong>Instant text</strong><small>Render messages without character delay.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="manual_battle_text" /><span class="box"></span><span><strong>Manual battle text</strong><small>Require confirmation for every battle message.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">C</span><h3>Transitions &amp; scenes</h3></div><p>Skip repeated cinematic and fade sequences.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" data-bind="fast_battle_anims" /><span class="box"></span><span><strong>Fast battle send-out</strong><small>Accelerate trainer, ball, healthbox, and cry waits.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="skip_battle_transition" /><span class="box"></span><span><strong>Skip battle transition</strong><small>Use the shortest battle-entry path.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="skip_intro_cutscene" /><span class="box"></span><span><strong>Skip title intro</strong><small>Go directly to the title screen.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="fast_intro" /><span class="box"></span><span><strong>Fast new-game intro</strong><small>Skip the moving-truck sequence.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="skip_fade_anims" /><span class="box"></span><span><strong>Skip fades</strong><small>Complete supported fade animations immediately.</small></span></label>
+                        <label class="check choice"><input type="checkbox" data-bind="fastest_speed" /><span class="box"></span><span><strong>32× scripted waits</strong><small>Apply the maximum wait-time divisor.</small></span></label>
+                    </div>
+                </article>
+
+                <article class="group group-wide">
+                    <div class="group-heading"><div><span class="group-index">D</span><h3>Battle animation engine</h3></div><p>Scale move effects, Pokémon motion, HP/EXP bars, and battle presentation together.</p></div>
+                    <div class="control-block">
+                        <div class="control-label"><strong>Animation multiplier</strong><span>1× vanilla · 8× maximum</span></div>
+                        <div class="control-inputs"><input type="range" min="1" max="8" step="1" data-bind="battle_anim_speed_multiplier" /><input type="number" class="num-mirror" min="1" max="8" step="1" data-bind="battle_anim_speed_multiplier" /></div>
+                    </div>
+                </article>
+
+                <article class="group group-wide">
+                    <div class="group-heading"><div><span class="group-index">E</span><h3>Evolution scenes</h3></div><p>Control evolution pacing and whether B can cancel the transformation.</p></div>
+                    <div class="option-grid option-grid-2">
+                        <label class="check option"><input type="checkbox" data-bind="fast_evolution_anim" /><span class="box"></span><span><strong>Fast evolution animation</strong><small>Skip the long cross-fade loop.</small></span></label>
+                        <label class="check option"><input type="checkbox" data-bind="prevent_evolution_cancel" /><span class="box"></span><span><strong>Prevent cancellation</strong><small>Holding B no longer stops evolution.</small></span></label>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- ===================== BUILD ===================== -->
+        <section class="panel hidden" data-section="build">
+            <div class="panel-intro build-intro">
+                <div>
+                    <span class="eyebrow">Output pipeline</span>
+                    <h2>Forge the ROM</h2>
+                    <p>Review the exact pipeline, compile the configured game, and inspect generated artifacts.</p>
+                </div>
+                <div class="build-hero-actions">
+                    <button class="btn btn-primary btn-large" id="build-btn">Build ROM</button>
+                    <button class="btn btn-danger" id="stop-btn" disabled>Stop</button>
+                </div>
+            </div>
+
+            <div class="studio-grid build-grid">
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">A</span><h3>Pipeline</h3></div><p>Choose which stages execute.</p></div>
+                    <div class="choice-stack">
+                        <label class="check choice"><input type="checkbox" id="opt-run-randomize" checked /><span class="box"></span><span><strong>Generate content</strong><small>Restore templates, remix selected data, and generate reports.</small></span></label>
+                        <label class="check choice"><input type="checkbox" id="opt-run-make" checked /><span class="box"></span><span><strong>Compile ROM</strong><small>Run <code>make</code> with all configured build flags.</small></span></label>
+                    </div>
+                    <div class="row">
+                        <div class="row-label"><strong>Parallel jobs</strong><small>Blank uses all available CPUs.</small></div>
+                        <input type="number" min="1" max="64" id="opt-jobs" placeholder="auto" />
+                    </div>
+                </article>
+
+                <article class="group">
+                    <div class="group-heading"><div><span class="group-index">B</span><h3>Build status</h3></div><p>The console opens automatically when a build starts.</p></div>
+                    <div class="build-state-card">
+                        <span class="build-state-label">Pipeline state</span>
+                        <strong class="build-status" id="build-status">ready</strong>
+                    </div>
+                    <div class="button-row">
+                        <button class="btn btn-quiet" id="build-clear-btn">Clear console</button>
+                        <button class="btn btn-quiet" id="log-toggle-inline">Open console</button>
+                    </div>
+                </article>
+
+                <article class="group group-wide command-group">
+                    <div class="group-heading"><div><span class="group-index">C</span><h3>Command preview</h3></div><p>Live representation of every command the studio will execute.</p></div>
+                    <pre class="preview" id="preview-pane">Loading…</pre>
+                </article>
+
+                <article class="group group-wide">
+                    <div class="group-heading"><div><span class="group-index">D</span><h3>Generated intelligence</h3></div><p>Inspect randomized content and visualize hardcoded evolution paths.</p></div>
+                    <div class="artifact-row">
+                        <a class="artifact-card" href="/api/spoiler-report" target="_blank" rel="noreferrer"><span class="artifact-mark">HTML</span><span><strong>Spoiler report</strong><small>Starters, encounters, teams, moves, compatibility, and more.</small></span></a>
+                        <button class="artifact-card" id="render-graph-btn"><span class="artifact-mark">DOT</span><span><strong>Evolution graph</strong><small>Render the current hardcoded evolution table.</small></span></button>
+                    </div>
+                    <div id="render-graph-status" class="artifact-status"></div>
+                    <div id="render-graph-container" class="graph-container"></div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <aside class="log-drawer collapsed" id="log-drawer">
+        <div class="log-header">
+            <div class="log-title">
+                <span class="led" id="log-led"></span>
+                <span>Forge console</span>
+                <span class="console-state" id="log-status">idle</span>
+            </div>
+            <div class="log-actions">
+                <button class="btn btn-quiet btn-small" id="log-clear">Clear</button>
+                <button class="btn btn-quiet btn-small" id="log-copy">Copy</button>
+                <button class="btn btn-quiet btn-small" id="log-close">Close</button>
+            </div>
+        </div>
+        <pre class="log-body" id="log-body"></pre>
+    </aside>
+
+    <div class="modal hidden" id="preset-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div><span class="eyebrow">Local library</span><h2>Configuration presets</h2></div>
+                <button class="btn btn-quiet" id="preset-close">Close</button>
+            </div>
+            <div class="modal-body">
+                <div class="preset-create">
+                    <input type="text" id="preset-name" placeholder="Preset name" />
+                    <button class="btn btn-primary" id="preset-save">Save current configuration</button>
+                </div>
+                <ul class="preset-list" id="preset-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js?v=editorial-2"></script>
+</body>
+</html>

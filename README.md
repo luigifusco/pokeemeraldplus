@@ -8,17 +8,18 @@ It builds the following ROM:
 
 To set up the repository, see [INSTALL.md](INSTALL.md).
 
-## Randomizer & Web UI
+## Emerald Forge
 
-The repository ships a randomizer plus a browser-based UI that wraps
-both the randomizer and `make`. To launch it:
+The repository ships **Emerald Forge**, a local browser studio for configuring
+gameplay changes, generating remixed content, compiling the ROM, and inspecting
+reports. To launch it:
 
 ```bash
 # Create a virtual environment (recommended on Debian/Ubuntu/WSL).
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r randomizer/requirements.txt
-python3 -m randomizer.webui
+pip install -r forge/requirements.txt
+python3 -m forge
 ```
 
 If you hit `error: externally-managed-environment`, that's PEP 668
@@ -26,28 +27,20 @@ refusing to touch the system Python. Use the `venv` recipe above, or
 install per-user:
 
 ```bash
-pip install --user -r randomizer/requirements.txt
-python3 -m randomizer.webui
+pip install --user -r forge/requirements.txt
+python3 -m forge
 ```
 
 This starts a local server on <http://127.0.0.1:8765/> and opens your
-browser. The UI has five sections:
+browser. Forge organizes configuration into seven workspaces:
 
-* **Randomizer** — pick targets (wild / starters / trainers),
-  distribution (global / per-occurrence / per-map-consistent), and
-  level scaling.
-* **Evolutions** — vanilla, re-roll-each-time, or hardcoded-random
-  (deterministic). Hardcoded mode exposes graph constraints
-  (max in-degree, max/min cycle length, min cycles, max avg
-  in-degree). A **Render graph** button visualizes the resulting
-  evolution graph.
-* **Gameplay** — EXP rules, economy tweaks, stat-stage modifiers,
-  and walk-through-walls.
-* **QoL & Speed** — instant text, fast animations, skip transitions,
-  configurable wait-time divisor.
-* **Build & Run** — toggle which steps to run, set `-j` parallelism,
-  watch the live command preview, then click Build and
-  stream logs in real time.
+* **Remix** — species targets, distribution models, seed, and level curve.
+* **Moves & Evolutions** — learnsets, compatibility, evolution modes, and CP-SAT graph constraints.
+* **Trainers** — randomized boss quality and curated opponent upgrades.
+* **World** — HM progression, encounters, facilities, and starting state.
+* **Battle** — battle format, EXP/economy rules, stat stages, and external control.
+* **Experience** — movement, text, transitions, animation speed, and evolution pacing.
+* **Build** — pipeline selection, live command preview, console, reports, and evolution graph.
 
 Presets are stored in your browser's local storage (accessible via the
 Presets button in the top bar).
@@ -55,9 +48,9 @@ Presets button in the top bar).
 ### CLI flags
 
 ```bash
-python3 -m randomizer.webui --host 127.0.0.1 --port 8765
-python3 -m randomizer.webui --no-browser   # don't auto-open a tab
-python3 -m randomizer.webui --reload       # dev mode
+python3 -m forge --host 127.0.0.1 --port 8765
+python3 -m forge --no-browser   # don't auto-open a tab
+python3 -m forge --reload       # dev mode
 ```
 
 For contacts and other pret projects, see [pret.github.io](https://pret.github.io/).

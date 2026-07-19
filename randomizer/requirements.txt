@@ -1,4 +1,1 @@
-fastapi>=0.110
 ortools==9.15.6755
-uvicorn[standard]>=0.27
-sse-starlette>=2.0

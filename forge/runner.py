@@ -1,4 +1,4 @@
-"""Async subprocess runner with per-run line queues.
+"""Async subprocess runner for Emerald Forge with per-run line queues.
 
 The web UI needs to:
 
