@@ -35,10 +35,16 @@ static void FieldCallback_Strength(void)
 
 bool8 FldEff_UseStrength(void)
 {
+#ifdef FREE_HM_MODE
+    u8 taskId = CreateFieldMoveTaskNoMon();
+#else
     u8 taskId = CreateFieldMoveTask();
+#endif
     gTasks[taskId].data[8] = (u32)StartStrengthFieldEffect >> 16;
     gTasks[taskId].data[9] = (u32)StartStrengthFieldEffect;
+#ifndef FREE_HM_MODE
     GetMonNickname(&gPlayerParty[gFieldEffectArguments[0]], gStringVar1);
+#endif
     return FALSE;
 }
 

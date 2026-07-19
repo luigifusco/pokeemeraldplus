@@ -283,7 +283,11 @@ static void FieldCallback_CutGrass(void)
 
 bool8 FldEff_UseCutOnGrass(void)
 {
+#ifdef FREE_HM_MODE
+    u8 taskId = CreateFieldMoveTaskNoMon();
+#else
     u8 taskId = CreateFieldMoveTask();
+#endif
 
     gTasks[taskId].data[8] = (u32)StartCutGrassFieldEffect >> 16;
     gTasks[taskId].data[9] = (u32)StartCutGrassFieldEffect;
@@ -299,7 +303,11 @@ static void FieldCallback_CutTree(void)
 
 bool8 FldEff_UseCutOnTree(void)
 {
+#ifdef FREE_HM_MODE
+    u8 taskId = CreateFieldMoveTaskNoMon();
+#else
     u8 taskId = CreateFieldMoveTask();
+#endif
 
     gTasks[taskId].data[8] = (u32)StartCutTreeFieldEffect >> 16;
     gTasks[taskId].data[9] = (u32)StartCutTreeFieldEffect;

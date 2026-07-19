@@ -106,6 +106,8 @@ class BuildConfigModel(BaseModel):
     no_wild_encounters: bool = False
     reload_save_on_whiteout: bool = False
     skip_wally_capture_tutorial: bool = False
+    open_world_mode: bool = False
+    free_hm_mode: bool = False
     level_cap: bool = False
     webui_opponent: bool = False
     opponent_stat_stage_mod: int = 0

@@ -24,6 +24,8 @@
 */
 
 #define ANIM_SPRITE_INDEX_COUNT 8
+#define BATTLE_ANIM_SOFT_TIMEOUT_FRAMES (10 * 60)
+#define BATTLE_ANIM_HARD_TIMEOUT_FRAMES (12 * 60)
 
 extern const u16 gMovesWithQuietBGM[];
 extern const u8 *const gBattleAnims_Moves[];
@@ -87,6 +89,7 @@ static void Task_PanFromInitialToTarget(u8 taskId);
 static void Task_LoopAndPlaySE(u8 taskId);
 static void Task_WaitAndPlaySE(u8 taskId);
 static void LoadDefaultBg(void);
+static void ClearMonBgTasks(void);
 static void LoadMoveBg(u16 bgId);
 
 EWRAM_DATA static const u8 *sBattleAnimScriptPtr = NULL;
@@ -108,6 +111,8 @@ EWRAM_DATA static u8 sMonAnimTaskIdArray[2] = {0};
 EWRAM_DATA u8 gAnimMoveTurn = 0;
 EWRAM_DATA static u8 sAnimBackgroundFadeState = 0;
 EWRAM_DATA static u16 sAnimMoveIndex = 0; // Set but unused.
+EWRAM_DATA static u16 sAnimElapsedFrames = 0;
+EWRAM_DATA static bool8 sIsMoveAnim = FALSE;
 EWRAM_DATA u8 gBattleAnimAttacker = 0;
 EWRAM_DATA u8 gBattleAnimTarget = 0;
 EWRAM_DATA u16 gAnimBattlerSpecies[MAX_BATTLERS_COUNT] = {0};
@@ -193,6 +198,8 @@ void ClearBattleAnimationVars(void)
     gAnimMoveTurn = 0;
     sAnimBackgroundFadeState = 0;
     sAnimMoveIndex = 0;
+    sAnimElapsedFrames = 0;
+    sIsMoveAnim = FALSE;
     gBattleAnimAttacker = 0;
     gBattleAnimTarget = 0;
     gAnimCustomPanning = 0;
@@ -231,6 +238,8 @@ void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMo
         sAnimMoveIndex = 0;
     else
         sAnimMoveIndex = tableId;
+    sIsMoveAnim = isMoveAnim;
+    sAnimElapsedFrames = 0;
 
     for (i = 0; i < ANIM_ARGS_COUNT; i++)
         gBattleAnimArgs[i] = 0;
@@ -265,29 +274,118 @@ void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMo
 
 void RunBattleAnimScript(void)
 {
+    if (gAnimScriptActive)
+        gAnimScriptCallback();
+}
+
+bool8 IsMoveBattleAnimationActive(void)
+{
+    return gAnimScriptActive && sIsMoveAnim;
+}
+
+static void ForceEndBattleAnimation(void)
+{
+    gBattleAnimArgs[7] = 0xFFFF;
+    m4aMPlayStop(&gMPlayInfo_SE1);
+    m4aMPlayStop(&gMPlayInfo_SE2);
+    ResetPaletteFadeControl();
+    sAnimBackgroundFadeState = 0;
+
+    ClearMonBgTasks();
+    ResetBattleAnimBg(FALSE);
+    ResetBattleAnimBg(TRUE);
+    LoadDefaultBg();
+    SetGpuReg(REG_OFFSET_BLDCNT, 0);
+    SetGpuReg(REG_OFFSET_BLDALPHA, 0);
+    SetGpuReg(REG_OFFSET_BLDY, 0);
+    InitPrioritiesForVisibleBattlers();
+    UpdateOamPriorityInAllHealthboxes(1);
+
+    gAnimVisualTaskCount = 0;
+    gAnimSoundTaskCount = 0;
+    sAnimFramesToWait = 0;
+    sSoundAnimFramesToWait = 0;
+    sAnimElapsedFrames = 0;
+    sIsMoveAnim = FALSE;
+    gAnimScriptActive = FALSE;
+}
+
+void UpdateBattleAnimationFailsafe(void)
+{
+    if (!gAnimScriptActive)
+    {
+        sAnimElapsedFrames = 0;
+        return;
+    }
+
+    if (++sAnimElapsedFrames == BATTLE_ANIM_SOFT_TIMEOUT_FRAMES)
+    {
+        gBattleAnimArgs[7] = 0xFFFF;
+        sAnimFramesToWait = 0;
+        sSoundAnimFramesToWait = 0;
+        m4aMPlayStop(&gMPlayInfo_SE1);
+        m4aMPlayStop(&gMPlayInfo_SE2);
+        ResetPaletteFadeControl();
+        gAnimScriptCallback = RunAnimScriptCommand;
+    }
+
+    if (sAnimElapsedFrames >= BATTLE_ANIM_SOFT_TIMEOUT_FRAMES)
+    {
+        gAnimVisualTaskCount = 0;
+        gAnimSoundTaskCount = 0;
+        ClearMonBgTasks();
+    }
+
+    if (sAnimElapsedFrames >= BATTLE_ANIM_HARD_TIMEOUT_FRAMES)
+    {
+        ForceEndBattleAnimation();
+    }
+}
+
+static void ClearMonBgTasks(void)
+{
     u8 i;
 
-    for (i = 0; i < BATTLE_ANIM_SPEED_MULTIPLIER && gAnimScriptActive; i++)
-        gAnimScriptCallback();
+    for (i = 0; i < ARRAY_COUNT(sMonAnimTaskIdArray); i++)
+    {
+        u8 taskId = sMonAnimTaskIdArray[i];
+
+        if (taskId != TASK_NONE)
+        {
+            if (gTasks[taskId].isActive)
+            {
+                u8 battler = gTasks[taskId].data[6];
+                bool8 toBG2 = gTasks[taskId].data[5];
+
+                gSprites[gBattlerSpriteIds[battler]].invisible = FALSE;
+                ResetBattleAnimBg(toBG2);
+                DestroyTask(taskId);
+            }
+            sMonAnimTaskIdArray[i] = TASK_NONE;
+        }
+    }
 }
 
 void DestroyAnimSprite(struct Sprite *sprite)
 {
     FreeSpriteOamMatrix(sprite);
     DestroySprite(sprite);
-    gAnimVisualTaskCount--;
+    if (gAnimVisualTaskCount != 0)
+        gAnimVisualTaskCount--;
 }
 
 void DestroyAnimVisualTask(u8 taskId)
 {
     DestroyTask(taskId);
-    gAnimVisualTaskCount--;
+    if (gAnimVisualTaskCount != 0)
+        gAnimVisualTaskCount--;
 }
 
 void DestroyAnimSoundTask(u8 taskId)
 {
     DestroyTask(taskId);
-    gAnimSoundTaskCount--;
+    if (gAnimSoundTaskCount != 0)
+        gAnimSoundTaskCount--;
 }
 
 static void AddSpriteIndex(u16 index)
@@ -532,6 +630,7 @@ static void Cmd_end(void)
             UpdateOamPriorityInAllHealthboxes(1);
         }
         gAnimScriptActive = FALSE;
+        sIsMoveAnim = FALSE;
     }
 }
 
@@ -567,6 +666,13 @@ static void Task_InitUpdateMonBg(u8 taskId)
     s16 *data = gTasks[taskId].data;
     u8 battlerSpriteId = gBattlerSpriteIds[tBattlerId];
     gSprites[battlerSpriteId].invisible = TRUE;
+
+    if (!gAnimScriptActive)
+    {
+        gSprites[battlerSpriteId].invisible = FALSE;
+        DestroyAnimVisualTask(taskId);
+        return;
+    }
 
     if (!tActive)
     {
@@ -826,6 +932,15 @@ static void Task_UpdateMonBg(u8 taskId)
 
     spriteId = gTasks[taskId].t2_SpriteId;
     battler = gTasks[taskId].t2_BattlerId;
+
+    if (!gAnimScriptActive)
+    {
+        gSprites[spriteId].invisible = FALSE;
+        ResetBattleAnimBg(gTasks[taskId].t2_InBg2);
+        DestroyTask(taskId);
+        return;
+    }
+
     GetBattleAnimBg1Data(&animBg);
     x = gTasks[taskId].t2_SpriteX - (gSprites[spriteId].x + gSprites[spriteId].x2);
     y = gTasks[taskId].t2_SpriteY - (gSprites[spriteId].y + gSprites[spriteId].y2);
@@ -1155,6 +1270,13 @@ static void Cmd_fadetobgfromset(void)
 
 static void Task_FadeToBg(u8 taskId)
 {
+    if (!gAnimScriptActive)
+    {
+        DestroyTask(taskId);
+        sAnimBackgroundFadeState = 0;
+        return;
+    }
+
     if (gTasks[taskId].tState == 0)
     {
         BeginHardwarePaletteFade(0xE8, 0, 0, 16, 0);
@@ -1447,8 +1569,7 @@ void Task_PanFromInitialToTarget(u8 taskId)
         if (destroyTask)
         {
             pan = targetPanning;
-            DestroyTask(taskId);
-            gAnimSoundTaskCount--;
+            DestroyAnimSoundTask(taskId);
         }
 
         SE12PanpotControl(pan);
@@ -1566,10 +1687,7 @@ static void Task_LoopAndPlaySE(u8 taskId)
         numberOfPlays = --gTasks[taskId].tNumberOfPlays;
         PlaySE12WithPanning(songId, panning);
         if (numberOfPlays == 0)
-        {
-            DestroyTask(taskId);
-            gAnimSoundTaskCount--;
-        }
+            DestroyAnimSoundTask(taskId);
     }
 }
 
@@ -1610,8 +1728,7 @@ static void Task_WaitAndPlaySE(u8 taskId)
     if (gTasks[taskId].tFramesToWait-- <= 0)
     {
         PlaySE12WithPanning(gTasks[taskId].tSongId, gTasks[taskId].tPanning);
-        DestroyTask(taskId);
-        gAnimSoundTaskCount--;
+        DestroyAnimSoundTask(taskId);
     }
 }
 

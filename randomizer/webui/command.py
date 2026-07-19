@@ -133,6 +133,8 @@ class BuildConfig:
     no_wild_encounters: bool = False
     reload_save_on_whiteout: bool = False
     skip_wally_capture_tutorial: bool = False
+    open_world_mode: bool = False
+    free_hm_mode: bool = False
     level_cap: bool = False
     webui_opponent: bool = False            # WEBUI_OPPONENT=1 — control opponent via browser UI
     opponent_stat_stage_mod: int = 0        # -6..+6
@@ -339,6 +341,8 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("no_wild_encounters", "NO_WILD_ENCOUNTERS"),
     ("reload_save_on_whiteout", "RELOAD_SAVE_ON_WHITEOUT"),
     ("skip_wally_capture_tutorial", "SKIP_WALLY_CAPTURE_TUTORIAL"),
+    ("open_world_mode", "OPEN_WORLD_MODE"),
+    ("free_hm_mode", "FREE_HM_MODE"),
     ("level_cap", "LEVEL_CAP"),
     ("nuzlocke_delete_fainted", "NUZLOCKE_DELETE_FAINTED"),
     ("instant_text", "INSTANT_TEXT"),

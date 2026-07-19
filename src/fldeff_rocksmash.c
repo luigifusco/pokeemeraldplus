@@ -20,6 +20,7 @@
 #include "constants/songs.h"
 
 static void Task_DoFieldMove_Init(u8 taskId);
+static void Task_DoFieldMove_InitNoMon(u8 taskId);
 static void Task_DoFieldMove_ShowMonAfterPose(u8 taskId);
 static void Task_DoFieldMove_WaitForMon(u8 taskId);
 static void Task_DoFieldMove_RunFunc(u8 taskId);
@@ -49,6 +50,19 @@ u8 CreateFieldMoveTask(void)
 {
     GetXYCoordsOneStepInFrontOfPlayer(&gPlayerFacingPosition.x, &gPlayerFacingPosition.y);
     return CreateTask(Task_DoFieldMove_Init, 8);
+}
+
+u8 CreateFieldMoveTaskNoMon(void)
+{
+    GetXYCoordsOneStepInFrontOfPlayer(&gPlayerFacingPosition.x, &gPlayerFacingPosition.y);
+    return CreateTask(Task_DoFieldMove_InitNoMon, 8);
+}
+
+static void Task_DoFieldMove_InitNoMon(u8 taskId)
+{
+    LockPlayerFieldControls();
+    gPlayerAvatar.preventStep = TRUE;
+    gTasks[taskId].func = Task_DoFieldMove_RunFunc;
 }
 
 static void Task_DoFieldMove_Init(u8 taskId)
@@ -149,7 +163,11 @@ static void FieldCallback_RockSmash(void)
 
 bool8 FldEff_UseRockSmash(void)
 {
+#ifdef FREE_HM_MODE
+    u8 taskId = CreateFieldMoveTaskNoMon();
+#else
     u8 taskId = CreateFieldMoveTask();
+#endif
 
     gTasks[taskId].data[8] = (u32)FieldMove_RockSmash >> 16;
     gTasks[taskId].data[9] = (u32)FieldMove_RockSmash;

@@ -547,7 +547,8 @@ void DestroyAnimSpriteAfterTimer(struct Sprite *sprite)
         }
 
         DestroySprite(sprite);
-        gAnimVisualTaskCount--;
+        if (gAnimVisualTaskCount != 0)
+            gAnimVisualTaskCount--;
     }
 }
 

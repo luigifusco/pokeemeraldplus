@@ -1926,20 +1926,38 @@ void BattleMainCB2(void)
     if (gAnimScriptActive || IsPokemonBattleAnimationActive())
         animationSpeed = BATTLE_ANIM_SPEED_MULTIPLIER;
 
-    AnimateSprites();
-    for (i = 1; i < animationSpeed; i++)
+    if (animationSpeed > 1)
     {
-        RunTasks();
         AnimateSprites();
+        for (i = 1; i < animationSpeed; i++)
+        {
+            RunTasks();
+            if (IsMoveBattleAnimationActive())
+                RunBattleAnimScript();
+            AnimateSprites();
+        }
+        BuildOamBuffer();
+        RunTextPrinters();
         UpdatePaletteFade();
+        RunTasks();
+    }
+    else
+    {
+        AnimateSprites();
+        BuildOamBuffer();
+        RunTextPrinters();
+        UpdatePaletteFade();
+        RunTasks();
     }
 #else
     AnimateSprites();
-#endif
     BuildOamBuffer();
     RunTextPrinters();
     UpdatePaletteFade();
     RunTasks();
+#endif
+
+    UpdateBattleAnimationFailsafe();
 
     if (JOY_HELD(B_BUTTON) && gBattleTypeFlags & BATTLE_TYPE_RECORDED && RecordedBattle_CanStopPlayback())
     {

@@ -283,6 +283,8 @@ class MakeArgsTest(unittest.TestCase):
             "NO_WILD_ENCOUNTERS=0",
             "RELOAD_SAVE_ON_WHITEOUT=0",
             "SKIP_WALLY_CAPTURE_TUTORIAL=0",
+            "OPEN_WORLD_MODE=0",
+            "FREE_HM_MODE=0",
             "LEVEL_CAP=0",
             "START_WITH_CAP_CANDY=0",
             "SWAP_TRAINER_POKEMON=0",
@@ -455,6 +457,26 @@ class MakeArgsTest(unittest.TestCase):
         self.assertIn(
             "SKIP_WALLY_CAPTURE_TUTORIAL=0",
             to_make_args(BuildConfig(skip_wally_capture_tutorial=False), jobs=1),
+        )
+
+    def test_open_world_mode_toggle(self) -> None:
+        self.assertIn(
+            "OPEN_WORLD_MODE=1",
+            to_make_args(BuildConfig(open_world_mode=True), jobs=1),
+        )
+        self.assertIn(
+            "OPEN_WORLD_MODE=0",
+            to_make_args(BuildConfig(open_world_mode=False), jobs=1),
+        )
+
+    def test_free_hm_mode_toggle(self) -> None:
+        self.assertIn(
+            "FREE_HM_MODE=1",
+            to_make_args(BuildConfig(free_hm_mode=True), jobs=1),
+        )
+        self.assertIn(
+            "FREE_HM_MODE=0",
+            to_make_args(BuildConfig(free_hm_mode=False), jobs=1),
         )
 
     def test_no_battle_items_toggle(self) -> None:

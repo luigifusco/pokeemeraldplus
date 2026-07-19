@@ -55,6 +55,8 @@ void ClearBattleAnimationVars(void);
 void DoMoveAnim(u16 move);
 void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMoveAnim);
 void RunBattleAnimScript(void);
+bool8 IsMoveBattleAnimationActive(void);
+void UpdateBattleAnimationFailsafe(void);
 void DestroyAnimSprite(struct Sprite *sprite);
 void DestroyAnimVisualTask(u8 taskId);
 void DestroyAnimSoundTask(u8 taskId);

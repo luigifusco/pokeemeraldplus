@@ -3625,7 +3625,8 @@ static void AnimTask_SlideMonForFocusBand_Step2(u8 taskId)
     if (gTasks[taskId].data[0] < 1)
     {
         DestroyTask(taskId);
-        gAnimVisualTaskCount--;
+        if (gAnimVisualTaskCount != 0)
+            gAnimVisualTaskCount--;
     }
 }
 

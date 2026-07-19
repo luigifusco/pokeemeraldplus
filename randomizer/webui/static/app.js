@@ -75,6 +75,8 @@ const defaultConfig = () => ({
     no_wild_encounters: false,
     reload_save_on_whiteout: false,
     skip_wally_capture_tutorial: false,
+    open_world_mode: false,
+    free_hm_mode: false,
     level_cap: false,
     webui_opponent: false,
     opponent_stat_stage_mod: 0,
