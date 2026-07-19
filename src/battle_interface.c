@@ -2345,6 +2345,7 @@ static void MoveBattleBarGraphically(u8 battler, u8 whichBar)
 static s32 CalcNewBarValue(s32 maxValue, s32 oldValue, s32 receivedValue, s32 *currValue, u8 scale, u16 toAdd)
 {
     s32 ret, newValue;
+    s32 step;
     scale *= 8;
 
     if (*currValue == -32768) // first function call
@@ -2362,9 +2363,63 @@ static s32 CalcNewBarValue(s32 maxValue, s32 oldValue, s32 receivedValue, s32 *c
         newValue = maxValue;
 
     if (maxValue < scale)
-        newValue = Q_24_8(newValue);
-    *currValue = newValue;
-    return -1;
+    {
+        if (newValue == Q_24_8_TO_INT(*currValue) && (*currValue & 0xFF) == 0)
+            return -1;
+    }
+    else
+    {
+        if (newValue == *currValue)
+            return -1;
+    }
+
+    if (maxValue < scale)
+    {
+        step = (Q_24_8(maxValue) / scale) * BATTLE_ANIM_SPEED_MULTIPLIER;
+
+        if (receivedValue < 0)
+        {
+            *currValue += step;
+            ret = Q_24_8_TO_INT(*currValue);
+            if (ret >= newValue)
+            {
+                *currValue = Q_24_8(newValue);
+                ret = newValue;
+            }
+        }
+        else
+        {
+            *currValue -= step;
+            ret = Q_24_8_TO_INT(*currValue);
+            if ((*currValue & 0xFF) > 0)
+                ret++;
+            if (ret <= newValue)
+            {
+                *currValue = Q_24_8(newValue);
+                ret = newValue;
+            }
+        }
+    }
+    else
+    {
+        step = toAdd * BATTLE_ANIM_SPEED_MULTIPLIER;
+
+        if (receivedValue < 0)
+        {
+            *currValue += step;
+            if (*currValue > newValue)
+                *currValue = newValue;
+        }
+        else
+        {
+            *currValue -= step;
+            if (*currValue < newValue)
+                *currValue = newValue;
+        }
+        ret = *currValue;
+    }
+
+    return ret;
 }
 
 static u8 CalcBarFilledPixels(s32 maxValue, s32 oldValue, s32 receivedValue, s32 *currValue, u8 *pixelsArray, u8 scale)

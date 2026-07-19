@@ -397,12 +397,12 @@ void SpriteCB_TrainerSlideIn(struct Sprite *sprite)
 {
     if (!(gIntroSlideFlags & 1))
     {
-#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
+#ifdef SKIP_BATTLE_TRANSITION
         sprite->x2 += 8 * sprite->sSpeedX;
         if (abs(sprite->x2) < abs(8 * sprite->sSpeedX))
 #else
-        sprite->x2 += 4 * sprite->sSpeedX;
-        if (abs(sprite->x2) < abs(4 * sprite->sSpeedX))
+        sprite->x2 += BATTLE_ANIM_SPEED_MULTIPLIER * sprite->sSpeedX;
+        if (abs(sprite->x2) < abs(BATTLE_ANIM_SPEED_MULTIPLIER * sprite->sSpeedX))
 #endif
         {
             sprite->x2 = 0;
@@ -417,10 +417,16 @@ void SpriteCB_TrainerSlideIn(struct Sprite *sprite)
 // Slide up to 0 if necessary (used by multi battle intro)
 static void SpriteCB_TrainerSlideVertical(struct Sprite *sprite)
 {
-#if defined(SKIP_BATTLE_TRANSITION) || defined(FAST_BATTLE_ANIMS)
-    sprite->y2 -= 4;
+#ifdef SKIP_BATTLE_TRANSITION
+    if (sprite->y2 <= 4)
+        sprite->y2 = 0;
+    else
+        sprite->y2 -= 4;
 #else
-    sprite->y2 -= 2;
+    if (sprite->y2 <= 2 * BATTLE_ANIM_SPEED_MULTIPLIER)
+        sprite->y2 = 0;
+    else
+        sprite->y2 -= 2 * BATTLE_ANIM_SPEED_MULTIPLIER;
 #endif
     if (sprite->y2 == 0)
         sprite->callback = SpriteCallbackDummy;

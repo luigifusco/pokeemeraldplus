@@ -21,6 +21,7 @@ static void BattleIntroSlide2(u8);
 static void BattleIntroSlide3(u8);
 static void BattleIntroSlideLink(u8);
 static void BattleIntroSlidePartner(u8);
+static void DecrementIntroDistance(s16 *distance, s16 amount);
 
 static const TaskFunc sBattleIntroSlideFuncs[] =
 {
@@ -35,6 +36,14 @@ static const TaskFunc sBattleIntroSlideFuncs[] =
     [BATTLE_ENVIRONMENT_BUILDING]   = BattleIntroSlide3,
     [BATTLE_ENVIRONMENT_PLAIN]      = BattleIntroSlide3,
 };
+
+static void DecrementIntroDistance(s16 *distance, s16 amount)
+{
+    if (*distance <= amount)
+        *distance = 0;
+    else
+        *distance -= amount;
+}
 
 void SetAnimBgAttribute(u8 bgId, u8 attributeId, u8 value)
 {
@@ -158,7 +167,7 @@ static void BattleIntroSlide1(u8 taskId)
 #ifdef SKIP_BATTLE_TRANSITION
     gBattle_BG1_X += 192;
 #else
-    gBattle_BG1_X += 24;
+    gBattle_BG1_X += 6 * BATTLE_ANIM_SPEED_MULTIPLIER;
 #endif
     switch (gTasks[taskId].tState)
     {
@@ -240,11 +249,11 @@ static void BattleIntroSlide1(u8 taskId)
     #endif
 
         if (gTasks[taskId].data[2] > 0)
-    #ifdef SKIP_BATTLE_TRANSITION
-            gTasks[taskId].data[2] -= 64;
-    #else
-            gTasks[taskId].data[2] -= 8;
-    #endif
+#ifdef SKIP_BATTLE_TRANSITION
+            DecrementIntroDistance(&gTasks[taskId].data[2], 64);
+#else
+            DecrementIntroDistance(&gTasks[taskId].data[2], 2 * BATTLE_ANIM_SPEED_MULTIPLIER);
+#endif
 
         // Scanline settings have already been set in CB2_InitBattleInternal()
         for (i = 0; i < DISPLAY_HEIGHT / 2; i++)
@@ -281,14 +290,14 @@ static void BattleIntroSlide2(u8 taskId)
     #ifdef SKIP_BATTLE_TRANSITION
         gBattle_BG1_X += 192;
     #else
-        gBattle_BG1_X += 32;
+        gBattle_BG1_X += 8 * BATTLE_ANIM_SPEED_MULTIPLIER;
     #endif
         break;
     case BATTLE_ENVIRONMENT_UNDERWATER:
     #ifdef SKIP_BATTLE_TRANSITION
         gBattle_BG1_X += 144;
     #else
-        gBattle_BG1_X += 24;
+        gBattle_BG1_X += 6 * BATTLE_ANIM_SPEED_MULTIPLIER;
     #endif
         break;
     }
@@ -391,11 +400,11 @@ static void BattleIntroSlide2(u8 taskId)
     #endif
 
         if (gTasks[taskId].data[2] > 0)
-    #ifdef SKIP_BATTLE_TRANSITION
-            gTasks[taskId].data[2] -= 64;
-    #else
-            gTasks[taskId].data[2] -= 8;
-    #endif
+#ifdef SKIP_BATTLE_TRANSITION
+            DecrementIntroDistance(&gTasks[taskId].data[2], 64);
+#else
+            DecrementIntroDistance(&gTasks[taskId].data[2], 2 * BATTLE_ANIM_SPEED_MULTIPLIER);
+#endif
 
         // Scanline settings have already been set in CB2_InitBattleInternal()
         for (i = 0; i < DISPLAY_HEIGHT / 2; i++)
@@ -431,7 +440,7 @@ static void BattleIntroSlide3(u8 taskId)
 #ifdef SKIP_BATTLE_TRANSITION
     gBattle_BG1_X += 192;
 #else
-    gBattle_BG1_X += 32;
+    gBattle_BG1_X += 8 * BATTLE_ANIM_SPEED_MULTIPLIER;
 #endif
     switch (gTasks[taskId].tState)
     {
@@ -508,11 +517,11 @@ static void BattleIntroSlide3(u8 taskId)
     #endif
 
         if (gTasks[taskId].data[2] > 0)
-    #ifdef SKIP_BATTLE_TRANSITION
-            gTasks[taskId].data[2] -= 64;
-    #else
-            gTasks[taskId].data[2] -= 8;
-    #endif
+#ifdef SKIP_BATTLE_TRANSITION
+            DecrementIntroDistance(&gTasks[taskId].data[2], 64);
+#else
+            DecrementIntroDistance(&gTasks[taskId].data[2], 2 * BATTLE_ANIM_SPEED_MULTIPLIER);
+#endif
 
         // Scanline settings have already been set in CB2_InitBattleInternal()
         for (i = 0; i < DISPLAY_HEIGHT / 2; i++)
@@ -615,11 +624,11 @@ static void BattleIntroSlideLink(u8 taskId)
 #endif
 
         if (gTasks[taskId].data[2] > 0)
-    #ifdef SKIP_BATTLE_TRANSITION
-            gTasks[taskId].data[2] -= 64;
-    #else
-            gTasks[taskId].data[2] -= 8;
-    #endif
+#ifdef SKIP_BATTLE_TRANSITION
+            DecrementIntroDistance(&gTasks[taskId].data[2], 64);
+#else
+            DecrementIntroDistance(&gTasks[taskId].data[2], 2 * BATTLE_ANIM_SPEED_MULTIPLIER);
+#endif
 
         // Scanline settings have already been set in CB2_InitBattleInternal()
         for (i = 0; i < DISPLAY_HEIGHT / 2; i++)
@@ -691,11 +700,11 @@ static void BattleIntroSlidePartner(u8 taskId)
 #endif
 
         if (gTasks[taskId].data[2] > 0)
-    #ifdef SKIP_BATTLE_TRANSITION
-            gTasks[taskId].data[2] -= 64;
-    #else
-            gTasks[taskId].data[2] -= 8;
-    #endif
+#ifdef SKIP_BATTLE_TRANSITION
+            DecrementIntroDistance(&gTasks[taskId].data[2], 64);
+#else
+            DecrementIntroDistance(&gTasks[taskId].data[2], 2 * BATTLE_ANIM_SPEED_MULTIPLIER);
+#endif
 
         gBattle_BG1_X = gTasks[taskId].data[2];
         gBattle_BG2_X = -gTasks[taskId].data[2];
