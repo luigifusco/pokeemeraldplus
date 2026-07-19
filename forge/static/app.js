@@ -91,6 +91,7 @@ const defaultConfig = () => ({
     skip_intro_cutscene: false,
     fast_intro: false,
     skip_fade_anims: false,
+    fast_save: false,
     manual_battle_text: false,
     fastest_speed: false,
 });
@@ -266,6 +267,7 @@ const QOL_CHECKBOX_FIELDS = [
     "skip_intro_cutscene",
     "fast_intro",
     "skip_fade_anims",
+    "fast_save",
     "fastest_speed",
     "fast_evolution_anim",
     "prevent_evolution_cancel",

@@ -1931,6 +1931,7 @@ void BattleMainCB2(void)
         AnimateSprites();
         for (i = 1; i < animationSpeed; i++)
         {
+            gBattleAnimTaskSubstep = i - 1;
             RunTasks();
             if (IsMoveBattleAnimationActive())
                 RunBattleAnimScript();
@@ -1939,7 +1940,9 @@ void BattleMainCB2(void)
         BuildOamBuffer();
         RunTextPrinters();
         UpdatePaletteFade();
+        gBattleAnimTaskSubstep = animationSpeed - 1;
         RunTasks();
+        gBattleAnimTaskSubstep = 0;
     }
     else
     {
@@ -1947,6 +1950,7 @@ void BattleMainCB2(void)
         BuildOamBuffer();
         RunTextPrinters();
         UpdatePaletteFade();
+        gBattleAnimTaskSubstep = 0;
         RunTasks();
     }
 #else

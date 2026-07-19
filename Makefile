@@ -359,6 +359,14 @@ ifeq ($(SKIP_FADE_ANIMS),1)
 	CPPFLAGS += -DSKIP_FADE_ANIMS
 endif
 
+# Compile-time toggle: shorten the normal start-menu save flow without
+# changing or skipping any flash writes or verification.
+# Usage: make FAST_SAVE=1
+FAST_SAVE ?= 0
+ifeq ($(FAST_SAVE),1)
+	CPPFLAGS += -DFAST_SAVE
+endif
+
 # Compile-time toggle: require A-press to advance every battle message.
 # Usage: make MANUAL_BATTLE_TEXT=1
 MANUAL_BATTLE_TEXT ?= 0

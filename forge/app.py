@@ -125,6 +125,7 @@ class BuildConfigModel(BaseModel):
     skip_intro_cutscene: bool = False
     fast_intro: bool = False
     skip_fade_anims: bool = False
+    fast_save: bool = False
     manual_battle_text: bool = False
     fastest_speed: bool = False
 

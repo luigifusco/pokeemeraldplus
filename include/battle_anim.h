@@ -48,6 +48,9 @@ extern s16 gBattleAnimArgs[ANIM_ARGS_COUNT];
 extern u8 gAnimMoveTurn;
 extern u8 gBattleAnimAttacker;
 extern u8 gBattleAnimTarget;
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+extern u8 gBattleAnimTaskSubstep;
+#endif
 extern u16 gAnimBattlerSpecies[MAX_BATTLERS_COUNT];
 extern u8 gAnimCustomPanning;
 

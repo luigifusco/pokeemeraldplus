@@ -291,6 +291,7 @@ class MakeArgsTest(unittest.TestCase):
             "ADD_TRAINER_POKEMON_IF_SPACE=0",
             "NUZLOCKE_DELETE_FAINTED=0",
             "INSTANT_TEXT=0",
+            "FAST_SAVE=0",
             "FAST_BATTLE_ANIMS=0",
             "FAST_INTRO=0",
             "FORCE_DOUBLE_BATTLES=0",
@@ -344,6 +345,10 @@ class MakeArgsTest(unittest.TestCase):
     def test_fast_intro_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(fast_intro=True), jobs=1)
         self.assertIn("FAST_INTRO=1", args)
+
+    def test_fast_save_toggle(self) -> None:
+        self.assertIn("FAST_SAVE=1", to_make_args(BuildConfig(fast_save=True), jobs=1))
+        self.assertIn("FAST_SAVE=0", to_make_args(BuildConfig(fast_save=False), jobs=1))
 
     def test_cap_candy_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(start_with_cap_candy=True), jobs=1)

@@ -153,6 +153,7 @@ class BuildConfig:
     skip_intro_cutscene: bool = False
     fast_intro: bool = False
     skip_fade_anims: bool = False
+    fast_save: bool = False
     manual_battle_text: bool = False
     fastest_speed: bool = False             # WAIT_TIME_DIVISOR=32
 
@@ -351,6 +352,7 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("skip_intro_cutscene", "SKIP_INTRO_CUTSCENE"),
     ("fast_intro", "FAST_INTRO"),
     ("skip_fade_anims", "SKIP_FADE_ANIMS"),
+    ("fast_save", "FAST_SAVE"),
     ("manual_battle_text", "MANUAL_BATTLE_TEXT"),
     ("force_doubles", "FORCE_DOUBLE_BATTLES"),
     ("steal_trainer_team", "STEAL_TRAINER_TEAM"),

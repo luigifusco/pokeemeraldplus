@@ -2045,6 +2045,27 @@ static void AnimTriAttackTriangle(struct Sprite *sprite)
 
 void AnimTask_DefenseCurlDeformMon(u8 taskId)
 {
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    u8 i;
+
+    if (gBattleAnimTaskSubstep != BATTLE_ANIM_SPEED_MULTIPLIER - 1)
+        return;
+
+    if (gTasks[taskId].data[0] == 0)
+    {
+        PrepareAffineAnimInTaskData(&gTasks[taskId], GetAnimBattlerSpriteId(ANIM_ATTACKER), DefenseCurlDeformMonAffineAnimCmds);
+        gTasks[taskId].data[0] = 1;
+    }
+
+    for (i = 0; i < BATTLE_ANIM_SPEED_MULTIPLIER; i++)
+    {
+        if (!RunAffineAnimFromTaskData(&gTasks[taskId]))
+        {
+            DestroyAnimVisualTask(taskId);
+            return;
+        }
+    }
+#else
     switch (gTasks[taskId].data[0])
     {
     case 0:
@@ -2056,6 +2077,7 @@ void AnimTask_DefenseCurlDeformMon(u8 taskId)
             DestroyAnimVisualTask(taskId);
         break;
     }
+#endif
 }
 
 static void AnimBatonPassPokeball(struct Sprite *sprite)

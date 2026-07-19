@@ -115,6 +115,9 @@ EWRAM_DATA static u16 sAnimElapsedFrames = 0;
 EWRAM_DATA static bool8 sIsMoveAnim = FALSE;
 EWRAM_DATA u8 gBattleAnimAttacker = 0;
 EWRAM_DATA u8 gBattleAnimTarget = 0;
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+EWRAM_DATA u8 gBattleAnimTaskSubstep = 0;
+#endif
 EWRAM_DATA u16 gAnimBattlerSpecies[MAX_BATTLERS_COUNT] = {0};
 EWRAM_DATA u8 gAnimCustomPanning = 0;
 
@@ -202,6 +205,9 @@ void ClearBattleAnimationVars(void)
     sIsMoveAnim = FALSE;
     gBattleAnimAttacker = 0;
     gBattleAnimTarget = 0;
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    gBattleAnimTaskSubstep = 0;
+#endif
     gAnimCustomPanning = 0;
 }
 
@@ -368,24 +374,49 @@ static void ClearMonBgTasks(void)
 
 void DestroyAnimSprite(struct Sprite *sprite)
 {
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    // Forced animation cleanup can leave callbacks queued for already-destroyed objects.
+    if (!sprite->inUse)
+        return;
+#endif
     FreeSpriteOamMatrix(sprite);
     DestroySprite(sprite);
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
     if (gAnimVisualTaskCount != 0)
         gAnimVisualTaskCount--;
+#else
+    gAnimVisualTaskCount--;
+#endif
 }
 
 void DestroyAnimVisualTask(u8 taskId)
 {
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    if (!gTasks[taskId].isActive)
+        return;
+#endif
     DestroyTask(taskId);
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
     if (gAnimVisualTaskCount != 0)
         gAnimVisualTaskCount--;
+#else
+    gAnimVisualTaskCount--;
+#endif
 }
 
 void DestroyAnimSoundTask(u8 taskId)
 {
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    if (!gTasks[taskId].isActive)
+        return;
+#endif
     DestroyTask(taskId);
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
     if (gAnimSoundTaskCount != 0)
         gAnimSoundTaskCount--;
+#else
+    gAnimSoundTaskCount--;
+#endif
 }
 
 static void AddSpriteIndex(u16 index)
@@ -509,12 +540,23 @@ static void Cmd_createsprite(void)
     if (subpriority < 3)
         subpriority = 3;
 
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    // Sprite constructors may destroy themselves immediately.
+    gAnimVisualTaskCount++;
+    if (CreateSpriteAndAnimate(
+        template,
+        GetBattlerSpriteCoord(gBattleAnimTarget, BATTLER_COORD_X_2),
+        GetBattlerSpriteCoord(gBattleAnimTarget, BATTLER_COORD_Y_PIC_OFFSET),
+        subpriority) == MAX_SPRITES)
+        gAnimVisualTaskCount--;
+#else
     CreateSpriteAndAnimate(
         template,
         GetBattlerSpriteCoord(gBattleAnimTarget, BATTLER_COORD_X_2),
         GetBattlerSpriteCoord(gBattleAnimTarget, BATTLER_COORD_Y_PIC_OFFSET),
         subpriority);
     gAnimVisualTaskCount++;
+#endif
 }
 
 static void Cmd_createvisualtask(void)
@@ -543,8 +585,17 @@ static void Cmd_createvisualtask(void)
     }
 
     taskId = CreateTask(taskFunc, taskPriority);
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    if (taskId != TASK_NONE)
+    {
+        // Task constructors may destroy themselves immediately.
+        gAnimVisualTaskCount++;
+        taskFunc(taskId);
+    }
+#else
     taskFunc(taskId);
     gAnimVisualTaskCount++;
+#endif
 }
 
 static void Cmd_delay(void)
@@ -1667,9 +1718,13 @@ static void Cmd_loopsewithpan(void)
     gTasks[taskId].tFramesToWait = framesToWait;
     gTasks[taskId].tNumberOfPlays = numberOfPlays;
     gTasks[taskId].tFrameCounter = framesToWait;
-    gTasks[taskId].func(taskId);
-
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
     gAnimSoundTaskCount++;
+    gTasks[taskId].func(taskId);
+#else
+    gTasks[taskId].func(taskId);
+    gAnimSoundTaskCount++;
+#endif
     sBattleAnimScriptPtr += 5;
 }
 
@@ -1753,8 +1808,16 @@ static void Cmd_createsoundtask(void)
         sBattleAnimScriptPtr += 2;
     }
     taskId = CreateTask(func, 1);
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    if (taskId != TASK_NONE)
+    {
+        gAnimSoundTaskCount++;
+        func(taskId);
+    }
+#else
     func(taskId);
     gAnimSoundTaskCount++;
+#endif
 }
 
 static void Cmd_waitsound(void)

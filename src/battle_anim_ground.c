@@ -562,6 +562,7 @@ static void AnimDigDirtMound(struct Sprite *sprite)
 #define tDelay               data[1]
 #define tTimer               data[2]
 #define tMaxTime             data[3]
+#define tVisualPhase         data[4]
 #define tbattlerSpriteIds(i) data[9 + (i)]
 #define tNumBattlers         data[13] // AnimTask_ShakeBattlers
 #define tInitialX            data[13] // AnimTask_ShakePlatforms
@@ -626,10 +627,12 @@ static void AnimTask_ShakePlatforms(u8 taskId)
         if (++task->tDelay > 1)
         {
             task->tDelay = 0;
+#if BATTLE_ANIM_SPEED_MULTIPLIER == 1
             if ((task->tTimer & 1) == 0)
                 gBattle_BG3_X = task->tInitialX + task->tInitHorizOffset;
             else
                 gBattle_BG3_X = task->tInitialX - task->tInitHorizOffset;
+#endif
 
             if (++task->tTimer == task->tMaxTime)
             {
@@ -643,10 +646,12 @@ static void AnimTask_ShakePlatforms(u8 taskId)
         if (++task->tDelay > 1)
         {
             task->tDelay = 0;
+#if BATTLE_ANIM_SPEED_MULTIPLIER == 1
             if ((task->tTimer & 1) == 0)
                 gBattle_BG3_X = task->tInitialX + task->tHorizOffset;
             else
                 gBattle_BG3_X = task->tInitialX - task->tHorizOffset;
+#endif
 
             if (++task->tTimer == 4)
             {
@@ -661,6 +666,18 @@ static void AnimTask_ShakePlatforms(u8 taskId)
         DestroyAnimVisualTask(taskId);
         break;
     }
+
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    if (task->tState < 2 && gBattleAnimTaskSubstep == BATTLE_ANIM_SPEED_MULTIPLIER - 1)
+    {
+        s16 offset = task->tState == 0 ? task->tInitHorizOffset : task->tHorizOffset;
+
+        if ((task->tVisualPhase++ & 1) == 0)
+            gBattle_BG3_X = task->tInitialX + offset;
+        else
+            gBattle_BG3_X = task->tInitialX - offset;
+    }
+#endif
 }
 
 static void AnimTask_ShakeBattlers(u8 taskId)
@@ -674,7 +691,9 @@ static void AnimTask_ShakeBattlers(u8 taskId)
         if (++task->tDelay > 1)
         {
             task->tDelay = 0;
+#if BATTLE_ANIM_SPEED_MULTIPLIER == 1
             SetBattlersXOffsetForShake(task);
+#endif
             if (++task->tTimer == task->tMaxTime)
             {
                 task->tTimer = 0;
@@ -687,7 +706,9 @@ static void AnimTask_ShakeBattlers(u8 taskId)
         if (++task->tDelay > 1)
         {
             task->tDelay = 0;
+#if BATTLE_ANIM_SPEED_MULTIPLIER == 1
             SetBattlersXOffsetForShake(task);
+#endif
             if (++task->tTimer == 4)
             {
                 task->tTimer = 0;
@@ -703,6 +724,18 @@ static void AnimTask_ShakeBattlers(u8 taskId)
         DestroyAnimVisualTask(taskId);
         break;
     }
+
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    if (task->tState < 2 && gBattleAnimTaskSubstep == BATTLE_ANIM_SPEED_MULTIPLIER - 1)
+    {
+        s16 timer = task->tTimer;
+
+        task->tTimer = task->tVisualPhase;
+        SetBattlersXOffsetForShake(task);
+        task->tTimer = timer;
+        task->tVisualPhase++;
+    }
+#endif
 }
 
 static void SetBattlersXOffsetForShake(struct Task *task)
@@ -725,6 +758,7 @@ static void SetBattlersXOffsetForShake(struct Task *task)
 #undef tDelay
 #undef tTimer
 #undef tMaxTime
+#undef tVisualPhase
 #undef tbattlerSpriteIds
 #undef tNumBattlers
 #undef tInitialX

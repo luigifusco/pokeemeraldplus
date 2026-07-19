@@ -253,9 +253,10 @@ static void CreateStartMenuTask(TaskFunc followupFunc);
 static void InitSave(void);
 static u8 RunSaveCallback(void);
 static void ShowSaveMessage(const u8 *message, u8 (*saveCallback)(void));
+static void ShowSaveFlowMessage(const u8 *message, u8 (*saveCallback)(void));
 static void HideSaveMessageWindow(void);
 static void HideSaveInfoWindow(void);
-static void SaveStartTimer(void);
+static void SaveStartTimer(bool8 success);
 static bool8 SaveSuccesTimer(void);
 static bool8 SaveErrorTimer(void);
 static void InitBattlePyramidRetire(void);
@@ -908,6 +909,19 @@ static void ShowSaveMessage(const u8 *message, u8 (*saveCallback)(void))
     sSaveDialogCallback = saveCallback;
 }
 
+static void ShowSaveFlowMessage(const u8 *message, u8 (*saveCallback)(void))
+{
+#ifdef FAST_SAVE
+    StringExpandPlaceholders(gStringVar4, message);
+    LoadMessageBoxAndFrameGfx(0, TRUE);
+    AddTextPrinterWithCustomSpeedForMessage(TRUE, 0);
+    sSavingComplete = TRUE;
+    sSaveDialogCallback = saveCallback;
+#else
+    ShowSaveMessage(message, saveCallback);
+#endif
+}
+
 static void SaveGameTask(u8 taskId)
 {
     u8 status = RunSaveCallback();
@@ -939,9 +953,13 @@ static void HideSaveInfoWindow(void)
     RemoveSaveInfoWindow();
 }
 
-static void SaveStartTimer(void)
+static void SaveStartTimer(bool8 success)
 {
+#ifdef FAST_SAVE
+    sSaveDialogTimer = success ? 1 : 60;
+#else
     sSaveDialogTimer = 60;
+#endif
 }
 
 static bool8 SaveSuccesTimer(void)
@@ -983,11 +1001,11 @@ static u8 SaveConfirmSaveCallback(void)
 
     if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE)
     {
-        ShowSaveMessage(gText_BattlePyramidConfirmRest, SaveYesNoCallback);
+        ShowSaveFlowMessage(gText_BattlePyramidConfirmRest, SaveYesNoCallback);
     }
     else
     {
-        ShowSaveMessage(gText_ConfirmSave, SaveYesNoCallback);
+        ShowSaveFlowMessage(gText_ConfirmSave, SaveYesNoCallback);
     }
 
     return SAVE_IN_PROGRESS;
@@ -1005,6 +1023,13 @@ static u8 SaveConfirmInputCallback(void)
     switch (Menu_ProcessInputNoWrapClearOnChoose())
     {
     case 0: // Yes
+#ifdef FAST_SAVE
+        if (gDifferentSaveFile == FALSE && gSaveFileStatus == SAVE_STATUS_OK)
+        {
+            sSaveDialogCallback = SaveSavingMessageCallback;
+            return SAVE_IN_PROGRESS;
+        }
+#endif
         switch (gSaveFileStatus)
         {
         case SAVE_STATUS_EMPTY:
@@ -1036,11 +1061,11 @@ static u8 SaveFileExistsCallback(void)
 {
     if (gDifferentSaveFile == TRUE)
     {
-        ShowSaveMessage(gText_DifferentSaveFile, SaveConfirmOverwriteDefaultNoCallback);
+        ShowSaveFlowMessage(gText_DifferentSaveFile, SaveConfirmOverwriteDefaultNoCallback);
     }
     else
     {
-        ShowSaveMessage(gText_AlreadySavedFile, SaveConfirmOverwriteCallback);
+        ShowSaveFlowMessage(gText_AlreadySavedFile, SaveConfirmOverwriteCallback);
     }
 
     return SAVE_IN_PROGRESS;
@@ -1079,7 +1104,7 @@ static u8 SaveOverwriteInputCallback(void)
 
 static u8 SaveSavingMessageCallback(void)
 {
-    ShowSaveMessage(gText_SavingDontTurnOff, SaveDoSaveCallback);
+    ShowSaveFlowMessage(gText_SavingDontTurnOff, SaveDoSaveCallback);
     return SAVE_IN_PROGRESS;
 }
 
@@ -1101,11 +1126,11 @@ static u8 SaveDoSaveCallback(void)
     }
 
     if (saveStatus == SAVE_STATUS_OK)
-        ShowSaveMessage(gText_PlayerSavedGame, SaveSuccessCallback);
+        ShowSaveFlowMessage(gText_PlayerSavedGame, SaveSuccessCallback);
     else
-        ShowSaveMessage(gText_SaveError, SaveErrorCallback);
+        ShowSaveFlowMessage(gText_SaveError, SaveErrorCallback);
 
-    SaveStartTimer();
+    SaveStartTimer(saveStatus == SAVE_STATUS_OK);
     return SAVE_IN_PROGRESS;
 }
 
@@ -1122,7 +1147,11 @@ static u8 SaveSuccessCallback(void)
 
 static u8 SaveReturnSuccessCallback(void)
 {
+#ifdef FAST_SAVE
+    if (SaveSuccesTimer())
+#else
     if (!IsSEPlaying() && SaveSuccesTimer())
+#endif
     {
         HideSaveInfoWindow();
         return SAVE_SUCCESS;
