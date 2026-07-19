@@ -293,11 +293,15 @@
                 <label class="check"><input type="checkbox" data-bind="fast_swim" /><span class="box"></span> Fast swim (surf at running-shoes speed)</label>
                 <label class="check"><input type="checkbox" data-bind="instant_text" /><span class="box"></span> Instant text</label>
                 <label class="check"><input type="checkbox" data-bind="fast_battle_anims" /><span class="box"></span> Fast battle intro/sendout animations</label>
+                <div class="row">
+                    <div class="row-label"><strong>Battle animation speed</strong><small>Multiplier for move effects and Pokémon sprite animations in battle.</small></div>
+                    <input type="range" min="1" max="8" step="1" data-bind="battle_anim_speed_multiplier" />
+                    <input type="number" class="num-mirror" min="1" max="8" step="1" data-bind="battle_anim_speed_multiplier" />
+                </div>
                 <label class="check"><input type="checkbox" data-bind="skip_battle_transition" /><span class="box"></span> Skip battle transition</label>
                 <label class="check"><input type="checkbox" data-bind="skip_intro_cutscene" /><span class="box"></span> Skip intro cutscene</label>
                 <label class="check"><input type="checkbox" data-bind="fast_intro" /><span class="box"></span> Fast new-game intro</label>
                 <label class="check"><input type="checkbox" data-bind="skip_fade_anims" /><span class="box"></span> Skip fade animations</label>
-                <label class="check"><input type="checkbox" data-bind="fast_stat_anims" /><span class="box"></span> Fast stat animations</label>
                 <label class="check"><input type="checkbox" data-bind="fastest_speed" /><span class="box"></span> Fastest speed (32× waits)</label>
                 <div class="row" style="margin-top: 8px;">
                     <button class="btn" id="qol-enable-all">Enable all</button>

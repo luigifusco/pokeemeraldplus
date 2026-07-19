@@ -1,6 +1,7 @@
 #include "global.h"
 #include "battle.h"
 #include "battle_anim.h"
+#include "pokemon_animation.h"
 #include "battle_ai_script_commands.h"
 #include "battle_arena.h"
 #include "battle_controllers.h"
@@ -1918,7 +1919,23 @@ static void CB2_HandleStartMultiBattle(void)
 
 void BattleMainCB2(void)
 {
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 1
+    u8 i;
+    u8 animationSpeed = 1;
+
+    if (gAnimScriptActive || IsPokemonBattleAnimationActive())
+        animationSpeed = BATTLE_ANIM_SPEED_MULTIPLIER;
+
     AnimateSprites();
+    for (i = 1; i < animationSpeed; i++)
+    {
+        RunTasks();
+        AnimateSprites();
+        UpdatePaletteFade();
+    }
+#else
+    AnimateSprites();
+#endif
     BuildOamBuffer();
     RunTextPrinters();
     UpdatePaletteFade();

@@ -146,11 +146,11 @@ class BuildConfig:
     fast_swim: bool = False
     instant_text: bool = False
     fast_battle_anims: bool = False
+    battle_anim_speed_multiplier: int = 1
     skip_battle_transition: bool = False
     skip_intro_cutscene: bool = False
     fast_intro: bool = False
     skip_fade_anims: bool = False
-    fast_stat_anims: bool = False
     manual_battle_text: bool = False
     fastest_speed: bool = False             # WAIT_TIME_DIVISOR=32
 
@@ -347,7 +347,6 @@ _BOOL_FLAG_FIELDS: tuple[tuple[str, str], ...] = (
     ("skip_intro_cutscene", "SKIP_INTRO_CUTSCENE"),
     ("fast_intro", "FAST_INTRO"),
     ("skip_fade_anims", "SKIP_FADE_ANIMS"),
-    ("fast_stat_anims", "FAST_STAT_ANIMS"),
     ("manual_battle_text", "MANUAL_BATTLE_TEXT"),
     ("force_doubles", "FORCE_DOUBLE_BATTLES"),
     ("steal_trainer_team", "STEAL_TRAINER_TEAM"),
@@ -399,6 +398,10 @@ def to_make_args(
     argv.append(f"STARTER_LEVEL={_clamp(cfg.level_scale.starter_level, 1, 100)}")
 
     argv.append(f"WAIT_TIME_DIVISOR={32 if cfg.fastest_speed else 1}")
+    argv.append(
+        f"BATTLE_ANIM_SPEED_MULTIPLIER="
+        f"{_clamp(cfg.battle_anim_speed_multiplier, 1, 8)}"
+    )
 
     # EXP multiplier is configured as a float (1.0x..3.0x) but passed to make in
     # tenths (10..30) so the C side can do integer-only math.

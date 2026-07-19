@@ -412,17 +412,10 @@ static void AnimTask_DrawFallingWhiteLinesOnAttacker_Step(u8 taskId)
 #define tBlend            data[12]
 #define tState            data[15]
 
-#ifdef FAST_STAT_ANIMS
-#define STAT_ANIM_FADE_INTERVAL  0
-#define STAT_ANIM_BLEND_STEP     2
-#define STAT_ANIM_WAIT_NORMAL    4
-#define STAT_ANIM_WAIT_SHARP     6
-#else
 #define STAT_ANIM_FADE_INTERVAL  1
 #define STAT_ANIM_BLEND_STEP     1
 #define STAT_ANIM_WAIT_NORMAL    20
 #define STAT_ANIM_WAIT_SHARP     30
-#endif
 
 void InitStatsChangeAnimation(u8 taskId)
 {
@@ -570,9 +563,7 @@ static void StatsChangeAnimation_Step2(u8 taskId)
     gTasks[taskId].tBattler2SpriteId = gBattlerSpriteIds[sAnimStatsChangeData->battler2];
     gTasks[taskId].func = StatsChangeAnimation_Step3;
 
-    // This SFX is relatively long and can make stat changes feel "gated" by audio.
-    // When FAST_STAT_ANIMS is enabled, skip it so the animation completes ASAP.
-#ifndef FAST_STAT_ANIMS
+#if BATTLE_ANIM_SPEED_MULTIPLIER == 1
     if (!sAnimStatsChangeData->aDecrease)
         PlaySE12WithPanning(SE_M_STAT_INCREASE, BattleAnimAdjustPanning2(SOUND_PAN_ATTACKER));
     else

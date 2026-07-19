@@ -969,6 +969,11 @@ void LaunchAnimationTaskForBackSprite(struct Sprite *sprite, u8 backAnimSet)
     gTasks[taskId].tAnimId = sBackAnimationIds[animId];
 }
 
+bool8 IsPokemonBattleAnimationActive(void)
+{
+    return FuncIsActiveTask(Task_HandleMonAnimation);
+}
+
 #undef tState
 #undef tPtrHi
 #undef tPtrLo

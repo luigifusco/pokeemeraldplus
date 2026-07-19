@@ -306,6 +306,7 @@ class MakeArgsTest(unittest.TestCase):
             "GYM_LEADER_FIRST_ROSTER=0",
             "STARTER_LEVEL=5",
             "WAIT_TIME_DIVISOR=1",
+            "BATTLE_ANIM_SPEED_MULTIPLIER=1",
             "EXP_MULTIPLIER=10",
         ):
             self.assertIn(expected, args, f"missing {expected} in {args!r}")
@@ -329,6 +330,14 @@ class MakeArgsTest(unittest.TestCase):
         args = to_make_args(BuildConfig(fast_battle_anims=True), jobs=1)
         self.assertIn("FAST_BATTLE_ANIMS=1", args)
         self.assertIn("SKIP_BATTLE_TRANSITION=0", args)
+
+    def test_battle_animation_speed_multiplier_is_clamped(self) -> None:
+        normal = to_make_args(BuildConfig(battle_anim_speed_multiplier=4), jobs=1)
+        high = to_make_args(BuildConfig(battle_anim_speed_multiplier=99), jobs=1)
+        low = to_make_args(BuildConfig(battle_anim_speed_multiplier=0), jobs=1)
+        self.assertIn("BATTLE_ANIM_SPEED_MULTIPLIER=4", normal)
+        self.assertIn("BATTLE_ANIM_SPEED_MULTIPLIER=8", high)
+        self.assertIn("BATTLE_ANIM_SPEED_MULTIPLIER=1", low)
 
     def test_fast_intro_emits_make_flag(self) -> None:
         args = to_make_args(BuildConfig(fast_intro=True), jobs=1)

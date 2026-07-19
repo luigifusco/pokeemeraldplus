@@ -263,6 +263,14 @@ void LaunchBattleAnimation(const u8 *const animsTable[], u16 tableId, bool8 isMo
     gBattle_WIN1V = 0;
 }
 
+void RunBattleAnimScript(void)
+{
+    u8 i;
+
+    for (i = 0; i < BATTLE_ANIM_SPEED_MULTIPLIER && gAnimScriptActive; i++)
+        gAnimScriptCallback();
+}
+
 void DestroyAnimSprite(struct Sprite *sprite)
 {
     FreeSpriteOamMatrix(sprite);
@@ -490,7 +498,7 @@ static void Cmd_end(void)
     // Finish the sound effects.
     if (IsSEPlaying())
     {
-        if (++sSoundAnimFramesToWait <= 90) // Wait 90 frames, then halt the sound effect.
+        if (++sSoundAnimFramesToWait <= 90 * BATTLE_ANIM_SPEED_MULTIPLIER)
         {
             sAnimFramesToWait = 1;
             return;
@@ -1641,7 +1649,7 @@ static void Cmd_waitsound(void)
     }
     else if (IsSEPlaying())
     {
-        if (++sSoundAnimFramesToWait > 90)
+        if (++sSoundAnimFramesToWait > 90 * BATTLE_ANIM_SPEED_MULTIPLIER)
         {
             m4aMPlayStop(&gMPlayInfo_SE1);
             m4aMPlayStop(&gMPlayInfo_SE2);

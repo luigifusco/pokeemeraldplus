@@ -1375,7 +1375,7 @@ static void RecordedPlayerDoMoveAnimation(void)
         }
         break;
     case 2:
-        gAnimScriptCallback();
+        RunBattleAnimScript();
         if (!gAnimScriptActive)
         {
             SetBattlerSpriteAffineMode(ST_OAM_AFFINE_NORMAL);

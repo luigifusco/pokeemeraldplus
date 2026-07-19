@@ -6840,10 +6840,14 @@ const u8 *GetTrainerPartnerName(void)
 
 static void Task_AnimateAfterDelay(u8 taskId)
 {
-    if (--gTasks[taskId].sAnimDelay == 0)
+    if (gTasks[taskId].sAnimDelay <= BATTLE_ANIM_SPEED_MULTIPLIER)
     {
         LaunchAnimationTaskForFrontSprite(READ_PTR_FROM_TASK(taskId, 0), gTasks[taskId].sAnimId);
         DestroyTask(taskId);
+    }
+    else
+    {
+        gTasks[taskId].sAnimDelay -= BATTLE_ANIM_SPEED_MULTIPLIER;
     }
 }
 

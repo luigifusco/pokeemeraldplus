@@ -351,13 +351,6 @@ ifeq ($(SKIP_FADE_ANIMS),1)
 	CPPFLAGS += -DSKIP_FADE_ANIMS
 endif
 
-# Compile-time toggle: speed up stat-change animations (Atk/Def/etc rose/fell).
-# Usage: make FAST_STAT_ANIMS=1
-FAST_STAT_ANIMS ?= 0
-ifeq ($(FAST_STAT_ANIMS),1)
-	CPPFLAGS += -DFAST_STAT_ANIMS
-endif
-
 # Compile-time toggle: require A-press to advance every battle message.
 # Usage: make MANUAL_BATTLE_TEXT=1
 MANUAL_BATTLE_TEXT ?= 0
@@ -388,6 +381,8 @@ FAST_BATTLE_ANIMS ?= 0
 ifeq ($(FAST_BATTLE_ANIMS),1)
 	CPPFLAGS += -DFAST_BATTLE_ANIMS
 endif
+BATTLE_ANIM_SPEED_MULTIPLIER ?= 1
+CPPFLAGS += -DBATTLE_ANIM_SPEED_MULTIPLIER=$(BATTLE_ANIM_SPEED_MULTIPLIER)
 
 ifeq ($(MODERN),0)
   CPPFLAGS += -I tools/agbcc/include -I tools/agbcc -nostdinc -undef -std=gnu89

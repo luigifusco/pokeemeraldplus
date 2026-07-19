@@ -54,6 +54,18 @@
 // to restore the vanilla, slower warp fade.
 #define FAST_WARP_FADE
 
+#ifndef BATTLE_ANIM_SPEED_MULTIPLIER
+#define BATTLE_ANIM_SPEED_MULTIPLIER 1
+#endif
+
+#if BATTLE_ANIM_SPEED_MULTIPLIER < 1
+#error "BATTLE_ANIM_SPEED_MULTIPLIER must be at least 1."
+#endif
+
+#if BATTLE_ANIM_SPEED_MULTIPLIER > 8
+#error "BATTLE_ANIM_SPEED_MULTIPLIER must not exceed 8."
+#endif
+
 // Various undefined behavior bugs may or may not prevent compilation with
 // newer compilers. So always fix them when using a modern compiler.
 #if MODERN || defined(BUGFIX)
