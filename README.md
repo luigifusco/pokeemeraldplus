@@ -45,6 +45,11 @@ browser. Forge organizes configuration into seven workspaces:
 Presets are stored in your browser's local storage (accessible via the
 Presets button in the top bar).
 
+Forge also keeps non-default settings in the browser URL. Changing a control
+updates the URL without reloading the page; **Copy configuration URL** creates
+a shareable link that restores configuration, pipeline options, and the active
+workspace.
+
 ### CLI flags
 
 ```bash

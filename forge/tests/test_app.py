@@ -32,7 +32,8 @@ class ApiBasics(unittest.TestCase):
         r = self.client.get("/")
         self.assertEqual(r.status_code, 200)
         self.assertIn("Emerald Forge · ROM Studio", r.text)
-        self.assertIn("style.css?v=editorial-2", r.text)
+        self.assertIn("style.css?v=forge-3", r.text)
+        self.assertIn("Copy configuration URL", r.text)
         self.assertIn("no-store", r.headers["cache-control"])
 
     def test_preview_make_only(self) -> None:

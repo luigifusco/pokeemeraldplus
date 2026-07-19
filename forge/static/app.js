@@ -101,6 +101,147 @@ const state = {
     currentRun: null,
 };
 
+const URL_SCHEMA_VERSION = "1";
+const URL_BUILD_FIELDS = {
+    "pipeline.generate": "run_randomize",
+    "pipeline.compile": "run_make",
+    "pipeline.jobs": "jobs",
+};
+
+function flattenObject(obj, prefix = "", output = {}) {
+    Object.entries(obj).forEach(([key, value]) => {
+        const path = prefix ? `${prefix}.${key}` : key;
+        if (value !== null && typeof value === "object")
+            flattenObject(value, path, output);
+        else
+            output[path] = value;
+    });
+    return output;
+}
+
+function parseUrlValue(raw, defaultValue) {
+    if (typeof defaultValue === "boolean") {
+        if (raw === "1" || raw.toLowerCase() === "true") return true;
+        if (raw === "0" || raw.toLowerCase() === "false") return false;
+        return defaultValue;
+    }
+    if (typeof defaultValue === "number") {
+        const value = Number(raw);
+        return Number.isFinite(value) ? value : defaultValue;
+    }
+    if (defaultValue === null) {
+        const value = Number(raw);
+        return Number.isFinite(value) ? value : null;
+    }
+    return raw;
+}
+
+function normalizeUrlConfig(config, defaults) {
+    Object.entries(defaults).forEach(([path, defaultValue]) => {
+        const value = getPath(config, path);
+        const numericInput = document.querySelector(`[data-bind="${path}"][type="number"], [data-bind="${path}"][type="range"]`);
+        const radioInputs = $$(`[data-bind-radio="${path}"]`);
+
+        if (radioInputs.length && !radioInputs.some((input) => input.value === value)) {
+            setPath(config, path, defaultValue);
+            return;
+        }
+
+        if (numericInput && typeof value === "number") {
+            const min = numericInput.min === "" ? -Infinity : Number(numericInput.min);
+            const max = numericInput.max === "" ? Infinity : Number(numericInput.max);
+            setPath(config, path, Math.max(min, Math.min(max, value)));
+        }
+    });
+}
+
+function loadStateFromUrl() {
+    const params = new URLSearchParams(location.search);
+    const defaults = flattenObject(defaultConfig());
+    const config = defaultConfig();
+
+    const supportedVersion = !params.has("v") || params.get("v") === URL_SCHEMA_VERSION;
+    if (supportedVersion) {
+        Object.entries(defaults).forEach(([path, defaultValue]) => {
+            if (params.has(path))
+                setPath(config, path, parseUrlValue(params.get(path), defaultValue));
+        });
+        normalizeUrlConfig(config, defaults);
+    }
+
+    const buildOpts = { run_randomize: true, run_make: true, jobs: null };
+    if (supportedVersion) {
+        Object.entries(URL_BUILD_FIELDS).forEach(([param, field]) => {
+            if (params.has(param))
+                buildOpts[field] = parseUrlValue(params.get(param), buildOpts[field]);
+        });
+    }
+    if (buildOpts.jobs !== null)
+        buildOpts.jobs = Math.max(1, Math.min(64, buildOpts.jobs));
+
+    state.config = config;
+    state.buildOpts = buildOpts;
+}
+
+function serializeUrlState() {
+    const params = new URLSearchParams();
+    const defaults = flattenObject(defaultConfig());
+    const current = flattenObject(state.config);
+    params.set("v", URL_SCHEMA_VERSION);
+
+    Object.entries(current).forEach(([path, value]) => {
+        const defaultValue = defaults[path];
+        if (value === defaultValue || value === null || value === "")
+            return;
+        params.set(path, typeof value === "boolean" ? (value ? "1" : "0") : String(value));
+    });
+
+    const buildDefaults = { run_randomize: true, run_make: true, jobs: null };
+    Object.entries(URL_BUILD_FIELDS).forEach(([param, field]) => {
+        const value = state.buildOpts[field];
+        if (value === buildDefaults[field] || value === null)
+            return;
+        params.set(param, typeof value === "boolean" ? (value ? "1" : "0") : String(value));
+    });
+
+    return params;
+}
+
+let urlUpdateTimer = null;
+function updateConfigurationUrl() {
+    const url = new URL(location.href);
+    url.search = serializeUrlState().toString();
+    history.replaceState(null, "", url);
+}
+
+function scheduleUrlUpdate() {
+    clearTimeout(urlUpdateTimer);
+    urlUpdateTimer = setTimeout(updateConfigurationUrl, 80);
+}
+
+async function copyConfigurationUrl() {
+    updateConfigurationUrl();
+    const button = $("#share-url-btn");
+    const original = button.textContent;
+    try {
+        await navigator.clipboard.writeText(location.href);
+        button.textContent = "Configuration URL copied";
+    } catch {
+        const input = document.createElement("textarea");
+        input.value = location.href;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+        button.textContent = "Configuration URL copied";
+    }
+    setTimeout(() => { button.textContent = original; }, 1600);
+}
+
+loadStateFromUrl();
+
 function countChangedLeaves(current, baseline) {
     if (current && baseline && typeof current === "object" && typeof baseline === "object") {
         const keys = new Set([...Object.keys(current), ...Object.keys(baseline)]);
@@ -180,6 +321,7 @@ navItems.forEach(b => b.addEventListener("click", () => navigateSection(b.datase
 showSection(((location.hash || "#remix").slice(1)) || "remix");
 window.addEventListener("hashchange", () => showSection(location.hash.slice(1)));
 $("#jump-build-btn").addEventListener("click", () => navigateSection("build"));
+$("#share-url-btn").addEventListener("click", copyConfigurationUrl);
 
 // ---------- Health ----------
 const healthPill = $("#health-pill");
@@ -411,6 +553,7 @@ function onConfigChanged() {
     updateStatMirror();
     updateLevelLink();
     updateChangeCount();
+    scheduleUrlUpdate();
     debouncedPreview();
 }
 
@@ -484,6 +627,7 @@ function wireCrossField() {
         });
         state.config.battle_anim_speed_multiplier = checked ? 4 : 1;
         applyStateToDom();
+        scheduleUrlUpdate();
     }
 
     $("#qol-enable-all").addEventListener("click", () => {
@@ -502,11 +646,21 @@ function wireBuildOpts() {
     const jobs = $("#opt-jobs");
     runR.checked = state.buildOpts.run_randomize;
     runM.checked = state.buildOpts.run_make;
-    runR.addEventListener("change", () => { state.buildOpts.run_randomize = runR.checked; debouncedPreview(); });
-    runM.addEventListener("change", () => { state.buildOpts.run_make = runM.checked; debouncedPreview(); });
+    jobs.value = state.buildOpts.jobs == null ? "" : String(state.buildOpts.jobs);
+    runR.addEventListener("change", () => {
+        state.buildOpts.run_randomize = runR.checked;
+        scheduleUrlUpdate();
+        debouncedPreview();
+    });
+    runM.addEventListener("change", () => {
+        state.buildOpts.run_make = runM.checked;
+        scheduleUrlUpdate();
+        debouncedPreview();
+    });
     jobs.addEventListener("input", () => {
         const v = parseInt(jobs.value, 10);
         state.buildOpts.jobs = isNaN(v) ? null : v;
+        scheduleUrlUpdate();
         debouncedPreview();
     });
 }
@@ -658,6 +812,7 @@ function wirePresets() {
                 state.config.evo_constraints = Object.assign(defaultConfig().evo_constraints, p.config.evo_constraints);
                 state.buildOpts = Object.assign({ run_randomize: true, run_make: true, jobs: null }, p.buildOpts);
                 applyStateToDom();
+                scheduleUrlUpdate();
                 debouncedPreview();
                 modal.classList.add("hidden");
             });
