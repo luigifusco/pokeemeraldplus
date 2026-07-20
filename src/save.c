@@ -696,6 +696,7 @@ static u16 CalculateChecksum(void *data, u16 size)
 #ifdef FAST_SAVE
 static bool8 IsPokemonStorageUpToDate(const struct SaveSectorLocation *locations)
 {
+    u16 i;
     u16 sectorId;
     u16 slotOffset;
 
@@ -712,9 +713,14 @@ static bool8 IsPokemonStorageUpToDate(const struct SaveSectorLocation *locations
         if (gReadWriteSector->id != sectorId
          || gReadWriteSector->signature != SECTOR_SIGNATURE
          || gReadWriteSector->counter != gSaveCounter
-         || gReadWriteSector->checksum != CalculateChecksum(gReadWriteSector->data, locations[sectorId].size)
-         || memcmp(gReadWriteSector->data, locations[sectorId].data, locations[sectorId].size) != 0)
+         || gReadWriteSector->checksum != CalculateChecksum(gReadWriteSector->data, locations[sectorId].size))
             return FALSE;
+
+        for (i = 0; i < locations[sectorId].size; i++)
+        {
+            if (gReadWriteSector->data[i] != ((u8 *)locations[sectorId].data)[i])
+                return FALSE;
+        }
     }
 
     return TRUE;
