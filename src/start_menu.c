@@ -1122,7 +1122,11 @@ static u8 SaveDoSaveCallback(void)
     }
     else
     {
+#ifdef FAST_SAVE
+        saveStatus = TrySavingData(SAVE_FAST);
+#else
         saveStatus = TrySavingData(SAVE_NORMAL);
+#endif
     }
 
     if (saveStatus == SAVE_STATUS_OK)

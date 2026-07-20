@@ -12,6 +12,11 @@
 #include "link.h"
 #include "constants/game_stat.h"
 
+#ifdef FAST_SAVE
+#define FAST_SAVE_FULL_INTERVAL 8
+#define MAX_GAME_STAT_VALUE 0xFFFFFF
+#endif
+
 static u16 CalculateChecksum(void *, u16);
 static bool8 ReadFlashSector(u8, struct SaveSector *);
 static u8 GetSaveValidStatus(const struct SaveSectorLocation *);
@@ -19,6 +24,9 @@ static u8 CopySaveSlotData(u16, struct SaveSectorLocation *);
 static u8 TryWriteSector(u8, u8 *);
 static u8 HandleWriteSector(u16, const struct SaveSectorLocation *);
 static u8 HandleReplaceSector(u16, const struct SaveSectorLocation *);
+#ifdef FAST_SAVE
+static bool8 IsPokemonStorageUpToDate(const struct SaveSectorLocation *);
+#endif
 
 // Divide save blocks into individual chunks to be written to flash sectors
 
@@ -685,6 +693,34 @@ static u16 CalculateChecksum(void *data, u16 size)
     return ((checksum >> 16) + checksum);
 }
 
+#ifdef FAST_SAVE
+static bool8 IsPokemonStorageUpToDate(const struct SaveSectorLocation *locations)
+{
+    u16 sectorId;
+    u16 slotOffset;
+
+    if (gSaveFileStatus != SAVE_STATUS_OK)
+        return FALSE;
+
+    gReadWriteSector = &gSaveDataBuffer;
+    slotOffset = NUM_SECTORS_PER_SLOT * (gSaveCounter % NUM_SAVE_SLOTS);
+    for (sectorId = SECTOR_ID_PKMN_STORAGE_START; sectorId <= SECTOR_ID_PKMN_STORAGE_END; sectorId++)
+    {
+        u16 sector = (sectorId + gLastWrittenSector) % NUM_SECTORS_PER_SLOT + slotOffset;
+
+        ReadFlashSector(sector, gReadWriteSector);
+        if (gReadWriteSector->id != sectorId
+         || gReadWriteSector->signature != SECTOR_SIGNATURE
+         || gReadWriteSector->counter != gSaveCounter
+         || gReadWriteSector->checksum != CalculateChecksum(gReadWriteSector->data, locations[sectorId].size)
+         || memcmp(gReadWriteSector->data, locations[sectorId].data, locations[sectorId].size) != 0)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+#endif
+
 static void UpdateSaveAddresses(void)
 {
     int i = SECTOR_ID_SAVEBLOCK2;
@@ -748,6 +784,31 @@ u8 HandleSavingData(u8 saveType)
         for(i = SECTOR_ID_SAVEBLOCK2; i <= SECTOR_ID_SAVEBLOCK1_END; i++)
             WriteSectorSignatureByte_NoOffset(i, gRamSaveSectorLocations);
         break;
+#ifdef FAST_SAVE
+    case SAVE_FAST:
+    {
+        u32 savedGameCount = GetGameStat(GAME_STAT_SAVED_GAME);
+
+        CopyPartyAndObjectsToSave();
+        if (savedGameCount != MAX_GAME_STAT_VALUE
+         && savedGameCount % FAST_SAVE_FULL_INTERVAL != 0
+         && IsPokemonStorageUpToDate(gRamSaveSectorLocations))
+        {
+            // Keep the current full slot and atomically update only the core save blocks.
+            gLastKnownGoodSector = gLastWrittenSector;
+            gLastSaveCounter = gSaveCounter;
+            for (i = SECTOR_ID_SAVEBLOCK2; i <= SECTOR_ID_SAVEBLOCK1_END; i++)
+                HandleReplaceSector(i, gRamSaveSectorLocations);
+            for (i = SECTOR_ID_SAVEBLOCK2; i <= SECTOR_ID_SAVEBLOCK1_END; i++)
+                WriteSectorSignatureByte_NoOffset(i, gRamSaveSectorLocations);
+        }
+        else
+        {
+            WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);
+        }
+        break;
+    }
+#endif
     case SAVE_OVERWRITE_DIFFERENT_FILE:
         // Erase Hall of Fame
         for (i = SECTOR_ID_HOF_1; i < SECTORS_COUNT; i++)
